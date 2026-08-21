@@ -255,6 +255,28 @@
         #btn-hotbar-prev { left: 100px; bottom: 170px; font-size: 20px; }
         #btn-hotbar-next { left: 180px; bottom: 170px; font-size: 20px; }
         #btn-pause-mob { left: 20px; bottom: 255px; font-size: 16px; }
+        #btn-inv-mob { left: 100px; bottom: 255px; font-size: 14px; }
+        #btn-settings-mob { left: 180px; bottom: 255px; font-size: 14px; }
+        #mine-bar-wrap {
+            display: none; position: fixed; left: 50%; top: 58%; transform: translateX(-50%);
+            width: 120px; height: 10px; background: rgba(0,0,0,0.6); border: 2px solid #fff;
+            border-radius: 4px; z-index: 90; pointer-events: none;
+        }
+        #mine-bar {
+            height: 100%; width: 0%; background: linear-gradient(90deg, #8bc34a, #cddc39);
+            border-radius: 2px; transition: width 0.05s linear;
+        }
+        #settings-screen {
+            display: none; position: fixed; inset: 0; z-index: 320;
+            background: rgba(0,0,0,0.78); flex-direction: column;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        #settings-screen.show { display: flex; }
+        .settings-row {
+            display: flex; align-items: center; justify-content: space-between;
+            width: min(340px, 90vw); color: #eee; font-size: 14px; margin: 4px 0; gap: 12px;
+        }
+        .settings-row input[type=range] { flex: 1; }
     </style>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -334,8 +356,18 @@
         <div id="pause-join-code"></div>
         <button class="menu-btn" id="btn-pause-resume">RESUME</button>
         <button class="menu-btn" id="btn-pause-save">SAVE WORLD</button>
+        <button class="menu-btn" id="btn-pause-settings">SETTINGS</button>
         <button class="menu-btn" id="btn-pause-copy-id">COPY JOIN ID</button>
         <button class="menu-btn" id="btn-pause-quit" style="background:#8b0000;border-color:#c00;">QUIT TO MENU</button>
+    </div>
+    <div id="settings-screen">
+        <div class="menu-title">SETTINGS</div>
+        <div class="settings-row"><span>Mouse sensitivity</span><input type="range" id="set-mouse-sens" min="0.5" max="3" step="0.1" value="1"></div>
+        <div class="settings-row"><span>Touch look sensitivity</span><input type="range" id="set-touch-sens" min="0.5" max="3" step="0.1" value="1"></div>
+        <div class="settings-row"><span>Render distance</span><input type="range" id="set-render-dist" min="3" max="10" step="1" value="6"></div>
+        <div class="settings-row"><span>Sound</span><input type="checkbox" id="set-sound" checked></div>
+        <div class="settings-row"><span>Show FPS (F3)</span><input type="checkbox" id="set-debug"></div>
+        <button class="menu-btn" id="btn-settings-close">BACK</button>
     </div>
 
     <div id="death-screen">
@@ -362,7 +394,10 @@
         <div class="mob-btn" id="btn-pause-mob">❚❚</div>
         <div class="mob-btn" id="btn-hotbar-prev">◀</div>
         <div class="mob-btn" id="btn-hotbar-next">▶</div>
+        <div class="mob-btn" id="btn-inv-mob">🎒</div>
+        <div class="mob-btn" id="btn-settings-mob">⚙</div>
     </div>
+    <div id="mine-bar-wrap"><div id="mine-bar"></div></div>
 
     <!-- Game HUD -->
     <div id="hud">
@@ -561,6 +596,31 @@
             LAPIS: 141, REDSTONE: 142, FLINT: 143, BUCKET: 144,
             WATER_BUCKET: 145, LAVA_BUCKET: 146, GOLDEN_APPLE: 147,
             SUGAR: 148, PAPER: 149, BOOK: 150
+        };
+
+
+        // Mining hardness (seconds with bare hand roughly); tools speed it up
+        const BLOCK_HARDNESS = {
+            [BLOCKS.GRASS]: 0.6, [BLOCKS.DIRT]: 0.5, [BLOCKS.SAND]: 0.5, [BLOCKS.GRAVEL]: 0.6,
+            [BLOCKS.WOOD]: 2.0, [BLOCKS.PLANKS]: 2.0, [BLOCKS.LEAVES]: 0.25,
+            [BLOCKS.STONE]: 1.5, [BLOCKS.COBBLESTONE]: 2.0, [BLOCKS.STONE_BRICKS]: 1.5,
+            [BLOCKS.COAL_ORE]: 3.0, [BLOCKS.IRON_ORE]: 3.0, [BLOCKS.GOLD_ORE]: 3.0,
+            [BLOCKS.DIAMOND_ORE]: 3.5, [BLOCKS.REDSTONE_ORE]: 3.0, [BLOCKS.LAPIS_ORE]: 3.0,
+            [BLOCKS.OBSIDIAN]: 10, [BLOCKS.NETHERRACK]: 0.4, [BLOCKS.GLOWSTONE]: 0.3,
+            [BLOCKS.BRICK]: 2.0, [BLOCKS.GLASS]: 0.3, [BLOCKS.ICE]: 0.5, [BLOCKS.SNOW]: 0.2,
+            [BLOCKS.CRAFTING_TABLE]: 2.5, [BLOCKS.DOOR_CLOSED]: 3.0, [BLOCKS.DOOR_OPEN]: 3.0,
+            [BLOCKS.BED]: 0.2, [BLOCKS.TORCH]: 0.05, [BLOCKS.FENCE]: 2.0, [BLOCKS.FENCE_GATE]: 2.0,
+            [BLOCKS.WOOL]: 0.8, [BLOCKS.WOOL_RED]: 0.8,
+            [BLOCKS.GOLD_BLOCK]: 3, [BLOCKS.IRON_BLOCK]: 5, [BLOCKS.DIAMOND_BLOCK]: 5
+        };
+        const BLOCK_TOOL = {
+            [BLOCKS.STONE]: 'pickaxe', [BLOCKS.COBBLESTONE]: 'pickaxe', [BLOCKS.STONE_BRICKS]: 'pickaxe',
+            [BLOCKS.COAL_ORE]: 'pickaxe', [BLOCKS.IRON_ORE]: 'pickaxe', [BLOCKS.GOLD_ORE]: 'pickaxe',
+            [BLOCKS.DIAMOND_ORE]: 'pickaxe', [BLOCKS.REDSTONE_ORE]: 'pickaxe', [BLOCKS.LAPIS_ORE]: 'pickaxe',
+            [BLOCKS.OBSIDIAN]: 'pickaxe', [BLOCKS.NETHERRACK]: 'pickaxe', [BLOCKS.BRICK]: 'pickaxe',
+            [BLOCKS.IRON_BLOCK]: 'pickaxe', [BLOCKS.GOLD_BLOCK]: 'pickaxe', [BLOCKS.DIAMOND_BLOCK]: 'pickaxe',
+            [BLOCKS.DIRT]: 'shovel', [BLOCKS.GRASS]: 'shovel', [BLOCKS.SAND]: 'shovel', [BLOCKS.GRAVEL]: 'shovel', [BLOCKS.SNOW]: 'shovel',
+            [BLOCKS.WOOD]: 'axe', [BLOCKS.PLANKS]: 'axe', [BLOCKS.CRAFTING_TABLE]: 'axe', [BLOCKS.FENCE]: 'axe', [BLOCKS.DOOR_CLOSED]: 'axe'
         };
 
         const ItemRegistry = {
@@ -2146,9 +2206,12 @@
                     this.heldRoot.remove(c);
                     if (c.geometry) c.geometry.dispose();
                 }
-                if (itemId != null) {
+                if (itemId != null && itemId !== 0) {
                     const item = createHeldItemMesh(itemId, this.texAtlas);
                     this.heldRoot.add(item);
+                    this.heldRoot.visible = true;
+                } else {
+                    this.heldRoot.visible = false;
                 }
             }
 
@@ -3933,6 +3996,7 @@
                 this.input = { keys: {} };
                 this.state = 'menu';
                 this.gameMode = 'survival'; // survival | creative | spectator
+                this.loadSettings();
                 this.time = 0;
                 this.isNight = false;
                 this.craftingSlots3 = new Array(9).fill(null);
@@ -4126,13 +4190,22 @@
                 window.addEventListener('mousedown', e => {
                     if(this.state !== 'play') return;
                     if(document.pointerLockElement !== document.body) {
-                        document.body.requestPointerLock();
+                        if (!this.isMobile) document.body.requestPointerLock();
                         audio.init();
                         return;
                     }
                     audio.init();
-                    if(e.button === 0) this.handleInteract('break');
+                    if(e.button === 0) {
+                        this._mouseBreaking = true;
+                        this.handleInteract('break');
+                    }
                     if(e.button === 2) this.handleInteract('place');
+                });
+                window.addEventListener('mouseup', e => {
+                    if (e.button === 0) {
+                        this._mouseBreaking = false;
+                        this.cancelMining();
+                    }
                 });
                 
                 document.addEventListener('pointerlockchange', () => {
@@ -4152,9 +4225,11 @@
                 });
 
                 document.addEventListener('mousemove', e => {
+                    // sensitivity applied below
                     if(this.state === 'play' && document.pointerLockElement) {
-                        this.camera.rotation.y -= e.movementX * 0.002;
-                        this.camera.rotation.x -= e.movementY * 0.002;
+                        const sens = (this.settings && this.settings.mouseSens) || 1;
+                        this.camera.rotation.y -= e.movementX * 0.002 * sens;
+                        this.camera.rotation.x -= e.movementY * 0.002 * sens;
                         this.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.camera.rotation.x));
                         this.camera.rotation.order = 'YXZ';
                     }
@@ -4322,6 +4397,8 @@
                 this.setupMobileControls();
                 this.setMobileControlsVisible(false);
                 document.getElementById('btn-pause-resume').onclick = () => this.togglePause('resume');
+                document.getElementById('btn-pause-settings').onclick = () => this.openSettings();
+                document.getElementById('btn-settings-close').onclick = () => this.closeSettings();
                 document.getElementById('btn-pause-save').onclick = () => {
                     this.saveCurrentWorld();
                     this.notify('World saved!');
@@ -4416,20 +4493,9 @@
                     this.camera.remove(this.playerView.fpRoot);
                 }
                 this.playerView = new PlayerViewModel(this.camera, this.texAtlas);
+                // Survival: empty inventory — punch trees, craft tools from scratch
+                this.player.inventory = new Array(36).fill(null);
                 setGen(30, 'Spawning player...', 'Terrain streaming live');
-                
-                this.player.addItem(ITEMS.WOODEN_PICKAXE, 1);
-                this.player.addItem(ITEMS.WOODEN_SWORD, 1);
-                this.player.addItem(ITEMS.WOODEN_SHOVEL, 1);
-                this.player.addItem(ITEMS.BOW, 1);
-                this.player.addItem(ITEMS.ARROW, 32);
-                this.player.addItem(BLOCKS.WOOD, 32);
-                this.player.addItem(BLOCKS.DIRT, 16);
-                this.player.addItem(ITEMS.APPLE, 8);
-                this.player.addItem(BLOCKS.PLANKS, 16);
-                this.player.addItem(ITEMS.STICK, 16);
-                this.player.addItem(BLOCKS.OBSIDIAN, 20);
-                this.player.addItem(BLOCKS.TORCH, 16);
                 
                 this.mobs = [];
                 this.spawnInitialMobs();
@@ -4854,6 +4920,70 @@
                 for (let i = 0; i < items.length && i < 36; i++) {
                     this.player.inventory[i] = { id: items[i], count: 64 };
                 }
+            }
+
+
+            loadSettings() {
+                try {
+                    this.settings = JSON.parse(localStorage.getItem('voxel_settings') || '{}') || {};
+                } catch (e) {
+                    this.settings = {};
+                }
+                if (this.settings.mouseSens == null) this.settings.mouseSens = 1;
+                if (this.settings.touchSens == null) this.settings.touchSens = 1;
+                if (this.settings.renderDist == null) this.settings.renderDist = 6;
+                if (this.settings.sound == null) this.settings.sound = true;
+                if (this.settings.debug == null) this.settings.debug = false;
+            }
+
+            openSettings() {
+                this.loadSettingsToUI();
+                const el = document.getElementById('settings-screen');
+                if (el) el.classList.add('show');
+                if (this.state === 'play') {
+                    this.togglePause('pause');
+                }
+            }
+
+            closeSettings() {
+                this.applySettingsFromUI();
+                const el = document.getElementById('settings-screen');
+                if (el) el.classList.remove('show');
+            }
+
+            loadSettingsToUI() {
+                if (!this.settings) this.loadSettings();
+                const s = this.settings;
+                const ms = document.getElementById('set-mouse-sens');
+                const ts = document.getElementById('set-touch-sens');
+                const rd = document.getElementById('set-render-dist');
+                const snd = document.getElementById('set-sound');
+                const dbg = document.getElementById('set-debug');
+                if (ms) ms.value = s.mouseSens;
+                if (ts) ts.value = s.touchSens;
+                if (rd) rd.value = s.renderDist;
+                if (snd) snd.checked = s.sound !== false;
+                if (dbg) dbg.checked = !!s.debug;
+            }
+
+            applySettingsFromUI() {
+                if (!this.settings) this.settings = {};
+                const ms = document.getElementById('set-mouse-sens');
+                const ts = document.getElementById('set-touch-sens');
+                const rd = document.getElementById('set-render-dist');
+                const snd = document.getElementById('set-sound');
+                const dbg = document.getElementById('set-debug');
+                if (ms) this.settings.mouseSens = parseFloat(ms.value) || 1;
+                if (ts) this.settings.touchSens = parseFloat(ts.value) || 1;
+                if (rd) this.settings.renderDist = parseInt(rd.value, 10) || 6;
+                if (snd) this.settings.sound = !!snd.checked;
+                if (dbg) this.settings.debug = !!dbg.checked;
+                try { localStorage.setItem('voxel_settings', JSON.stringify(this.settings)); } catch (e) {}
+                if (this.scene && this.scene.fog) {
+                    this.scene.fog.far = this.settings.renderDist * CHUNK_SIZE;
+                }
+                const debugEl = document.getElementById('debug');
+                if (debugEl) debugEl.style.display = this.settings.debug ? 'block' : 'none';
             }
 
             togglePause(force) {
@@ -5360,7 +5490,7 @@
                         const dy = t.clientY - this._lookLast.y;
                         this._lookLast = { x: t.clientX, y: t.clientY };
                         // Sensitivity — pixels to radians
-                        const sens = 0.0055;
+                        const sens = 0.0055 * ((this.settings && this.settings.touchSens) || 1);
                         this.camera.rotation.order = 'YXZ';
                         this.camera.rotation.y -= dx * sens;
                         this.camera.rotation.x -= dy * sens;
@@ -5409,10 +5539,15 @@
                     () => { this.mobile.jump = true; if (this.input && this.input.keys) this.input.keys['Space'] = true; },
                     () => { this.mobile.jump = false; if (this.input && this.input.keys) this.input.keys['Space'] = false; }
                 );
-                bindBtn('btn-break', () => { if (this.state === 'play') this.handleInteract('break'); });
+                bindBtn('btn-break',
+                    () => { if (this.state === 'play') { this._mouseBreaking = true; this.handleInteract('break'); } },
+                    () => { this._mouseBreaking = false; this.cancelMining(); }
+                );
                 bindBtn('btn-place', () => { if (this.state === 'play') this.handleInteract('place'); });
                 bindBtn('btn-chat-mob', () => { if (this.state === 'play') this.openChat(); });
                 bindBtn('btn-pause-mob', () => this.togglePause());
+                bindBtn('btn-inv-mob', () => { if (this.state === 'play' || this.state === 'inventory') this.toggleInventory(); });
+                bindBtn('btn-settings-mob', () => this.openSettings());
                 bindBtn('btn-hotbar-prev', () => {
                     if (!this.player || this.state !== 'play') return;
                     this.player.hotbarSelect = (this.player.hotbarSelect + 8) % 9;
@@ -5433,6 +5568,104 @@
                 this.input.keys['KeyS'] = this.mobile.moveZ > 0.25;
                 this.input.keys['KeyA'] = this.mobile.moveX < -0.25;
                 this.input.keys['KeyD'] = this.mobile.moveX > 0.25;
+            }
+
+
+            getMineSpeed(blockId) {
+                const hard = BLOCK_HARDNESS[blockId] != null ? BLOCK_HARDNESS[blockId] : 1.0;
+                if (hard <= 0) return 999;
+                const held = this.player.inventory[this.player.hotbarSelect];
+                const tool = held && ItemRegistry[held.id];
+                const prefer = BLOCK_TOOL[blockId];
+                let mult = 1;
+                if (tool && tool.type === 'tool') {
+                    const tier = tool.tier || 1;
+                    const tierMult = [1, 1.2, 1.8, 2.5, 4, 6][tier] || 1.5;
+                    if (prefer && tool.toolType === prefer) mult = tierMult * 2.2;
+                    else if (prefer === 'pickaxe' && tool.toolType === 'pickaxe') mult = tierMult * 2;
+                    else if (tool.toolType === 'sword' && (blockId === BLOCKS.LEAVES || blockId === BLOCKS.WOOL || blockId === BLOCKS.WOOL_RED)) mult = 1.5;
+                    else mult = 1.15;
+                }
+                // Wrong tool on ore/stone is very slow
+                if (prefer === 'pickaxe' && (!tool || tool.toolType !== 'pickaxe')) mult = 0.35;
+                return mult / Math.max(0.05, hard);
+            }
+
+            beginMining(x, y, z) {
+                const id = this.world.getBlock(x, y, z);
+                if (!id || id === BLOCKS.AIR || BlockRegistry[id]?.unbreakable) {
+                    this.cancelMining();
+                    return;
+                }
+                if (!this._mine) this._mine = { x:0,y:0,z:0, progress:0, id:0 };
+                if (this._mine.x !== x || this._mine.y !== y || this._mine.z !== z || this._mine.id !== id) {
+                    this._mine = { x, y, z, progress: 0, id };
+                }
+                this._mining = true;
+                if (this.playerView) this.playerView.triggerSwing();
+            }
+
+            cancelMining() {
+                this._mining = false;
+                if (this._mine) this._mine.progress = 0;
+                const wrap = document.getElementById('mine-bar-wrap');
+                if (wrap) wrap.style.display = 'none';
+            }
+
+            finishBreakBlock(x, y, z, id) {
+                this.world.setBlock(x, y, z, BLOCKS.AIR);
+                if (this.mp && this.mp.enabled) this.mp.sendBlock(x, y, z, BLOCKS.AIR);
+                audio.playSound('break');
+                const col = id === BLOCKS.GRASS ? 0x4caf50
+                    : id === BLOCKS.STONE || id === BLOCKS.COBBLESTONE ? 0x9e9e9e
+                    : id === BLOCKS.SAND ? 0xf5e6b3
+                    : id === BLOCKS.WOOD || id === BLOCKS.PLANKS ? 0x8d6e63
+                    : id === BLOCKS.LEAVES ? 0x2e7d32
+                    : 0x8d6e63;
+                if (this.particles) this.particles.spawnBreak(x, y, z, col);
+                if (this.gameMode !== 'creative') {
+                    let dropId = BlockRegistry[id]?.drops || id;
+                    this.player.addItem(dropId, 1);
+                }
+                this.updateHUD();
+                this.cancelMining();
+            }
+
+            updateMining(dt) {
+                if (!this._mining || !this._mine || this.state !== 'play') {
+                    const wrap = document.getElementById('mine-bar-wrap');
+                    if (wrap) wrap.style.display = 'none';
+                    return;
+                }
+                const { x, y, z, id } = this._mine;
+                const cur = this.world.getBlock(x, y, z);
+                if (cur !== id || !cur || cur === BLOCKS.AIR) {
+                    this.cancelMining();
+                    return;
+                }
+                // Must still be looking at same block
+                const target = this.player.raycast();
+                if (!target || target.hit.x !== x || target.hit.y !== y || target.hit.z !== z) {
+                    this.cancelMining();
+                    return;
+                }
+                const speed = this.getMineSpeed(id);
+                this._mine.progress += speed * dt;
+                const wrap = document.getElementById('mine-bar-wrap');
+                const bar = document.getElementById('mine-bar');
+                if (wrap && bar) {
+                    wrap.style.display = 'block';
+                    bar.style.width = Math.min(100, this._mine.progress * 100) + '%';
+                }
+                // Swing periodically
+                this._mineSwingT = (this._mineSwingT || 0) + dt;
+                if (this._mineSwingT > 0.35) {
+                    this._mineSwingT = 0;
+                    if (this.playerView) this.playerView.triggerSwing();
+                }
+                if (this._mine.progress >= 1) {
+                    this.finishBreakBlock(x, y, z, id);
+                }
             }
 
             handleInteract(action) {
@@ -5476,25 +5709,17 @@
                         }
                     }
 
-                    if(!target) return;
-                    let id = this.world.getBlock(target.hit.x, target.hit.y, target.hit.z);
-                    if(id !== BLOCKS.AIR && !BlockRegistry[id]?.unbreakable) {
-                        this.world.setBlock(target.hit.x, target.hit.y, target.hit.z, BLOCKS.AIR);
-                        if (this.mp && this.mp.enabled) this.mp.sendBlock(target.hit.x, target.hit.y, target.hit.z, BLOCKS.AIR);
-                        audio.playSound('break');
-                        const col = id === BLOCKS.GRASS ? 0x4caf50
-                            : id === BLOCKS.STONE || id === BLOCKS.COBBLESTONE ? 0x9e9e9e
-                            : id === BLOCKS.SAND ? 0xf5e6b3
-                            : id === BLOCKS.WOOD || id === BLOCKS.PLANKS ? 0x8d6e63
-                            : id === BLOCKS.LEAVES ? 0x2e7d32
-                            : 0x8d6e63;
-                        this.particles.spawnBreak(target.hit.x, target.hit.y, target.hit.z, col);
-                        if (this.gameMode !== 'creative') {
-                            let dropId = BlockRegistry[id]?.drops || id;
-                            this.player.addItem(dropId, 1);
+                    if(!target) { this.cancelMining(); return; }
+                    // Creative: instant break
+                    if (this.gameMode === 'creative') {
+                        let id = this.world.getBlock(target.hit.x, target.hit.y, target.hit.z);
+                        if(id !== BLOCKS.AIR && !BlockRegistry[id]?.unbreakable) {
+                            this.finishBreakBlock(target.hit.x, target.hit.y, target.hit.z, id);
                         }
-                        this.updateHUD();
+                        return;
                     }
+                    // Survival: start / continue mining this block (progress in updateMining)
+                    this.beginMining(target.hit.x, target.hit.y, target.hit.z);
                 } else if(action === 'place') {
                     // Bow shoots on right-click
                     const heldBow = this.player.inventory[this.player.hotbarSelect];
@@ -5926,6 +6151,11 @@
                     }
 
                     if (this.isMobile) this.applyMobileInput(dt);
+                    // Hold-to-mine (PC left mouse or mobile break hold)
+                    if (this._mouseBreaking && this.state === 'play' && this.gameMode !== 'creative') {
+                        this.handleInteract('break');
+                    }
+                    this.updateMining(dt);
                     this.player.update(dt, this.input);
                     this.world.update(this.player.pos);
                     this.particles.update(dt);
@@ -5940,7 +6170,8 @@
                     // First-person arms + held item
                     if (this.playerView && this.player) {
                         const held = this.player.inventory[this.player.hotbarSelect];
-                        this.playerView.setHeldItem(held ? held.id : null);
+                        // Empty hand when no item/block in selected slot
+                        this.playerView.setHeldItem((held && held.count > 0) ? held.id : null);
                         const moving = Math.abs(this.player.vel.x) + Math.abs(this.player.vel.z) > 0.4;
                         this.playerView.update(dt, moving, this.player.onGround);
                         this.playerView.setVisible(this.gameMode !== 'spectator');
