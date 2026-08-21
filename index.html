@@ -147,6 +147,57 @@
         .notify { background: rgba(0,0,0,0.8); color: #fff; padding: 10px 16px; border-left: 4px solid #4caf50; border-radius: 4px; animation: fadeout 3s forwards; font-size: 14px; }
         @keyframes fadeout { 0% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
 
+    
+        #chat-box {
+            display: none; position: fixed; left: 12px; bottom: 90px; width: min(420px, 90vw);
+            z-index: 200; flex-direction: column; gap: 4px; pointer-events: none;
+        }
+        #chat-log {
+            max-height: 140px; overflow-y: auto; display: flex; flex-direction: column-reverse; gap: 2px;
+            pointer-events: none;
+        }
+        #chat-log div {
+            background: rgba(0,0,0,0.55); color: #fff; padding: 4px 8px; font-size: 13px;
+            border-radius: 3px; word-break: break-word;
+        }
+        #chat-input-wrap {
+            display: none; pointer-events: auto;
+        }
+        #chat-input-wrap.open { display: block; }
+        #chat-input {
+            width: 100%; padding: 8px 10px; font-size: 14px; border: 2px solid #555;
+            background: rgba(0,0,0,0.85); color: #fff; outline: none; border-radius: 4px;
+        }
+        #mobile-controls {
+            display: none; position: fixed; inset: 0; z-index: 150; pointer-events: none;
+        }
+        #mobile-controls.show { display: block; }
+        .joy-zone {
+            position: absolute; width: 120px; height: 120px; border-radius: 50%;
+            background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.25);
+            pointer-events: auto; touch-action: none;
+        }
+        #joy-move { left: 24px; bottom: 24px; }
+        #joy-look { right: 24px; bottom: 24px; }
+        .joy-knob {
+            position: absolute; width: 48px; height: 48px; border-radius: 50%;
+            background: rgba(255,255,255,0.35); left: 36px; top: 36px;
+            pointer-events: none;
+        }
+        .mob-btn {
+            position: absolute; width: 56px; height: 56px; border-radius: 50%;
+            background: rgba(0,0,0,0.45); border: 2px solid rgba(255,255,255,0.35);
+            color: #fff; font-size: 18px; pointer-events: auto; touch-action: none;
+            display: flex; align-items: center; justify-content: center; user-select: none;
+        }
+        #btn-jump { right: 100px; bottom: 160px; }
+        #btn-place { right: 24px; bottom: 160px; }
+        #btn-break { right: 24px; bottom: 230px; }
+        #btn-chat-mob { left: 24px; bottom: 160px; font-size: 14px; }
+        .name-tag {
+            background: rgba(0,0,0,0.55); color: #fff; padding: 2px 6px; border-radius: 3px;
+            font-size: 12px; white-space: nowrap; pointer-events: none;
+        }
     </style>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
@@ -221,6 +272,20 @@
         <div class="death-title">You Died!</div>
         <div class="death-msg" id="death-msg">You were slain</div>
         <button class="menu-btn" id="btn-respawn">RESPAWN</button>
+    </div>
+
+    
+    <div id="chat-box">
+        <div id="chat-log"></div>
+        <div id="chat-input-wrap"><input id="chat-input" type="text" maxlength="120" placeholder="Message or /command" autocomplete="off"></div>
+    </div>
+    <div id="mobile-controls">
+        <div class="joy-zone" id="joy-move"><div class="joy-knob" id="knob-move"></div></div>
+        <div class="joy-zone" id="joy-look"><div class="joy-knob" id="knob-look"></div></div>
+        <div class="mob-btn" id="btn-jump">⬆</div>
+        <div class="mob-btn" id="btn-break">⛏</div>
+        <div class="mob-btn" id="btn-place">⬚</div>
+        <div class="mob-btn" id="btn-chat-mob">T</div>
     </div>
 
     <!-- Game HUD -->
@@ -1800,6 +1865,22 @@
                 }
             }
 
+            clearChunks() {
+                for (const chunk of this.chunks.values()) {
+                    if (chunk.mesh) {
+                        this.scene.remove(chunk.mesh);
+                        if (chunk.mesh.geometry) chunk.mesh.geometry.dispose();
+                    }
+                    if (chunk.waterMesh) {
+                        this.scene.remove(chunk.waterMesh);
+                        if (chunk.waterMesh.geometry) chunk.waterMesh.geometry.dispose();
+                    }
+                }
+                this.chunks.clear();
+                this.requestedChunks.clear();
+                this.villages = [];
+            }
+
             requestChunk(cx, cz) {
                 const key = this.getChunkKey(cx, cz);
                 if (this.requestedChunks.has(key)) return;
@@ -2159,6 +2240,11 @@
             }
 
             update(dt, input) {
+                if (this.game && this.game.chatOpen) {
+                    // Don't move while typing in chat
+                    input = { keys: {} };
+                }
+
                 const pcx = Math.floor(this.pos.x / CHUNK_SIZE);
                 const pcz = Math.floor(this.pos.z / CHUNK_SIZE);
                 const currentChunk = this.world.getChunk(pcx, pcz);
@@ -3417,7 +3503,8 @@
                         this.conn = this.peer.connect(hostId, { reliable: true });
                         this.conn.on('open', () => {
                             this.conn.send({ type: 'hello', name: this.playerName });
-                            this.game.notify('Connected to host!');
+                            this.conn.send({ type: 'request_world' });
+                            this.game.notify('Connected — syncing world...');
                             resolve();
                         });
                         this.conn.on('data', (d) => this._onData(d, this.conn));
@@ -3450,10 +3537,29 @@
                 if (!d || !d.type) return;
                 if (d.type === 'hello') {
                     this.game.notify((d.name || 'Player') + ' connected');
+                    if (this.isHost && fromConn) {
+                        fromConn.send({
+                            type: 'world_info',
+                            seed: this.game.world.seed,
+                            mods: this.game.world.modifications
+                        });
+                    }
+                } else if (d.type === 'request_world' && this.isHost && fromConn) {
+                    fromConn.send({
+                        type: 'world_info',
+                        seed: this.game.world.seed,
+                        mods: this.game.world.modifications
+                    });
                 } else if (d.type === 'world_info' && !this.isHost) {
-                    // Client receives seed — already in world if joined via menu
+                    // Rebuild terrain with host seed so all players share the same world
+                    this.game.applyHostWorld(d.seed, d.mods || {});
                 } else if (d.type === 'pos') {
                     this._updateRemote(d.id || fromConn.peer, d);
+                    // Clients take host time
+                    if (!this.isHost && d.time != null && this.game) {
+                        this.game.time = d.time;
+                        this.game.isNight = !!d.isNight;
+                    }
                 } else if (d.type === 'block') {
                     if (this.game.world) {
                         this.game.world.setBlock(d.x, d.y, d.z, d.id);
@@ -3461,7 +3567,9 @@
                     // Relay to others if host
                     if (this.isHost) this._broadcast(d, fromConn);
                 } else if (d.type === 'chat') {
-                    this.game.notify((d.name || '?') + ': ' + d.msg);
+                    this.game.addChatMessage(d.name || '?', d.msg);
+                    // Relay chat from host
+                    if (this.isHost) this._broadcast(d, fromConn);
                 }
             }
             _updateRemote(id, d) {
@@ -3469,9 +3577,37 @@
                 let rp = this.remotePlayers[id];
                 if (!rp) {
                     const g = createRemotePlayerAvatar(this.game.texAtlas);
+                    // Name tag sprite
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 256; canvas.height = 64;
+                    const ctx = canvas.getContext('2d');
+                    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                    ctx.fillRect(0, 8, 256, 48);
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 28px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText((d.name || 'Player').slice(0, 16), 128, 42);
+                    const tex = new THREE.CanvasTexture(canvas);
+                    const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: true }));
+                    spr.scale.set(1.6, 0.4, 1);
+                    spr.position.y = 2.15;
+                    g.add(spr);
                     this.game.scene.add(g);
-                    rp = { mesh: g, name: d.name || 'Player', lastPos: new THREE.Vector3() };
+                    rp = { mesh: g, name: d.name || 'Player', lastPos: new THREE.Vector3(), nameSpr: spr, nameCanvas: canvas };
                     this.remotePlayers[id] = rp;
+                } else if (d.name && d.name !== rp.name) {
+                    rp.name = d.name;
+                    if (rp.nameCanvas) {
+                        const ctx = rp.nameCanvas.getContext('2d');
+                        ctx.clearRect(0,0,256,64);
+                        ctx.fillStyle = 'rgba(0,0,0,0.55)';
+                        ctx.fillRect(0, 8, 256, 48);
+                        ctx.fillStyle = '#fff';
+                        ctx.font = 'bold 28px monospace';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(rp.name.slice(0, 16), 128, 42);
+                        if (rp.nameSpr && rp.nameSpr.material.map) rp.nameSpr.material.map.needsUpdate = true;
+                    }
                 }
                 if (d.x != null) {
                     const moving = d.moving || (rp.lastPos && rp.lastPos.distanceTo(new THREE.Vector3(d.x, d.y, d.z)) > 0.02);
@@ -3505,7 +3641,7 @@
                 if (!this.enabled || !this.game.player) return;
                 const p = this.game.player.pos;
                 const held = this.game.player.inventory[this.game.player.hotbarSelect];
-                this.send({
+                const msg = {
                     type: 'pos',
                     id: this.peerId,
                     name: this.playerName,
@@ -3513,7 +3649,17 @@
                     yaw: this.game.player.yaw || 0,
                     held: held ? held.id : null,
                     moving: (Math.abs(this.game.player.vel.x) + Math.abs(this.game.player.vel.z)) > 0.3
-                });
+                };
+                // Host authoritatively syncs time of day
+                if (this.isHost && this.game) {
+                    msg.time = this.game.time;
+                    msg.isNight = !!this.game.isNight;
+                }
+                this.send(msg);
+            }
+            sendChat(text) {
+                if (!text) return;
+                this.send({ type: 'chat', name: this.playerName, msg: text });
             }
             sendBlock(x, y, z, id) {
                 this.send({ type: 'block', x, y, z, id });
@@ -3749,6 +3895,11 @@
                                 this.notify('Multiplayer not active');
                             }
                         }
+                        if(e.code === 'KeyT' && this.state === 'play' && !this.chatOpen) {
+                            e.preventDefault();
+                            this.openChat();
+                        }
+
                         if(e.code === 'F4') {
                             e.preventDefault();
                             this.cycleGameMode();
@@ -3920,6 +4071,15 @@
                     document.body.requestPointerLock();
                     this.notify("Respawned");
                 };
+                const chatInp = document.getElementById('chat-input');
+                if (chatInp) {
+                    chatInp.addEventListener('keydown', (e) => {
+                        e.stopPropagation();
+                        if (e.code === 'Enter') { e.preventDefault(); this.submitChat(); }
+                        if (e.code === 'Escape') { e.preventDefault(); this.closeChat(); }
+                    });
+                }
+                this.setupMobileControls();
 
                 this.dragItem = null;
                 const makeSlot = (i, parent) => {
@@ -4162,6 +4322,10 @@
 
             trySpawnMobs() {
                 if (!this._pendingMobSpawn || !this.world) return;
+                if (this.mp && this.mp.enabled && !this.mp.isHost) {
+                    this._pendingMobSpawn = false;
+                    return;
+                }
                 const c = this.world.getChunk(0, 0);
                 if (!c || !c.loaded) return;
                 // Ensure a few neighbor chunks exist
@@ -4232,6 +4396,8 @@
             }
 
             spawnHostileMobs() {
+                // Clients: host is authority for hostile spawns
+                if (this.mp && this.mp.enabled && !this.mp.isHost) return;
                 if (this.mobs.filter(m => m.data.hostile && !m.dead).length > 12) return;
                 const px = this.player.pos.x, pz = this.player.pos.z;
                 for (let i = 0; i < 2; i++) {
@@ -4250,6 +4416,31 @@
                     else type = 'SILVERFISH';
                     this.spawnMobAt(type, x, z);
                 }
+            }
+
+            applyHostWorld(seed, mods) {
+                const seedNum = Number(seed) || 0;
+                if (!this.world) return;
+                this.notify('Syncing terrain with host (seed ' + seedNum + ')...');
+                this.world.clearChunks();
+                this.world.seed = seedNum;
+                this.world.modifications = mods || {};
+                this.world.dimension = this.world.dimension || 'overworld';
+                if (this.player) {
+                    this.player.pos.set(8, 45, 8);
+                    this.player.vel.set(0, 0, 0);
+                    this._pendingPlayerSpawn = true;
+                }
+                // Clear old mobs from wrong terrain
+                if (this.mobs) {
+                    for (const m of this.mobs) {
+                        if (m.mesh) this.scene.remove(m.mesh);
+                    }
+                    this.mobs = [];
+                    this._pendingMobSpawn = true;
+                }
+                this.world.update(this.player ? this.player.pos : new THREE.Vector3(8, 40, 8));
+                this.notify('World synced — same terrain as host');
             }
 
             async loadWorld(name) {
@@ -4497,6 +4688,194 @@
                     pos: origin, vel: dir.multiplyScalar(28), mesh, life: 4, damage: 5
                 });
                 audio.playSound('click');
+            }
+
+
+            addChatMessage(name, msg) {
+                const log = document.getElementById('chat-log');
+                const box = document.getElementById('chat-box');
+                if (!log || !box) return;
+                box.style.display = 'flex';
+                const line = document.createElement('div');
+                line.textContent = '[' + name + '] ' + msg;
+                log.prepend(line);
+                while (log.children.length > 40) log.removeChild(log.lastChild);
+            }
+
+            openChat() {
+                if (this.state !== 'play') return;
+                this.chatOpen = true;
+                document.getElementById('chat-box').style.display = 'flex';
+                document.getElementById('chat-input-wrap').classList.add('open');
+                const inp = document.getElementById('chat-input');
+                inp.value = '';
+                setTimeout(() => inp.focus(), 10);
+                document.exitPointerLock();
+            }
+
+            closeChat() {
+                this.chatOpen = false;
+                document.getElementById('chat-input-wrap').classList.remove('open');
+                if (this.state === 'play') document.body.requestPointerLock();
+            }
+
+            submitChat() {
+                const inp = document.getElementById('chat-input');
+                const raw = (inp ? inp.value : '').trim();
+                this.closeChat();
+                if (!raw) return;
+                if (raw.startsWith('/')) {
+                    this.runCommand(raw);
+                } else {
+                    const name = (this.mp && this.mp.playerName) || 'Player';
+                    this.addChatMessage(name, raw);
+                    if (this.mp && this.mp.enabled) this.mp.sendChat(raw);
+                }
+            }
+
+            runCommand(raw) {
+                const parts = raw.slice(1).trim().split(/\s+/);
+                const cmd = (parts[0] || '').toLowerCase();
+                const args = parts.slice(1);
+                if (cmd === 'highlight') {
+                    const target = args.join(' ').trim();
+                    if (!target) { this.notify('Usage: /highlight <player name>'); return; }
+                    this.highlightPlayer(target);
+                } else if (cmd === 'help') {
+                    this.addChatMessage('System', 'Commands: /highlight <name>  /help  /time set day|night (host)');
+                } else if (cmd === 'time' && args[0] === 'set') {
+                    if (this.mp && this.mp.enabled && !this.mp.isHost) {
+                        this.notify('Only host can set time');
+                        return;
+                    }
+                    if (args[1] === 'day') { this.time = (Math.PI/2)/0.03; this.isNight = false; this.notify('Time set to day'); }
+                    else if (args[1] === 'night') { this.time = (Math.PI * 1.5)/0.03; this.isNight = true; this.notify('Time set to night'); }
+                    else this.notify('Usage: /time set day|night');
+                } else {
+                    this.notify('Unknown command: /' + cmd + ' (try /help)');
+                }
+            }
+
+            highlightPlayer(name) {
+                const q = name.toLowerCase();
+                let found = null;
+                if (this.mp && this.mp.remotePlayers) {
+                    for (const id of Object.keys(this.mp.remotePlayers)) {
+                        const rp = this.mp.remotePlayers[id];
+                        if ((rp.name || '').toLowerCase().includes(q)) { found = rp; break; }
+                    }
+                }
+                if (!found) { this.notify('Player not found: ' + name); return; }
+                if (found._hl) { found.mesh.remove(found._hl); found._hl = null; }
+                const ring = new THREE.Mesh(
+                    new THREE.TorusGeometry(0.7, 0.06, 8, 24),
+                    new THREE.MeshBasicMaterial({ color: 0xffeb3b })
+                );
+                ring.rotation.x = Math.PI / 2;
+                ring.position.y = 0.15;
+                found.mesh.add(ring);
+                found._hl = ring;
+                // Also flash name sprite
+                this.notify('Highlighting ' + found.name);
+                this.addChatMessage('System', 'Highlighted ' + found.name);
+                setTimeout(() => {
+                    if (found._hl) { found.mesh.remove(found._hl); found._hl = null; }
+                }, 8000);
+            }
+
+
+            setupMobileControls() {
+                const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+                if (!isTouch) return;
+                this.isMobile = true;
+                const mc = document.getElementById('mobile-controls');
+                if (mc) mc.classList.add('show');
+                this.mobile = { moveX: 0, moveZ: 0, lookDX: 0, lookDY: 0, jump: false };
+
+                const bindJoy = (zoneId, knobId, mode) => {
+                    const zone = document.getElementById(zoneId);
+                    const knob = document.getElementById(knobId);
+                    if (!zone || !knob) return;
+                    let active = null;
+                    const center = () => {
+                        const r = zone.getBoundingClientRect();
+                        return { x: r.left + r.width/2, y: r.top + r.height/2, max: r.width/2 };
+                    };
+                    const onStart = (e) => {
+                        e.preventDefault();
+                        active = e.changedTouches[0].identifier;
+                        onMove(e);
+                    };
+                    const onMove = (e) => {
+                        if (active == null) return;
+                        let t = null;
+                        for (const touch of e.touches) if (touch.identifier === active) t = touch;
+                        if (!t) return;
+                        const c = center();
+                        let dx = t.clientX - c.x, dy = t.clientY - c.y;
+                        const len = Math.hypot(dx, dy) || 1;
+                        const max = c.max - 10;
+                        if (len > max) { dx = dx / len * max; dy = dy / len * max; }
+                        knob.style.left = (36 + dx) + 'px';
+                        knob.style.top = (36 + dy) + 'px';
+                        const nx = dx / max, ny = dy / max;
+                        if (mode === 'move') {
+                            this.mobile.moveX = nx;
+                            this.mobile.moveZ = ny;
+                        } else {
+                            this.mobile.lookDX = nx * 2.5;
+                            this.mobile.lookDY = ny * 2.0;
+                        }
+                    };
+                    const onEnd = (e) => {
+                        for (const touch of e.changedTouches) {
+                            if (touch.identifier === active) {
+                                active = null;
+                                knob.style.left = '36px'; knob.style.top = '36px';
+                                if (mode === 'move') { this.mobile.moveX = 0; this.mobile.moveZ = 0; }
+                                else { this.mobile.lookDX = 0; this.mobile.lookDY = 0; }
+                            }
+                        }
+                    };
+                    zone.addEventListener('touchstart', onStart, { passive: false });
+                    zone.addEventListener('touchmove', onMove, { passive: false });
+                    zone.addEventListener('touchend', onEnd);
+                    zone.addEventListener('touchcancel', onEnd);
+                };
+                bindJoy('joy-move', 'knob-move', 'move');
+                bindJoy('joy-look', 'knob-look', 'look');
+
+                const press = (id, down, up) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    el.addEventListener('touchstart', (e) => { e.preventDefault(); down(); }, { passive: false });
+                    el.addEventListener('touchend', (e) => { e.preventDefault(); if (up) up(); });
+                };
+                press('btn-jump', () => { this.mobile.jump = true; this.input.keys['Space'] = true; },
+                      () => { this.mobile.jump = false; this.input.keys['Space'] = false; });
+                press('btn-break', () => this.handleInteract('break'));
+                press('btn-place', () => this.handleInteract('place'));
+                press('btn-chat-mob', () => this.openChat());
+
+                // Tap center screen to lock / place when not on controls — optional
+                this.notify('Mobile controls enabled');
+            }
+
+            applyMobileInput(dt) {
+                if (!this.isMobile || !this.mobile || !this.player || this.chatOpen) return;
+                // Look
+                if (this.player.yaw == null) this.player.yaw = 0;
+                if (this.player.pitch == null) this.player.pitch = 0;
+                // Use camera rotation if player uses euler from pointer
+                this.camera.rotation.order = 'YXZ';
+                this.camera.rotation.y -= this.mobile.lookDX * dt * 1.8;
+                this.camera.rotation.x -= this.mobile.lookDY * dt * 1.4;
+                this.camera.rotation.x = Math.max(-Math.PI/2+0.1, Math.min(Math.PI/2-0.1, this.camera.rotation.x));
+                // Movement keys simulation
+                this.input.keys['KeyW'] = this.mobile.moveZ < -0.25;
+                this.input.keys['KeyS'] = this.mobile.moveZ > 0.25;
+                this.input.keys['KeyA'] = this.mobile.moveX < -0.25;
+                this.input.keys['KeyD'] = this.mobile.moveX > 0.25;
             }
 
             handleInteract(action) {
@@ -4944,7 +5323,8 @@
                 this.lastTime = now;
 
                 if (this.state === 'play' && this.world && this.player) {
-                    this.time += dt;
+                    // Host or singleplayer advances time; clients receive host time via MP
+                    if (!(this.mp && this.mp.enabled && !this.mp.isHost)) this.time += dt;
                     
                     // Day/Night cycle — bright day, dark foggy night
                     let lightIntensity = Math.sin(this.time * 0.03) * 0.5 + 0.5;
@@ -4987,6 +5367,7 @@
                         this.fillLight.intensity = 0.25;
                     }
 
+                    if (this.isMobile) this.applyMobileInput(dt);
                     this.player.update(dt, this.input);
                     this.world.update(this.player.pos);
                     this.particles.update(dt);
