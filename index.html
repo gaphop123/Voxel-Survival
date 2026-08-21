@@ -528,6 +528,15 @@
         <button type="button" class="inv-close-btn" id="btn-close-chest">✕ CLOSE</button>
     </div>
 
+    <div id="trade-screen" style="display:none;position:fixed;inset:0;z-index:280;background:rgba(0,0,0,0.75);justify-content:center;align-items:center;flex-direction:column;pointer-events:auto;">
+        <div class="inv-container" style="flex-direction:column;align-items:center;min-width:280px;">
+            <div class="inv-title">Villager Trades</div>
+            <div id="trade-list" style="display:flex;flex-direction:column;gap:8px;width:100%;"></div>
+            <div style="color:#333;font-size:12px;margin-top:8px;">Emeralds: <span id="trade-emerald-count">0</span></div>
+        </div>
+        <button type="button" class="inv-close-btn" id="btn-close-trade">✕ CLOSE</button>
+    </div>
+
     <div id="drag-container">
         <img id="drag-item" src="">
         <div id="drag-count"></div>
@@ -578,7 +587,8 @@
             CHEST: 51, WOOL_RED: 52, WOOL_BLUE: 53, WOOL_GREEN: 54,
             SANDSTONE: 55, COBBLE_STAIRS: 56, PLANK_STAIRS: 57,
             GOLD_BLOCK: 58, IRON_BLOCK: 59, DIAMOND_BLOCK: 60,
-            DOOR_CLOSED: 61, DOOR_OPEN: 62
+            DOOR_CLOSED: 61, DOOR_OPEN: 62,
+            EMERALD_ORE: 63, EMERALD_BLOCK: 64, FIRE: 65
         };
 
         const BlockRegistry = {
@@ -643,7 +653,10 @@
             [BLOCKS.DIAMOND_BLOCK]: { name: "Block of Diamond", solid: true, tex: [64, 64, 64, 64, 64, 64], type: 'metal' },
             [BLOCKS.DOOR_CLOSED]: { name: "Oak Door", solid: true, transparent: true, tex: [65, 65, 65, 65, 65, 65], type: 'wood', door: true },
             [BLOCKS.DOOR_OPEN]: { name: "Oak Door (Open)", solid: false, transparent: true, tex: [66, 66, 66, 66, 66, 66], type: 'wood', door: true },
-        
+            [BLOCKS.EMERALD_ORE]: { name: "Emerald Ore", solid: true, tex: [67, 67, 67, 67, 67, 67], type: 'stone', drops: 153 },
+            [BLOCKS.EMERALD_BLOCK]: { name: "Block of Emerald", solid: true, tex: [68, 68, 68, 68, 68, 68], type: 'metal' },
+            [BLOCKS.FIRE]: { name: "Fire", solid: false, transparent: true, tex: [69, 69, 69, 69, 69, 69], type: 'plant' },
+            [BLOCKS.TNT]: { name: "TNT", solid: true, tex: [49, 49, 49, 49, 49, 49], type: 'wood' },
         };
 
         const ITEMS = {
@@ -662,7 +675,8 @@
             BOW: 131, WOOL: 132, EGG: 133,
             LAPIS: 141, REDSTONE: 142, FLINT: 143, BUCKET: 144,
             WATER_BUCKET: 145, LAVA_BUCKET: 146, GOLDEN_APPLE: 147,
-            SUGAR: 148, PAPER: 149, BOOK: 150
+            SUGAR: 148, PAPER: 149, BOOK: 150,
+            FLINT_AND_STEEL: 151, EMERALD: 153
         };
 
 
@@ -672,7 +686,7 @@
             [BLOCKS.WOOD]: 2.0, [BLOCKS.PLANKS]: 2.0, [BLOCKS.LEAVES]: 0.25,
             [BLOCKS.STONE]: 1.5, [BLOCKS.COBBLESTONE]: 2.0, [BLOCKS.STONE_BRICKS]: 1.5,
             [BLOCKS.COAL_ORE]: 3.0, [BLOCKS.IRON_ORE]: 3.0, [BLOCKS.GOLD_ORE]: 3.0,
-            [BLOCKS.DIAMOND_ORE]: 3.5, [BLOCKS.REDSTONE_ORE]: 3.0, [BLOCKS.LAPIS_ORE]: 3.0,
+            [BLOCKS.DIAMOND_ORE]: 3.5, [BLOCKS.REDSTONE_ORE]: 3.0, [BLOCKS.LAPIS_ORE]: 3.0, [BLOCKS.EMERALD_ORE]: 3.5,
             [BLOCKS.OBSIDIAN]: 10, [BLOCKS.NETHERRACK]: 0.4, [BLOCKS.GLOWSTONE]: 0.3,
             [BLOCKS.BRICK]: 2.0, [BLOCKS.GLASS]: 0.3, [BLOCKS.ICE]: 0.5, [BLOCKS.SNOW]: 0.2,
             [BLOCKS.CRAFTING_TABLE]: 2.5, [BLOCKS.DOOR_CLOSED]: 3.0, [BLOCKS.DOOR_OPEN]: 3.0,
@@ -685,7 +699,7 @@
             [BLOCKS.COAL_ORE]: 'pickaxe', [BLOCKS.IRON_ORE]: 'pickaxe', [BLOCKS.GOLD_ORE]: 'pickaxe',
             [BLOCKS.DIAMOND_ORE]: 'pickaxe', [BLOCKS.REDSTONE_ORE]: 'pickaxe', [BLOCKS.LAPIS_ORE]: 'pickaxe',
             [BLOCKS.OBSIDIAN]: 'pickaxe', [BLOCKS.NETHERRACK]: 'pickaxe', [BLOCKS.BRICK]: 'pickaxe',
-            [BLOCKS.IRON_BLOCK]: 'pickaxe', [BLOCKS.GOLD_BLOCK]: 'pickaxe', [BLOCKS.DIAMOND_BLOCK]: 'pickaxe',
+            [BLOCKS.IRON_BLOCK]: 'pickaxe', [BLOCKS.GOLD_BLOCK]: 'pickaxe', [BLOCKS.DIAMOND_BLOCK]: 'pickaxe', [BLOCKS.EMERALD_ORE]: 'pickaxe', [BLOCKS.EMERALD_BLOCK]: 'pickaxe',
             [BLOCKS.DIRT]: 'shovel', [BLOCKS.GRASS]: 'shovel', [BLOCKS.SAND]: 'shovel', [BLOCKS.GRAVEL]: 'shovel', [BLOCKS.SNOW]: 'shovel',
             [BLOCKS.WOOD]: 'axe', [BLOCKS.PLANKS]: 'axe', [BLOCKS.CRAFTING_TABLE]: 'axe', [BLOCKS.FENCE]: 'axe', [BLOCKS.DOOR_CLOSED]: 'axe'
         };
@@ -740,6 +754,9 @@
             [ITEMS.SUGAR]: { name: "Sugar", maxStack: 64, type: 'item' },
             [ITEMS.PAPER]: { name: "Paper", maxStack: 64, type: 'item' },
             [ITEMS.BOOK]: { name: "Book", maxStack: 64, type: 'item' },
+            [ITEMS.FLINT]: { name: "Flint", maxStack: 64, type: 'item' },
+            [ITEMS.FLINT_AND_STEEL]: { name: "Flint and Steel", maxStack: 1, type: 'tool', toolType: 'flint_steel' },
+            [ITEMS.EMERALD]: { name: "Emerald", maxStack: 64, type: 'item' },
             [ITEMS.WOOL]: { name: "Wool", maxStack: 64, type: 'item' },
             [ITEMS.EGG]: { name: "Egg", maxStack: 16, type: 'item' }
         };
@@ -768,6 +785,11 @@
         };
 
         const Recipes = [
+            { shape: [ITEMS.IRON_INGOT, null, null, ITEMS.FLINT, null, null, null, null, null], out: ITEMS.FLINT_AND_STEEL, count: 1 },
+            { shape: [ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD], out: BLOCKS.EMERALD_BLOCK, count: 1 },
+            { shape: [BLOCKS.EMERALD_BLOCK, null, null, null, null, null, null, null, null], out: ITEMS.EMERALD, count: 9 },
+            { shape: [BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND], out: BLOCKS.TNT, count: 1 },
+
             { in: [BLOCKS.WOOD], out: BLOCKS.PLANKS, count: 4 },
             { in: [BLOCKS.PLANKS, BLOCKS.PLANKS], out: ITEMS.STICK, count: 4 },
             { in: [BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS], out: BLOCKS.CRAFTING_TABLE, count: 1 },
@@ -1173,7 +1195,12 @@
             29: 'iron_bars', 30: 'glass', 31: 'vine', 32: 'melon_side', 33: 'melon_top',
             34: 'clay', 35: 'obsidian', 36: 'bookshelf', 37: 'mossy_cobblestone',
             38: 'pumpkin_side', 39: 'pumpkin_top', 40: 'netherrack', 41: 'glowstone',
-            42: 'red_mushroom', 43: 'brown_mushroom', 44: 'bed_head_top', 45: 'bed_feet_end'
+            42: 'red_mushroom', 43: 'brown_mushroom', 44: 'bed_head_top', 45: 'bed_feet_end',
+            46: 'lapis_ore', 47: 'lapis_block', 48: 'redstone_ore', 49: 'tnt_side',
+            50: 'cactus_side', 51: 'sugar_cane', 52: 'sponge', 53: 'furnace_side', 54: 'furnace_top',
+            55: 'oak_planks', 56: 'chest_side', // approx
+            60: 'sandstone', 61: 'sandstone_top', 62: 'gold_block', 63: 'iron_block', 64: 'diamond_block',
+            65: 'oak_door_bottom', 66: 'oak_door_top', 67: 'emerald_ore', 68: 'emerald_block', 69: 'fire_0'
         };
 
         async function applyMinecraftTextures(atlasCanvas, tex) {
@@ -1265,75 +1292,168 @@
         }
 
 
-        async function applyItemTexturesFromMcAssets(itemIcons) {
+        // Inventory icons: destruc7i0n/minecraft-textures (2D item + block faces)
+        // https://github.com/destruc7i0n/minecraft-textures
+        // World blocks: zardoy/mc-assets (applied by applyMinecraftTextures)
+        const INV_TEX_ID_MAP = {
+            // Blocks (use block item texture name in minecraft-textures)
+            [BLOCKS.GRASS]: 'grass_block',
+            [BLOCKS.DIRT]: 'dirt',
+            [BLOCKS.STONE]: 'stone',
+            [BLOCKS.COBBLESTONE]: 'cobblestone',
+            [BLOCKS.WOOD]: 'oak_log',
+            [BLOCKS.PLANKS]: 'oak_planks',
+            [BLOCKS.LEAVES]: 'oak_leaves',
+            [BLOCKS.SAND]: 'sand',
+            [BLOCKS.GLASS]: 'glass',
+            [BLOCKS.WATER]: 'water_bucket',
+            [BLOCKS.LAVA]: 'lava_bucket',
+            [BLOCKS.BEDROCK]: 'bedrock',
+            [BLOCKS.CRAFTING_TABLE]: 'crafting_table',
+            [BLOCKS.COAL_ORE]: 'coal_ore',
+            [BLOCKS.IRON_ORE]: 'iron_ore',
+            [BLOCKS.GOLD_ORE]: 'gold_ore',
+            [BLOCKS.DIAMOND_ORE]: 'diamond_ore',
+            [BLOCKS.BRICK]: 'bricks',
+            [BLOCKS.GRAVEL]: 'gravel',
+            [BLOCKS.SNOW]: 'snow_block',
+            [BLOCKS.ICE]: 'ice',
+            [BLOCKS.TORCH]: 'torch',
+            [BLOCKS.STONE_BRICKS]: 'stone_bricks',
+            [BLOCKS.OBSIDIAN]: 'obsidian',
+            [BLOCKS.NETHERRACK]: 'netherrack',
+            [BLOCKS.GLOWSTONE]: 'glowstone',
+            [BLOCKS.FURNACE]: 'furnace',
+            [BLOCKS.CHEST]: 'chest',
+            [BLOCKS.TNT]: 'tnt',
+            [BLOCKS.SANDSTONE]: 'sandstone',
+            [BLOCKS.GOLD_BLOCK]: 'gold_block',
+            [BLOCKS.IRON_BLOCK]: 'iron_block',
+            [BLOCKS.DIAMOND_BLOCK]: 'diamond_block',
+            [BLOCKS.EMERALD_ORE]: 'emerald_ore',
+            [BLOCKS.EMERALD_BLOCK]: 'emerald_block',
+            [BLOCKS.DOOR_CLOSED]: 'oak_door',
+            [BLOCKS.DOOR_OPEN]: 'oak_door',
+            [BLOCKS.BED]: 'red_bed',
+            [BLOCKS.BOOKSHELF]: 'bookshelf',
+            [BLOCKS.MELON]: 'melon',
+            [BLOCKS.PUMPKIN]: 'pumpkin',
+            [BLOCKS.CLAY]: 'clay',
+            [BLOCKS.WOOL]: 'white_wool',
+            [BLOCKS.WOOL_RED]: 'red_wool',
+            [BLOCKS.FENCE]: 'oak_fence',
+            [BLOCKS.FENCE_GATE]: 'oak_fence_gate',
+            [BLOCKS.IRON_BARS]: 'iron_bars',
+            [BLOCKS.GLASS_PANE]: 'glass_pane',
+            [BLOCKS.LAPIS_ORE]: 'lapis_ore',
+            [BLOCKS.LAPIS_BLOCK]: 'lapis_block',
+            [BLOCKS.REDSTONE_ORE]: 'redstone_ore',
+            [BLOCKS.MOSSY_COBBLE]: 'mossy_cobblestone',
+            [BLOCKS.SPONGE]: 'sponge',
+            [BLOCKS.CACTUS]: 'cactus',
+            // Items
+            [ITEMS.STICK]: 'stick',
+            [ITEMS.WOODEN_PICKAXE]: 'wooden_pickaxe',
+            [ITEMS.STONE_PICKAXE]: 'stone_pickaxe',
+            [ITEMS.IRON_PICKAXE]: 'iron_pickaxe',
+            [ITEMS.GOLD_PICKAXE]: 'golden_pickaxe',
+            [ITEMS.DIAMOND_PICKAXE]: 'diamond_pickaxe',
+            [ITEMS.WOODEN_SWORD]: 'wooden_sword',
+            [ITEMS.STONE_SWORD]: 'stone_sword',
+            [ITEMS.IRON_SWORD]: 'iron_sword',
+            [ITEMS.GOLD_SWORD]: 'golden_sword',
+            [ITEMS.DIAMOND_SWORD]: 'diamond_sword',
+            [ITEMS.WOODEN_SHOVEL]: 'wooden_shovel',
+            [ITEMS.STONE_SHOVEL]: 'stone_shovel',
+            [ITEMS.IRON_SHOVEL]: 'iron_shovel',
+            [ITEMS.GOLD_SHOVEL]: 'golden_shovel',
+            [ITEMS.DIAMOND_SHOVEL]: 'diamond_shovel',
+            [ITEMS.BOW]: 'bow',
+            [ITEMS.ARROW]: 'arrow',
+            [ITEMS.APPLE]: 'apple',
+            [ITEMS.COAL]: 'coal',
+            [ITEMS.IRON_INGOT]: 'iron_ingot',
+            [ITEMS.GOLD_INGOT]: 'gold_ingot',
+            [ITEMS.DIAMOND]: 'diamond',
+            [ITEMS.EMERALD]: 'emerald',
+            [ITEMS.FLINT]: 'flint',
+            [ITEMS.FLINT_AND_STEEL]: 'flint_and_steel',
+            [ITEMS.STRING]: 'string',
+            [ITEMS.FEATHER]: 'feather',
+            [ITEMS.BONE]: 'bone',
+            [ITEMS.BREAD]: 'bread',
+            [ITEMS.RAW_BEEF]: 'beef',
+            [ITEMS.COOKED_BEEF]: 'cooked_beef',
+            [ITEMS.RAW_CHICKEN]: 'chicken',
+            [ITEMS.COOKED_CHICKEN]: 'cooked_chicken',
+            [ITEMS.COOKED_PORK]: 'cooked_porkchop',
+            [ITEMS.LEATHER]: 'leather',
+            [ITEMS.GUNPOWDER]: 'gunpowder',
+            [ITEMS.ROTTEN_FLESH]: 'rotten_flesh',
+            [ITEMS.ENDER_PEARL]: 'ender_pearl',
+            [ITEMS.BUCKET]: 'bucket',
+            [ITEMS.WATER_BUCKET]: 'water_bucket',
+            [ITEMS.LAVA_BUCKET]: 'lava_bucket',
+            [ITEMS.PAPER]: 'paper',
+            [ITEMS.BOOK]: 'book',
+            [ITEMS.SUGAR]: 'sugar',
+            [ITEMS.REDSTONE]: 'redstone',
+            [ITEMS.LAPIS]: 'lapis_lazuli',
+            [ITEMS.WOOL]: 'white_wool',
+            [ITEMS.EGG]: 'egg',
+            [ITEMS.MELON_SLICE]: 'melon_slice',
+            [ITEMS.GOLDEN_APPLE]: 'golden_apple'
+        };
+
+        async function applyInventoryTexturesFromMinecraftTextures(itemIcons) {
             try {
-                const base = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist';
-                const mapRes = await fetch(base + '/itemsAtlases.json');
-                if (!mapRes.ok) return itemIcons;
-                const mapJson = await mapRes.json();
-                const latest = mapJson.latest || mapJson;
-                const textures = latest.textures || {};
-                const srcW = latest.width || 1024, srcH = latest.height || 1024;
-                const tileSize = latest.tileSize || 16;
-
-                const img = await new Promise((resolve, reject) => {
-                    const i = new Image();
-                    i.crossOrigin = 'anonymous';
-                    i.onload = () => resolve(i);
-                    i.onerror = reject;
-                    i.src = base + '/itemsAtlasLatest.png';
-                });
-
-                const ITEM_MAP = {
-                    [ITEMS.WOODEN_SWORD]: 'wooden_sword',
-                    [ITEMS.STONE_SWORD]: 'stone_sword',
-                    [ITEMS.IRON_SWORD]: 'iron_sword',
-                    [ITEMS.GOLD_SWORD]: 'golden_sword',
-                    [ITEMS.DIAMOND_SWORD]: 'diamond_sword',
-                    [ITEMS.WOODEN_SHOVEL]: 'wooden_shovel',
-                    [ITEMS.STONE_SHOVEL]: 'stone_shovel',
-                    [ITEMS.IRON_SHOVEL]: 'iron_shovel',
-                    [ITEMS.GOLD_SHOVEL]: 'golden_shovel',
-                    [ITEMS.DIAMOND_SHOVEL]: 'diamond_shovel',
-                    [ITEMS.BOW]: 'bow',
-                    [ITEMS.ARROW]: 'arrow',
-                    [ITEMS.WOODEN_PICKAXE]: 'wooden_pickaxe',
-                    [ITEMS.STONE_PICKAXE]: 'stone_pickaxe',
-                    [ITEMS.IRON_PICKAXE]: 'iron_pickaxe',
-                    [ITEMS.DIAMOND_PICKAXE]: 'diamond_pickaxe',
-                    [ITEMS.STICK]: 'stick',
-                    [ITEMS.COAL]: 'coal',
-                    [ITEMS.IRON_INGOT]: 'iron_ingot',
-                    [ITEMS.GOLD_INGOT]: 'gold_ingot',
-                    [ITEMS.DIAMOND]: 'diamond',
-                    [ITEMS.STRING]: 'string',
-                    [ITEMS.FEATHER]: 'feather',
-                    [ITEMS.BONE]: 'bone',
-                    [ITEMS.APPLE]: 'apple',
-                    [ITEMS.BREAD]: 'bread'
-                };
-
-                for (const [idStr, name] of Object.entries(ITEM_MAP)) {
-                    const id = +idStr;
-                    const info = textures[name];
-                    if (!info) continue;
-                    const sx = Math.round(info.u * srcW);
-                    const sy = Math.round(info.v * srcH);
-                    const sw = Math.round((info.su != null ? info.su : tileSize / srcW) * srcW) || tileSize;
-                    const sh = Math.round((info.sv != null ? info.sv : tileSize / srcH) * srcH) || tileSize;
-                    const c = document.createElement('canvas');
-                    c.width = 32; c.height = 32;
-                    const ctx = c.getContext('2d');
-                    ctx.imageSmoothingEnabled = false;
-                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 32, 32);
-                    itemIcons[id] = c.toDataURL();
+                const urls = [
+                    'https://unpkg.com/minecraft-textures@latest/dist/textures/json/1.21.json',
+                    'https://cdn.jsdelivr.net/npm/minecraft-textures@latest/dist/textures/json/1.21.json',
+                    'https://unpkg.com/minecraft-textures@latest/dist/textures/json/1.16.json'
+                ];
+                let data = null;
+                for (const u of urls) {
+                    try {
+                        const res = await fetch(u);
+                        if (res.ok) { data = await res.json(); break; }
+                    } catch (e) {}
                 }
-                console.log('[Voxel] Item textures from mc-assets applied');
+                if (!data || !data.items) {
+                    console.warn('[Voxel] minecraft-textures JSON not found');
+                    return itemIcons;
+                }
+                // id "minecraft:stone" -> texture data URL
+                const byShort = {};
+                for (const entry of data.items) {
+                    if (!entry || !entry.id || !entry.texture) continue;
+                    const short = String(entry.id).replace(/^minecraft:/, '');
+                    byShort[short] = entry.texture;
+                    // also readable name lowercased
+                    if (entry.readable) {
+                        byShort[entry.readable.toLowerCase().replace(/\s+/g, '_')] = entry.texture;
+                    }
+                }
+                let applied = 0;
+                for (const [idStr, name] of Object.entries(INV_TEX_ID_MAP)) {
+                    const id = +idStr;
+                    const tex = byShort[name];
+                    if (tex) {
+                        itemIcons[id] = tex;
+                        applied++;
+                    }
+                }
+                console.log('[Voxel] Inventory icons from minecraft-textures:', applied);
                 return itemIcons;
             } catch (e) {
-                console.warn('Item textures failed', e);
+                console.warn('[Voxel] minecraft-textures failed', e);
                 return itemIcons;
             }
+        }
+
+        // Back-compat alias
+        async function applyItemTexturesFromMcAssets(itemIcons) {
+            return applyInventoryTexturesFromMinecraftTextures(itemIcons);
         }
 
         function generateItemIcons(atlasCanvas) {
@@ -2828,7 +2948,7 @@
             CAVE_SPIDER: { name: 'Cave Spider', health: 12, speed: 2.8, hostile: true, size: [0.7, 0.5, 0.7], damage: 2, poison: true, drops: [{id: ITEMS.STRING, min:0, max:2}] },
             ENDERMAN: { name: 'Enderman', health: 40, speed: 2.5, hostile: true, size: [0.6, 2.9, 0.6], damage: 4, teleports: true, drops: [{id: ITEMS.ENDER_PEARL, min:0, max:1}] },
             SILVERFISH: { name: 'Silverfish', health: 8, speed: 2.4, hostile: true, size: [0.4, 0.3, 0.8], damage: 1, drops: [] },
-            VILLAGER: { name: 'Villager', health: 20, speed: 1.5, hostile: false, size: [0.6, 1.95, 0.6], villager: true, drops: [] },
+            VILLAGER: { name: 'Villager', health: 20, speed: 1.5, hostile: false, size: [0.6, 1.95, 0.6], villager: true, drops: [{id: 153, min: 0, max: 2}] },
             IRON_GOLEM: { name: 'Iron Golem', health: 50, speed: 1.4, hostile: false, size: [1.4, 2.7, 1.4], golem: true, damage: 7, drops: [{id: ITEMS.IRON_INGOT, min: 3, max: 5}] }
         };
 
@@ -3900,6 +4020,16 @@
                     }
                     // Host relays to all other clients
                     if (this.isHost) this._broadcast(d, fromConn);
+                } else if (d.type === 'pvp_hit') {
+                    // Apply damage if we are the target
+                    if (d.to === this.peerId && this.game && this.game.player) {
+                        if (this.game.worldRules && this.game.worldRules.pvp === false) return;
+                        if (this.game.mpRules && this.game.mpRules.friendlyFire === false) return;
+                        this.game.player.takeDamage(d.dmg || 1, 'You were slain by ' + (d.name || 'Player'));
+                        audio.playSound('hurt');
+                    }
+                    // Host relays
+                    if (this.isHost) this._broadcast(d, fromConn);
                 } else if (d.type === 'chat') {
                     this.game.addChatMessage(d.name || '?', d.msg);
                     // Host relays to every other client
@@ -4077,10 +4207,11 @@
                 this.atlasCanvas = atlasData.atlasCanvas;
                 this.itemIcons = generateItemIcons(atlasData.atlasCanvas);
                 // Overlay real Minecraft 1.16 textures from unpkg (async)
+                // World blocks: mc-assets (zardoy) | Inventory 2D: minecraft-textures (destruc7i0n)
                 applyMinecraftTextures(atlasData.atlasCanvas, this.texAtlas).then((ok) => {
                     if (ok) {
                         this.itemIcons = generateItemIcons(atlasData.atlasCanvas);
-                        this.notify('mc-assets textures loaded');
+                        this.notify('Block textures: mc-assets');
                         if (this.world) {
                             for (const ch of this.world.chunks.values()) {
                                 if (ch.loaded) ch.markDirty();
@@ -4088,13 +4219,14 @@
                         }
                         this.updateHUD && this.updateHUD();
                     }
-                    return applyItemTexturesFromMcAssets(this.itemIcons);
+                    return applyInventoryTexturesFromMinecraftTextures(this.itemIcons);
                 }).then((icons) => {
                     if (icons) {
                         this.itemIcons = icons;
+                        this.notify('Inventory icons: minecraft-textures');
                         this.updateHUD && this.updateHUD();
                     }
-                });
+                }).catch((e) => console.warn('Texture load chain failed', e));
 
                 this.world = null;
                 this.player = null;
@@ -4103,6 +4235,21 @@
                 this.input = { keys: {} };
                 this.state = 'menu';
                 this.gameMode = 'survival'; // survival | creative | spectator
+                this.worldRules = {
+                    pvp: true,
+                    keepInventory: false,
+                    mobGriefing: true,
+                    tntExplodes: true,
+                    naturalRegen: true,
+                    fireTick: true,
+                    showDeathMessages: true
+                };
+                this.mpRules = {
+                    allowJoin: true,
+                    friendlyFire: true,
+                    hostCommandsOnly: true
+                };
+                this.groundItems = [];
                 this.loadSettings();
                 this.time = 0;
                 this.isNight = false;
@@ -4238,7 +4385,19 @@
                 document.addEventListener('keydown', e => {
                     this.input.keys[e.code] = true;
                     if(this.state === 'play') {
-                        if(e.code === 'KeyE') this.toggleInventory();
+                        if(e.code === 'KeyE') {
+                            // Trade if looking at / near villager
+                            let traded = false;
+                            for (const mob of this.mobs) {
+                                if (mob.dead || !mob.data.villager) continue;
+                                if (mob.pos.distanceTo(this.player.pos) < 4) {
+                                    this.openVillagerTrade(mob);
+                                    traded = true;
+                                    break;
+                                }
+                            }
+                            if (!traded) this.toggleInventory();
+                        }
                         if(e.code === 'ShiftLeft') this.player.isSprinting = true;
                         if(e.key >= '1' && e.key <= '9') {
                             this.player.hotbarSelect = parseInt(e.key)-1;
@@ -4279,6 +4438,8 @@
                         this.closeFurnace();
                     } else if (this.state === 'chest' && (e.code === 'KeyE' || e.code === 'Escape')) {
                         this.closeChest();
+                    } else if (this.state === 'trade' && (e.code === 'KeyE' || e.code === 'Escape')) {
+                        this.closeTrade();
                     } else if (this.state === 'pause' && (e.code === 'Escape' || e.code === 'KeyP')) {
                         this.togglePause('resume');
                     }
@@ -4535,6 +4696,12 @@
                     closeChestBtn.onclick = fn;
                     closeChestBtn.addEventListener('touchend', fn, { passive: false });
                 }
+                const closeTradeBtn = document.getElementById('btn-close-trade');
+                if (closeTradeBtn) {
+                    const fn = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } this.closeTrade(); };
+                    closeTradeBtn.onclick = fn;
+                    closeTradeBtn.addEventListener('touchend', fn, { passive: false });
+                }
                 document.getElementById('btn-pause-settings').onclick = () => this.openSettings();
                 document.getElementById('btn-settings-close').onclick = () => this.closeSettings();
                 document.getElementById('btn-pause-save').onclick = () => {
@@ -4742,6 +4909,10 @@
                 try { document.exitPointerLock(); } catch (e) {}
                 this.setMobileControlsVisible(false);
                 this.closeChat();
+                this.dropInventoryOnDeath();
+                if (this.worldRules && this.worldRules.showDeathMessages !== false) {
+                    if (this.mp && this.mp.enabled) this.mp.sendChat('[Death] ' + (msg || 'died'));
+                }
                 document.getElementById('death-msg').innerText = msg;
                 document.getElementById('death-screen').style.display = 'flex';
             }
@@ -5120,8 +5291,10 @@
                     BLOCKS.STONE, BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.COBBLESTONE, BLOCKS.PLANKS,
                     BLOCKS.WOOD, BLOCKS.GLASS, BLOCKS.SAND, BLOCKS.BRICK, BLOCKS.STONE_BRICKS,
                     BLOCKS.OBSIDIAN, BLOCKS.NETHERRACK, BLOCKS.GLOWSTONE, BLOCKS.BED, BLOCKS.TORCH,
-                    BLOCKS.CRAFTING_TABLE, BLOCKS.FURNACE, BLOCKS.CHEST, BLOCKS.WATER, BLOCKS.LAVA, BLOCKS.ICE, BLOCKS.SNOW, BLOCKS.DOOR_CLOSED,
-                    ITEMS.DIAMOND_PICKAXE, ITEMS.DIAMOND_SWORD, ITEMS.IRON_INGOT, ITEMS.DIAMOND, ITEMS.WOOL
+                    BLOCKS.CRAFTING_TABLE, BLOCKS.FURNACE, BLOCKS.CHEST, BLOCKS.TNT, BLOCKS.EMERALD_ORE, BLOCKS.EMERALD_BLOCK,
+                    BLOCKS.WATER, BLOCKS.LAVA, BLOCKS.ICE, BLOCKS.SNOW, BLOCKS.DOOR_CLOSED,
+                    ITEMS.DIAMOND_PICKAXE, ITEMS.DIAMOND_SWORD, ITEMS.IRON_INGOT, ITEMS.DIAMOND, ITEMS.WOOL,
+                    ITEMS.EMERALD, ITEMS.FLINT, ITEMS.FLINT_AND_STEEL, ITEMS.GUNPOWDER
                 ];
                 for (let i = 0; i < items.length && i < 36; i++) {
                     this.player.inventory[i] = { id: items[i], count: 64 };
@@ -5524,28 +5697,89 @@
             }
 
             runCommand(raw) {
-                if (this.mp && this.mp.enabled && !this.mp.isHost) {
-                    this.notify('Only the host can use commands');
-                    this.addChatMessage('System', 'Commands are host-only. Chat without / to talk.');
-                    return;
+                if (this.mp && this.mp.enabled && !this.mp.isHost && this.mpRules && this.mpRules.hostCommandsOnly !== false) {
+                    // clients can still use /help and /rules
+                    const c0 = (raw.slice(1).trim().split(/\s+/)[0] || '').toLowerCase();
+                    if (c0 !== 'help' && c0 !== 'rules' && c0 !== 'mprules') {
+                        this.notify('Only the host can use commands');
+                        this.addChatMessage('System', 'Host-only command. Try /help');
+                        return;
+                    }
                 }
                 const parts = raw.slice(1).trim().split(/\s+/);
                 const cmd = (parts[0] || '').toLowerCase();
                 const args = parts.slice(1);
-                if (cmd === 'highlight') {
+                if (cmd === 'help') {
+                    this.addChatMessage('System', 'Commands:');
+                    this.addChatMessage('System', '/help  /rules  /mprules');
+                    this.addChatMessage('System', '/highlight <name>  /time set day|night');
+                    this.addChatMessage('System', '/gamemode survival|creative|spectator');
+                    this.addChatMessage('System', '/tp <x> <y> <z>  /give <itemId> [count]');
+                    this.addChatMessage('System', '/gamerule <rule> <true|false>');
+                    this.addChatMessage('System', '/mprule <rule> <true|false>  (host)');
+                    this.addChatMessage('System', '/kill  /clear');
+                } else if (cmd === 'rules' || cmd === 'gamerules') {
+                    const r = this.worldRules || {};
+                    this.addChatMessage('System', 'World rules: ' + JSON.stringify(r));
+                } else if (cmd === 'mprules') {
+                    const r = this.mpRules || {};
+                    this.addChatMessage('System', 'MP rules: ' + JSON.stringify(r));
+                } else if (cmd === 'highlight') {
                     const target = args.join(' ').trim();
                     if (!target) { this.notify('Usage: /highlight <player name>'); return; }
                     this.highlightPlayer(target);
-                } else if (cmd === 'help') {
-                    this.addChatMessage('System', 'Commands: /highlight <name>  /help  /time set day|night (host)');
                 } else if (cmd === 'time' && args[0] === 'set') {
-                    if (this.mp && this.mp.enabled && !this.mp.isHost) {
-                        this.notify('Only host can set time');
-                        return;
-                    }
                     if (args[1] === 'day') { this.time = (Math.PI/2)/0.03; this.isNight = false; this.notify('Time set to day'); }
                     else if (args[1] === 'night') { this.time = (Math.PI * 1.5)/0.03; this.isNight = true; this.notify('Time set to night'); }
                     else this.notify('Usage: /time set day|night');
+                } else if (cmd === 'gamemode' || cmd === 'gm') {
+                    const m = (args[0] || '').toLowerCase();
+                    if (['survival','creative','spectator'].includes(m)) {
+                        this.gameMode = m;
+                        this.player.flying = m === 'spectator' || m === 'creative';
+                        if (m === 'creative') this.fillCreativeInventory();
+                        this.notify('Game mode: ' + m);
+                        this.updateHUD();
+                    } else this.notify('Usage: /gamemode survival|creative|spectator');
+                } else if (cmd === 'tp') {
+                    const x = parseFloat(args[0]), y = parseFloat(args[1]), z = parseFloat(args[2]);
+                    if ([x,y,z].some(v => isNaN(v))) { this.notify('Usage: /tp <x> <y> <z>'); return; }
+                    this.player.pos.set(x, y, z);
+                    this.notify('Teleported');
+                } else if (cmd === 'give') {
+                    const id = parseInt(args[0], 10);
+                    const cnt = parseInt(args[1] || '1', 10);
+                    if (isNaN(id)) { this.notify('Usage: /give <itemId> [count]'); return; }
+                    this.player.addItem(id, cnt || 1);
+                    this.notify('Gave ' + (cnt||1) + ' x id ' + id);
+                    this.updateHUD();
+                } else if (cmd === 'gamerule') {
+                    const rule = args[0];
+                    const val = (args[1] || '').toLowerCase() === 'true';
+                    if (!rule || !(rule in (this.worldRules || {}))) {
+                        this.notify('Rules: ' + Object.keys(this.worldRules || {}).join(', '));
+                        return;
+                    }
+                    this.worldRules[rule] = val;
+                    this.notify('gamerule ' + rule + ' = ' + val);
+                } else if (cmd === 'mprule') {
+                    if (this.mp && this.mp.enabled && !this.mp.isHost) {
+                        this.notify('Only host can set MP rules'); return;
+                    }
+                    const rule = args[0];
+                    const val = (args[1] || '').toLowerCase() === 'true';
+                    if (!rule || !(rule in (this.mpRules || {}))) {
+                        this.notify('MP rules: ' + Object.keys(this.mpRules || {}).join(', '));
+                        return;
+                    }
+                    this.mpRules[rule] = val;
+                    this.notify('mprule ' + rule + ' = ' + val);
+                } else if (cmd === 'kill') {
+                    this.player.takeDamage(999, 'Killed by command');
+                } else if (cmd === 'clear') {
+                    this.player.inventory = new Array(36).fill(null);
+                    this.updateHUD();
+                    this.notify('Inventory cleared');
                 } else {
                     this.notify('Unknown command: /' + cmd + ' (try /help)');
                 }
@@ -5833,6 +6067,11 @@
                 if (this.gameMode !== 'creative') {
                     let dropId = BlockRegistry[id]?.drops || id;
                     this.player.addItem(dropId, 1);
+                    // Gravel has a chance to drop flint
+                    if (id === BLOCKS.GRAVEL && Math.random() < 0.25) {
+                        this.player.addItem(ITEMS.FLINT, 1);
+                        this.notify('Flint!');
+                    }
                 }
                 this.updateHUD();
                 this.cancelMining();
@@ -5888,6 +6127,23 @@
                     }
                     // Continuous hold-to-mine must NOT re-hit mobs every frame
                     if (!opts.mineOnly) {
+                    // PvP: punch nearby remote players
+                    if (this.mp && this.mp.enabled && this.mp.remotePlayers) {
+                        for (const rid of Object.keys(this.mp.remotePlayers)) {
+                            const rp = this.mp.remotePlayers[rid];
+                            if (!rp || !rp.mesh) continue;
+                            const dist = rp.mesh.position.distanceTo(this.player.pos);
+                            if (dist < 3.2) {
+                                const toP = new THREE.Vector3().subVectors(rp.mesh.position, this.player.pos).normalize();
+                                const ray = new THREE.Vector3();
+                                this.camera.getWorldDirection(ray);
+                                if (toP.dot(ray) > 0.65) {
+                                    this.punchPlayer(rid);
+                                    return;
+                                }
+                            }
+                        }
+                    }
                     for (let mob of this.mobs) {
                         if (mob.dead) continue;
                         const toMob = new THREE.Vector3().subVectors(mob.pos, this.player.pos);
@@ -5986,6 +6242,27 @@
 
                     let item = this.player.inventory[this.player.hotbarSelect];
                     if(!item) return;
+
+                    // Flint and Steel
+                    if (item.id === ITEMS.FLINT_AND_STEEL && target) {
+                        const hx = target.hit.x, hy = target.hit.y, hz = target.hit.z;
+                        const hid = this.world.getBlock(hx, hy, hz);
+                        if (hid === BLOCKS.TNT) {
+                            this.notify('TNT ignited!');
+                            setTimeout(() => this.explodeTNT(hx, hy, hz), 1500);
+                            audio.playSound('click');
+                            return;
+                        }
+                        // Light fire on face
+                        const fx = target.prev.x, fy = target.prev.y, fz = target.prev.z;
+                        if (!this.world.getBlock(fx, fy, fz)) {
+                            this.world.setBlock(fx, fy, fz, BLOCKS.FIRE);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(fx, fy, fz, BLOCKS.FIRE);
+                            audio.playSound('click');
+                        }
+                        // Obsidian portal frame activation is existing portal logic
+                        return;
+                    }
 
                     // Handle Food Consumption
                     if (ItemRegistry[item.id]?.type === 'food') {
@@ -6267,6 +6544,196 @@
                 if (this.state === 'furnace') this.refreshFurnaceUI();
             }
 
+
+            spawnGroundItem(id, count, x, y, z) {
+                if (!id || count <= 0) return;
+                if (!this.groundItems) this.groundItems = [];
+                const mesh = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.25, 0.25, 0.25),
+                    new THREE.MeshLambertMaterial({ map: this.texAtlas, color: 0xffffff })
+                );
+                mesh.position.set(x + (Math.random()-0.5)*0.4, y + 0.2, z + (Math.random()-0.5)*0.4);
+                this.scene.add(mesh);
+                this.groundItems.push({
+                    id, count, mesh,
+                    pos: mesh.position.clone(),
+                    life: 300, // 5 minutes
+                    bob: Math.random() * Math.PI * 2
+                });
+            }
+
+            updateGroundItems(dt) {
+                if (!this.groundItems || !this.player) return;
+                for (let i = this.groundItems.length - 1; i >= 0; i--) {
+                    const g = this.groundItems[i];
+                    g.life -= dt;
+                    g.bob += dt * 3;
+                    if (g.mesh) {
+                        g.mesh.position.y = g.pos.y + Math.sin(g.bob) * 0.08;
+                        g.mesh.rotation.y += dt * 2;
+                    }
+                    if (g.life <= 0) {
+                        if (g.mesh) this.scene.remove(g.mesh);
+                        this.groundItems.splice(i, 1);
+                        continue;
+                    }
+                    // Pickup
+                    if (this.player.pos.distanceTo(g.mesh.position) < 1.4) {
+                        this.player.addItem(g.id, g.count);
+                        if (g.mesh) this.scene.remove(g.mesh);
+                        this.groundItems.splice(i, 1);
+                        audio.playSound('click');
+                        this.updateHUD();
+                    }
+                }
+            }
+
+            dropInventoryOnDeath() {
+                if (this.worldRules && this.worldRules.keepInventory) return;
+                if (!this.player) return;
+                const p = this.player.pos;
+                for (let i = 0; i < 36; i++) {
+                    const it = this.player.inventory[i];
+                    if (it && it.count > 0) {
+                        this.spawnGroundItem(it.id, it.count, p.x, p.y + 0.5, p.z);
+                    }
+                    this.player.inventory[i] = null;
+                }
+                this.updateHUD();
+            }
+
+            openVillagerTrade(mob) {
+                this.state = 'trade';
+                this._tradeMob = mob;
+                try { document.exitPointerLock(); } catch (e) {}
+                document.getElementById('trade-screen').style.display = 'flex';
+                this.refreshTradeUI();
+            }
+
+            closeTrade() {
+                document.getElementById('trade-screen').style.display = 'none';
+                this.state = 'play';
+                this._tradeMob = null;
+                if (!this.isMobile) try { document.body.requestPointerLock(); } catch (e) {}
+            }
+
+            countEmeralds() {
+                let n = 0;
+                for (const it of this.player.inventory) {
+                    if (it && it.id === ITEMS.EMERALD) n += it.count;
+                }
+                return n;
+            }
+
+            takeEmeralds(n) {
+                let left = n;
+                for (let i = 0; i < 36 && left > 0; i++) {
+                    const it = this.player.inventory[i];
+                    if (it && it.id === ITEMS.EMERALD) {
+                        const take = Math.min(left, it.count);
+                        it.count -= take; left -= take;
+                        if (it.count <= 0) this.player.inventory[i] = null;
+                    }
+                }
+                return left <= 0;
+            }
+
+            refreshTradeUI() {
+                const list = document.getElementById('trade-list');
+                if (!list) return;
+                list.innerHTML = '';
+                const em = document.getElementById('trade-emerald-count');
+                if (em) em.textContent = String(this.countEmeralds());
+                const trades = [
+                    { cost: 1, give: ITEMS.BREAD, count: 4, name: '4 Bread' },
+                    { cost: 2, give: ITEMS.APPLE, count: 3, name: '3 Apples' },
+                    { cost: 3, give: ITEMS.IRON_INGOT, count: 1, name: 'Iron Ingot' },
+                    { cost: 5, give: ITEMS.DIAMOND, count: 1, name: 'Diamond' },
+                    { cost: 1, give: BLOCKS.TORCH, count: 8, name: '8 Torches' },
+                    { cost: 4, give: ITEMS.IRON_SWORD, count: 1, name: 'Iron Sword' },
+                ];
+                for (const t of trades) {
+                    const b = document.createElement('button');
+                    b.className = 'menu-btn';
+                    b.style.cssText = 'margin:0;font-size:13px;padding:8px;';
+                    b.textContent = t.cost + ' Emerald → ' + t.name;
+                    b.onclick = () => {
+                        if (this.countEmeralds() < t.cost) {
+                            this.notify('Not enough emeralds');
+                            return;
+                        }
+                        if (this.takeEmeralds(t.cost)) {
+                            this.player.addItem(t.give, t.count);
+                            this.notify('Traded for ' + t.name);
+                            this.refreshTradeUI();
+                            this.updateHUD();
+                            audio.playSound('click');
+                        }
+                    };
+                    list.appendChild(b);
+                }
+            }
+
+            explodeTNT(x, y, z) {
+                if (this.worldRules && this.worldRules.tntExplodes === false) {
+                    this.world.setBlock(x, y, z, BLOCKS.AIR);
+                    return;
+                }
+                this.world.setBlock(x, y, z, BLOCKS.AIR);
+                if (this.mp && this.mp.enabled) this.mp.sendBlock(x, y, z, BLOCKS.AIR);
+                audio.playSound('explode');
+                const r = 3;
+                for (let dx = -r; dx <= r; dx++) {
+                    for (let dy = -r; dy <= r; dy++) {
+                        for (let dz = -r; dz <= r; dz++) {
+                            if (dx*dx + dy*dy + dz*dz > r*r) continue;
+                            const bx = x+dx, by = y+dy, bz = z+dz;
+                            const id = this.world.getBlock(bx, by, bz);
+                            if (!id || id === BLOCKS.BEDROCK || id === BLOCKS.AIR) continue;
+                            this.world.setBlock(bx, by, bz, BLOCKS.AIR);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(bx, by, bz, BLOCKS.AIR);
+                            if (Math.random() < 0.3) {
+                                const drop = BlockRegistry[id]?.drops || id;
+                                this.spawnGroundItem(drop, 1, bx+0.5, by+0.5, bz+0.5);
+                            }
+                        }
+                    }
+                }
+                // Damage player/mobs
+                const center = new THREE.Vector3(x+0.5, y+0.5, z+0.5);
+                if (this.player && this.player.pos.distanceTo(center) < 5) {
+                    const d = 5 - this.player.pos.distanceTo(center);
+                    this.player.takeDamage(Math.ceil(d), 'You were blown up by TNT');
+                }
+                for (const mob of this.mobs) {
+                    if (mob.dead) continue;
+                    if (mob.pos.distanceTo(center) < 5) {
+                        mob.takeDamage(8, true);
+                    }
+                }
+                if (this.particles) this.particles.spawn(x+0.5, y+0.5, z+0.5, 0xff6600, 30, 3, 0.8);
+            }
+
+            punchPlayer(remoteId) {
+                if (!this.mp || !this.mp.enabled) return;
+                if (this.worldRules && this.worldRules.pvp === false) {
+                    this.notify('PvP is disabled');
+                    return;
+                }
+                if (this.mpRules && this.mpRules.friendlyFire === false && this.mp.isHost) {
+                    // still allow unless rule says no
+                }
+                if (this.mpRules && this.mpRules.friendlyFire === false) {
+                    this.notify('Friendly fire is off');
+                    return;
+                }
+                const held = this.player.inventory[this.player.hotbarSelect];
+                let dmg = 1;
+                if (held && ItemRegistry[held.id]?.toolType === 'sword') dmg = ItemRegistry[held.id].damage || 2;
+                this.mp.send({ type: 'pvp_hit', from: this.mp.peerId, to: remoteId, dmg, name: this.mp.playerName });
+                audio.playSound('hurt');
+            }
+
             openCraftingTable() {
                 this.state = 'crafting';
                 this.usingCraftingTable = true;
@@ -6389,9 +6856,31 @@
                 this.craftResult = null;
                 let inputIds = this.craftingSlots.filter(s=>s).map(s=>s.id).sort();
                 for(let r of Recipes) {
+                    // 2x2 inventory crafting: only shapeless { in: [...] } recipes
+                    if (!r.in || !Array.isArray(r.in)) continue;
                     let rin = [...r.in].sort();
                     if(JSON.stringify(inputIds) === JSON.stringify(rin)) {
                         this.craftResult = { id: r.out, count: r.count }; break;
+                    }
+                }
+                // Also allow 2x2 shaped recipes that fit in top-left of shape
+                if (!this.craftResult) {
+                    const grid = [
+                        this.craftingSlots[0]?.id || null, this.craftingSlots[1]?.id || null,
+                        this.craftingSlots[2]?.id || null, this.craftingSlots[3]?.id || null
+                    ];
+                    for (let r of Recipes) {
+                        if (!r.shape || !Array.isArray(r.shape)) continue;
+                        // Map 2x2 into 3x3 top-left
+                        const s = r.shape;
+                        const match =
+                            (s[0]||null) === grid[0] && (s[1]||null) === grid[1] && (s[2]||null) === null &&
+                            (s[3]||null) === grid[2] && (s[4]||null) === grid[3] && (s[5]||null) === null &&
+                            (s[6]||null) === null && (s[7]||null) === null && (s[8]||null) === null;
+                        if (match) {
+                            this.craftResult = { id: r.out, count: r.count };
+                            break;
+                        }
                     }
                 }
                 this.renderSlot(document.getElementById('crafting-output'), this.craftResult);
@@ -6446,7 +6935,7 @@
                 this.craftResult3 = null;
                 const shape = this.craftingSlots3.map(s => s ? s.id : null);
                 for (let r of Recipes) {
-                    if (r.shape) {
+                    if (r.shape && Array.isArray(r.shape)) {
                         let match = true;
                         for (let i=0; i<9; i++) {
                             if ((r.shape[i] || null) !== (shape[i] || null)) { match = false; break; }
@@ -6610,6 +7099,7 @@
                     }
                     this.updateMining(dt);
                     this.updateAllFurnaces(dt);
+                    this.updateGroundItems(dt);
                     this.player.update(dt, this.input);
                     this.world.update(this.player.pos);
                     this.particles.update(dt);
