@@ -131,10 +131,18 @@
         .crafting-grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: max-content; }
         .slot-dark { background: #8b8b8b; border: 2px solid #373737; border-right-color: #eee; border-bottom-color: #eee; }
         .slot-dark:hover { background: #9a9a9a; }
-        #crafting-table-screen {
+        #crafting-table-screen, #furnace-screen, #chest-screen {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.75); justify-content: center; align-items: center;
             pointer-events: auto; z-index: 280; flex-direction: column;
+        }
+        .furnace-row { display: flex; gap: 12px; align-items: center; justify-content: center; margin: 8px 0; }
+        .furnace-label { color: #222; font-size: 12px; font-weight: bold; text-align: center; margin-bottom: 4px; }
+        #furnace-progress {
+            width: 80px; height: 10px; background: #555; border: 2px solid #333; border-radius: 3px;
+        }
+        #furnace-progress-bar {
+            height: 100%; width: 0%; background: #ff9800; border-radius: 2px;
         }
         
         /* Drag Element */
@@ -471,6 +479,55 @@
         <div style="margin-top:8px; color:#ccc; font-size:13px;">Press E or Esc to close</div>
     </div>
 
+    <div id="furnace-screen">
+        <div class="inv-container" style="flex-direction:column;align-items:center;">
+            <div class="inv-title">Furnace</div>
+            <div class="furnace-row">
+                <div>
+                    <div class="furnace-label">Input</div>
+                    <div class="slot slot-dark" id="furnace-input"></div>
+                </div>
+                <div style="text-align:center;">
+                    <div class="furnace-label">Smelting</div>
+                    <div id="furnace-progress"><div id="furnace-progress-bar"></div></div>
+                </div>
+                <div>
+                    <div class="furnace-label">Result</div>
+                    <div class="slot slot-dark" id="furnace-output"></div>
+                </div>
+            </div>
+            <div class="furnace-row">
+                <div>
+                    <div class="furnace-label">Fuel</div>
+                    <div class="slot slot-dark" id="furnace-fuel"></div>
+                </div>
+            </div>
+            <div class="inv-section" style="margin-top:12px;">
+                <div class="inv-title">Inventory</div>
+                <div class="inv-grid" id="furnace-inv-main"></div>
+            </div>
+            <div class="inv-section">
+                <div class="inv-grid" id="furnace-inv-hotbar"></div>
+            </div>
+        </div>
+        <button type="button" class="inv-close-btn" id="btn-close-furnace">✕ CLOSE</button>
+    </div>
+
+    <div id="chest-screen">
+        <div class="inv-container" style="flex-direction:column;align-items:center;">
+            <div class="inv-title">Chest</div>
+            <div class="inv-grid" id="chest-slots" style="grid-template-columns:repeat(9,1fr);margin-bottom:16px;"></div>
+            <div class="inv-section">
+                <div class="inv-title">Inventory</div>
+                <div class="inv-grid" id="chest-inv-main"></div>
+            </div>
+            <div class="inv-section">
+                <div class="inv-grid" id="chest-inv-hotbar"></div>
+            </div>
+        </div>
+        <button type="button" class="inv-close-btn" id="btn-close-chest">✕ CLOSE</button>
+    </div>
+
     <div id="drag-container">
         <img id="drag-item" src="">
         <div id="drag-count"></div>
@@ -688,6 +745,28 @@
         };
 
         // Recipes
+        const SMELT_RECIPES = {
+            // inputId -> outputId
+            [BLOCKS.COBBLESTONE]: BLOCKS.STONE,
+            [BLOCKS.SAND]: BLOCKS.GLASS,
+            [BLOCKS.IRON_ORE]: ITEMS.IRON_INGOT,
+            [BLOCKS.GOLD_ORE]: ITEMS.GOLD_INGOT,
+            [BLOCKS.CLAY]: BLOCKS.BRICK,
+            [ITEMS.RAW_BEEF]: ITEMS.COOKED_BEEF,
+            [ITEMS.RAW_CHICKEN]: ITEMS.COOKED_CHICKEN,
+            [BLOCKS.WOOD]: ITEMS.COAL, // charcoal as coal
+            };
+        // fuel burn time (smelt cycles)
+        const FUEL_VALUES = {
+            [ITEMS.COAL]: 8,
+            [BLOCKS.WOOD]: 1.5,
+            [BLOCKS.PLANKS]: 1.5,
+            [ITEMS.STICK]: 0.5,
+            [BLOCKS.CRAFTING_TABLE]: 1.5,
+            [BLOCKS.CHEST]: 1.5,
+            [BLOCKS.FENCE]: 1.5
+        };
+
         const Recipes = [
             { in: [BLOCKS.WOOD], out: BLOCKS.PLANKS, count: 4 },
             { in: [BLOCKS.PLANKS, BLOCKS.PLANKS], out: ITEMS.STICK, count: 4 },
@@ -4190,6 +4269,10 @@
                         this.toggleInventory();
                     } else if (this.state === 'crafting' && (e.code === 'KeyE' || e.code === 'Escape')) {
                         this.closeCraftingTable();
+                    } else if (this.state === 'furnace' && (e.code === 'KeyE' || e.code === 'Escape')) {
+                        this.closeFurnace();
+                    } else if (this.state === 'chest' && (e.code === 'KeyE' || e.code === 'Escape')) {
+                        this.closeChest();
                     } else if (this.state === 'pause' && (e.code === 'Escape' || e.code === 'KeyP')) {
                         this.togglePause('resume');
                     }
@@ -4255,7 +4338,7 @@
                         this.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.camera.rotation.x));
                         this.camera.rotation.order = 'YXZ';
                     }
-                    if((this.state === 'inventory' || this.state === 'crafting') && this.dragItem) {
+                    if((this.state === 'inventory' || this.state === 'crafting' || this.state === 'chest' || this.state === 'furnace') && this.dragItem) {
                         let d = document.getElementById('drag-container');
                         if (d) {
                             d.style.left = e.clientX - 18 + 'px';
@@ -4434,6 +4517,18 @@
                     craftCloseBtn.onclick = closeCraft;
                     craftCloseBtn.addEventListener('touchend', closeCraft, { passive: false });
                 }
+                const closeFurnaceBtn = document.getElementById('btn-close-furnace');
+                if (closeFurnaceBtn) {
+                    const fn = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } this.closeFurnace(); };
+                    closeFurnaceBtn.onclick = fn;
+                    closeFurnaceBtn.addEventListener('touchend', fn, { passive: false });
+                }
+                const closeChestBtn = document.getElementById('btn-close-chest');
+                if (closeChestBtn) {
+                    const fn = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } this.closeChest(); };
+                    closeChestBtn.onclick = fn;
+                    closeChestBtn.addEventListener('touchend', fn, { passive: false });
+                }
                 document.getElementById('btn-pause-settings').onclick = () => this.openSettings();
                 document.getElementById('btn-settings-close').onclick = () => this.closeSettings();
                 document.getElementById('btn-pause-save').onclick = () => {
@@ -4496,6 +4591,70 @@
                 for(let i=9; i<36; i++) this.invSlots3[i] = makeSlot(i, m3);
                 let h3 = document.getElementById('inv-hotbar-3x3');
                 for(let i=0; i<9; i++) this.invSlots3[i] = makeSlot(i, h3);
+
+                // Chest slots
+                this.chestSlotEls = [];
+                const chestGrid = document.getElementById('chest-slots');
+                if (chestGrid) {
+                    for (let i = 0; i < 27; i++) {
+                        const d = document.createElement('div'); d.className = 'slot';
+                        const idx = i;
+                        d.onclick = () => this.handleChestClick(idx, true);
+                        chestGrid.appendChild(d);
+                        this.chestSlotEls.push(d);
+                    }
+                }
+                this.chestInvSlots = [];
+                const cim = document.getElementById('chest-inv-main');
+                const cih = document.getElementById('chest-inv-hotbar');
+                if (cim && cih) {
+                    for (let i = 9; i < 36; i++) {
+                        const d = document.createElement('div'); d.className = 'slot';
+                        const idx = i;
+                        d.onclick = () => this.handleChestClick(idx, false);
+                        cim.appendChild(d); this.chestInvSlots[i] = d;
+                    }
+                    for (let i = 0; i < 9; i++) {
+                        const d = document.createElement('div'); d.className = 'slot';
+                        const idx = i;
+                        d.onclick = () => this.handleChestClick(idx, false);
+                        cih.appendChild(d); this.chestInvSlots[i] = d;
+                    }
+                }
+
+                // Furnace slots
+                const fi = document.getElementById('furnace-input');
+                const ff = document.getElementById('furnace-fuel');
+                const fo = document.getElementById('furnace-output');
+                if (fi) fi.onclick = () => this.handleFurnaceSlot('input');
+                if (ff) ff.onclick = () => this.handleFurnaceSlot('fuel');
+                if (fo) fo.onclick = () => this.handleFurnaceSlot('output');
+                this.furnaceInvSlots = [];
+                const fim = document.getElementById('furnace-inv-main');
+                const fih = document.getElementById('furnace-inv-hotbar');
+                if (fim && fih) {
+                    for (let i = 9; i < 36; i++) {
+                        const d = document.createElement('div'); d.className = 'slot';
+                        const idx = i;
+                        d.onclick = () => this.handleChestClick(idx, false); // reuse inv drag into player inv while furnace open — need special
+                        d.onclick = () => {
+                            // player inv while furnace open
+                            this._tempChestMode = false;
+                            this.handleInvClick(idx);
+                            this.refreshFurnaceUI();
+                        };
+                        fim.appendChild(d); this.furnaceInvSlots[i] = d;
+                    }
+                    for (let i = 0; i < 9; i++) {
+                        const d = document.createElement('div'); d.className = 'slot';
+                        const idx = i;
+                        d.onclick = () => {
+                            this.handleInvClick(idx);
+                            this.refreshFurnaceUI();
+                        };
+                        fih.appendChild(d); this.furnaceInvSlots[i] = d;
+                    }
+                }
             }
 
             async startWorld(name, seedStr) {
@@ -4951,7 +5110,7 @@
                     BLOCKS.STONE, BLOCKS.DIRT, BLOCKS.GRASS, BLOCKS.COBBLESTONE, BLOCKS.PLANKS,
                     BLOCKS.WOOD, BLOCKS.GLASS, BLOCKS.SAND, BLOCKS.BRICK, BLOCKS.STONE_BRICKS,
                     BLOCKS.OBSIDIAN, BLOCKS.NETHERRACK, BLOCKS.GLOWSTONE, BLOCKS.BED, BLOCKS.TORCH,
-                    BLOCKS.CRAFTING_TABLE, BLOCKS.WATER, BLOCKS.LAVA, BLOCKS.ICE, BLOCKS.SNOW, BLOCKS.DOOR_CLOSED,
+                    BLOCKS.CRAFTING_TABLE, BLOCKS.FURNACE, BLOCKS.CHEST, BLOCKS.WATER, BLOCKS.LAVA, BLOCKS.ICE, BLOCKS.SNOW, BLOCKS.DOOR_CLOSED,
                     ITEMS.DIAMOND_PICKAXE, ITEMS.DIAMOND_SWORD, ITEMS.IRON_INGOT, ITEMS.DIAMOND, ITEMS.WOOL
                 ];
                 for (let i = 0; i < items.length && i < 36; i++) {
@@ -5503,7 +5662,8 @@
                     return !!(target.closest('.mob-btn') || target.closest('.joy-zone') ||
                         target.closest('#chat-box') || target.closest('#pause-screen') ||
                         target.closest('#death-screen') || target.closest('#main-menu') ||
-                        target.closest('#inventory-screen') || target.closest('#crafting-table-screen'));
+                        target.closest('#inventory-screen') || target.closest('#crafting-table-screen') ||
+                        target.closest('#furnace-screen') || target.closest('#chest-screen'));
                 };
                 const onLookStart = (e) => {
                     if (this.state !== 'play' || this.chatOpen) return;
@@ -5779,6 +5939,14 @@
                             this.openCraftingTable();
                             return;
                         }
+                        if (id === BLOCKS.FURNACE) {
+                            this.openFurnace(target.hit.x, target.hit.y, target.hit.z);
+                            return;
+                        }
+                        if (id === BLOCKS.CHEST) {
+                            this.openChest(target.hit.x, target.hit.y, target.hit.z);
+                            return;
+                        }
                         if (id === BLOCKS.BED || BlockRegistry[id]?.bed) {
                             this.trySleep(target.hit.x, target.hit.y, target.hit.z);
                             return;
@@ -5826,6 +5994,14 @@
                         if(box.intersectsBox(this.player.getAABB(this.player.pos))) return;
                         
                         this.world.setBlock(target.prev.x, target.prev.y, target.prev.z, item.id);
+                        // Door: place upper half
+                        if (item.id === BLOCKS.DOOR_CLOSED) {
+                            const uy = target.prev.y + 1;
+                            if (uy < CHUNK_HEIGHT && !this.world.getBlock(target.prev.x, uy, target.prev.z)) {
+                                this.world.setBlock(target.prev.x, uy, target.prev.z, BLOCKS.DOOR_CLOSED);
+                                if (this.mp && this.mp.enabled) this.mp.sendBlock(target.prev.x, uy, target.prev.z, BLOCKS.DOOR_CLOSED);
+                            }
+                        }
                         if (this.mp && this.mp.enabled) this.mp.sendBlock(target.prev.x, target.prev.y, target.prev.z, item.id);
                         audio.playSound('place');
                         this.particles.spawn(target.prev.x + 0.5, target.prev.y + 0.5, target.prev.z + 0.5, 0xffffff, 4, 1.2, 0.35);
@@ -5865,6 +6041,218 @@
                 audio.playSound('click');
                 this.notify("You slept until morning. Spawn point set!");
                 this.updateHUD();
+            }
+
+
+            chestKey(x, y, z) { return x + ',' + y + ',' + z; }
+
+            getChestData(x, y, z) {
+                if (!this.chestData) this.chestData = {};
+                const k = this.chestKey(x, y, z);
+                if (!this.chestData[k]) this.chestData[k] = new Array(27).fill(null);
+                return this.chestData[k];
+            }
+
+            getFurnaceData(x, y, z) {
+                if (!this.furnaceData) this.furnaceData = {};
+                const k = this.chestKey(x, y, z);
+                if (!this.furnaceData[k]) {
+                    this.furnaceData[k] = { input: null, fuel: null, output: null, progress: 0, burnLeft: 0, burnMax: 0 };
+                }
+                return this.furnaceData[k];
+            }
+
+            openChest(x, y, z) {
+                this.state = 'chest';
+                this._chestPos = { x, y, z };
+                this.dragItem = null;
+                this.updateDragUI();
+                try { document.exitPointerLock(); } catch (e) {}
+                document.getElementById('chest-screen').style.display = 'flex';
+                this.refreshChestUI();
+                audio.playSound('click');
+            }
+
+            closeChest() {
+                if (this.dragItem) {
+                    this.player.addItem(this.dragItem.id, this.dragItem.count);
+                    this.dragItem = null;
+                    this.updateDragUI();
+                }
+                document.getElementById('chest-screen').style.display = 'none';
+                this.state = 'play';
+                this._chestPos = null;
+                if (!this.isMobile) try { document.body.requestPointerLock(); } catch (e) {}
+                this.updateHUD();
+            }
+
+            openFurnace(x, y, z) {
+                this.state = 'furnace';
+                this._furnacePos = { x, y, z };
+                this.dragItem = null;
+                this.updateDragUI();
+                try { document.exitPointerLock(); } catch (e) {}
+                document.getElementById('furnace-screen').style.display = 'flex';
+                this.refreshFurnaceUI();
+                audio.playSound('click');
+            }
+
+            closeFurnace() {
+                if (this.dragItem) {
+                    this.player.addItem(this.dragItem.id, this.dragItem.count);
+                    this.dragItem = null;
+                    this.updateDragUI();
+                }
+                document.getElementById('furnace-screen').style.display = 'none';
+                this.state = 'play';
+                this._furnacePos = null;
+                if (!this.isMobile) try { document.body.requestPointerLock(); } catch (e) {}
+                this.updateHUD();
+            }
+
+            refreshChestUI() {
+                if (!this._chestPos) return;
+                const data = this.getChestData(this._chestPos.x, this._chestPos.y, this._chestPos.z);
+                if (!this.chestSlotEls) return;
+                for (let i = 0; i < 27; i++) this.renderSlot(this.chestSlotEls[i], data[i]);
+                for (let i = 9; i < 36; i++) this.renderSlot(this.chestInvSlots[i], this.player.inventory[i]);
+                for (let i = 0; i < 9; i++) this.renderSlot(this.chestInvSlots[i], this.player.inventory[i]);
+            }
+
+            refreshFurnaceUI() {
+                if (!this._furnacePos) return;
+                const f = this.getFurnaceData(this._furnacePos.x, this._furnacePos.y, this._furnacePos.z);
+                this.renderSlot(document.getElementById('furnace-input'), f.input);
+                this.renderSlot(document.getElementById('furnace-fuel'), f.fuel);
+                this.renderSlot(document.getElementById('furnace-output'), f.output);
+                const bar = document.getElementById('furnace-progress-bar');
+                if (bar) bar.style.width = Math.min(100, (f.progress || 0) * 100) + '%';
+                if (this.furnaceInvSlots) {
+                    for (let i = 9; i < 36; i++) this.renderSlot(this.furnaceInvSlots[i], this.player.inventory[i]);
+                    for (let i = 0; i < 9; i++) this.renderSlot(this.furnaceInvSlots[i], this.player.inventory[i]);
+                }
+            }
+
+            handleChestClick(idx, isChest) {
+                const inv = isChest
+                    ? this.getChestData(this._chestPos.x, this._chestPos.y, this._chestPos.z)
+                    : this.player.inventory;
+                let slot = inv[idx];
+                if (this.dragItem) {
+                    if (!slot) {
+                        inv[idx] = this.dragItem; this.dragItem = null;
+                    } else if (slot.id === this.dragItem.id) {
+                        const max = this.stackMax(slot.id);
+                        const space = max - slot.count;
+                        if (space > 0) {
+                            const move = Math.min(space, this.dragItem.count);
+                            slot.count += move; this.dragItem.count -= move;
+                            if (this.dragItem.count <= 0) this.dragItem = null;
+                        } else {
+                            inv[idx] = this.dragItem; this.dragItem = slot;
+                        }
+                    } else {
+                        inv[idx] = this.dragItem; this.dragItem = slot;
+                    }
+                } else if (slot) {
+                    this.dragItem = { id: slot.id, count: slot.count };
+                    inv[idx] = null;
+                }
+                audio.playSound('click');
+                this.updateDragUI();
+                this.refreshChestUI();
+            }
+
+            handleFurnaceSlot(which) {
+                if (!this._furnacePos) return;
+                const f = this.getFurnaceData(this._furnacePos.x, this._furnacePos.y, this._furnacePos.z);
+                const getSlot = () => which === 'input' ? f.input : which === 'fuel' ? f.fuel : f.output;
+                const setSlot = (v) => {
+                    if (which === 'input') f.input = v;
+                    else if (which === 'fuel') f.fuel = v;
+                    else f.output = v;
+                };
+                let slot = getSlot();
+                if (this.dragItem) {
+                    // Output: only take out, don't put in (except empty drag)
+                    if (which === 'output') {
+                        if (!this.dragItem && slot) {
+                            this.dragItem = { id: slot.id, count: slot.count };
+                            setSlot(null);
+                        } else if (this.dragItem && slot && slot.id === this.dragItem.id) {
+                            const max = this.stackMax(slot.id);
+                            const space = max - this.dragItem.count;
+                            if (space > 0) {
+                                const move = Math.min(space, slot.count);
+                                this.dragItem.count += move; slot.count -= move;
+                                if (slot.count <= 0) setSlot(null);
+                            }
+                        } else if (this.dragItem && !slot) {
+                            // ignore putting into output
+                        }
+                    } else if (!slot) {
+                        setSlot(this.dragItem); this.dragItem = null;
+                    } else if (slot.id === this.dragItem.id) {
+                        const max = this.stackMax(slot.id);
+                        const space = max - slot.count;
+                        if (space > 0) {
+                            const move = Math.min(space, this.dragItem.count);
+                            slot.count += move; this.dragItem.count -= move;
+                            if (this.dragItem.count <= 0) this.dragItem = null;
+                        } else {
+                            setSlot(this.dragItem); this.dragItem = slot;
+                        }
+                    } else {
+                        setSlot(this.dragItem); this.dragItem = slot;
+                    }
+                } else if (slot) {
+                    this.dragItem = { id: slot.id, count: slot.count };
+                    setSlot(null);
+                }
+                audio.playSound('click');
+                this.updateDragUI();
+                this.refreshFurnaceUI();
+            }
+
+            updateAllFurnaces(dt) {
+                if (!this.furnaceData) return;
+                for (const k of Object.keys(this.furnaceData)) {
+                    const f = this.furnaceData[k];
+                    if (!f) continue;
+                    // Burn fuel
+                    if (f.burnLeft > 0) {
+                        f.burnLeft -= dt;
+                    }
+                    const canSmelt = f.input && SMELT_RECIPES[f.input.id] != null;
+                    const outId = canSmelt ? SMELT_RECIPES[f.input.id] : null;
+                    const outOk = !f.output || (f.output.id === outId && f.output.count < this.stackMax(outId));
+                    if (canSmelt && outOk) {
+                        if (f.burnLeft <= 0) {
+                            // try consume fuel
+                            if (f.fuel && FUEL_VALUES[f.fuel.id]) {
+                                f.burnMax = FUEL_VALUES[f.fuel.id];
+                                f.burnLeft = f.burnMax;
+                                f.fuel.count--;
+                                if (f.fuel.count <= 0) f.fuel = null;
+                            }
+                        }
+                        if (f.burnLeft > 0) {
+                            f.progress += dt / 8; // 8 seconds per smelt
+                            if (f.progress >= 1) {
+                                f.progress = 0;
+                                f.input.count--;
+                                if (f.input.count <= 0) f.input = null;
+                                if (!f.output) f.output = { id: outId, count: 1 };
+                                else f.output.count++;
+                            }
+                        } else {
+                            f.progress = Math.max(0, f.progress - dt * 0.5);
+                        }
+                    } else {
+                        f.progress = Math.max(0, f.progress - dt * 0.5);
+                    }
+                }
+                if (this.state === 'furnace') this.refreshFurnaceUI();
             }
 
             openCraftingTable() {
@@ -6209,6 +6597,7 @@
                         this.handleInteract('break');
                     }
                     this.updateMining(dt);
+                    this.updateAllFurnaces(dt);
                     this.player.update(dt, this.input);
                     this.world.update(this.player.pos);
                     this.particles.update(dt);
