@@ -1178,8 +1178,12 @@
 
         async function applyMinecraftTextures(atlasCanvas, tex) {
             try {
-                const base = 'https://cdn.jsdelivr.net/npm/mc-assets/dist';
-                const mapRes = await fetch(base + '/blocksAtlases.json');
+                let base = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist';
+                let mapRes = await fetch(base + '/blocksAtlases.json');
+                if (!mapRes.ok) {
+                    base = 'https://unpkg.com/mc-assets@latest/dist';
+                    mapRes = await fetch(base + '/blocksAtlases.json');
+                }
                 if (!mapRes.ok) throw new Error('atlas map HTTP ' + mapRes.status);
                 const mapJson = await mapRes.json();
                 const latest = mapJson.latest || mapJson;
@@ -1263,7 +1267,7 @@
 
         async function applyItemTexturesFromMcAssets(itemIcons) {
             try {
-                const base = 'https://cdn.jsdelivr.net/npm/mc-assets/dist';
+                const base = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist';
                 const mapRes = await fetch(base + '/itemsAtlases.json');
                 if (!mapRes.ok) return itemIcons;
                 const mapJson = await mapRes.json();
@@ -2829,7 +2833,7 @@
         };
 
         // Entity textures from mc-assets (assets/minecraft/textures/entity/...)
-        const ENTITY_TEX_URL = 'https://cdn.jsdelivr.net/npm/mc-assets/dist/other-textures/latest/entity/';
+        const ENTITY_TEX_URL = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist/other-textures/latest/entity/';
         const ENTITY_TEX_PATHS = {
             COW: 'cow/cow.png', PIG: 'pig/pig.png', ZOMBIE: 'zombie/zombie.png',
             CREEPER: 'creeper/creeper.png', SHEEP: 'sheep/sheep.png', SPIDER: 'spider/spider.png',
@@ -3875,7 +3879,6 @@
                     this.game.applyHostWorld(d.seed, d.mods || {});
                 } else if (d.type === 'pos') {
                     this._updateRemote(d.id || fromConn.peer, d);
-                    // Clients take host time
                     if (!this.isHost && this.game) {
                         if (d.time != null) {
                             this.game.time = d.time;
@@ -3886,6 +3889,10 @@
                             }
                         }
                         if (d.mobs) this.game.applyHostMobs(d.mobs);
+                    }
+                } else if (d.type === 'mobs') {
+                    if (!this.isHost && this.game && d.list) {
+                        this.game.applyHostMobs(d.list);
                     }
                 } else if (d.type === 'block') {
                     if (this.game && this.game.world) {
@@ -3976,36 +3983,35 @@
                 if (!this.enabled || !this.game.player) return;
                 const p = this.game.player.pos;
                 const held = this.game.player.inventory[this.game.player.hotbarSelect];
+                const yaw = (this.game.camera && this.game.camera.rotation) ? this.game.camera.rotation.y : 0;
                 const msg = {
                     type: 'pos',
                     id: this.peerId,
                     name: this.playerName,
                     x: p.x, y: p.y, z: p.z,
-                    yaw: this.game.player.yaw || 0,
+                    yaw: yaw,
                     held: held ? held.id : null,
                     moving: (Math.abs(this.game.player.vel.x) + Math.abs(this.game.player.vel.z)) > 0.3
                 };
-                // Host authoritatively syncs time of day
                 if (this.isHost && this.game) {
                     msg.time = this.game.time;
                     msg.isNight = !!this.game.isNight;
-                    // Compact mob state for clients (type + pos + health)
-                    if (this.game.mobs && this._mobSyncT !== false) {
-                        this._mobTick = (this._mobTick || 0) + 1;
-                        if (this._mobTick % 3 === 0) { // every 3rd pos packet
-                            msg.mobs = this.game.mobs.filter(m => !m.dead && !m._mpRemote).slice(0, 28).map(m => ({
-                                id: m.mpId,
-                                t: m.type,
-                                x: +m.pos.x.toFixed(2),
-                                y: +m.pos.y.toFixed(2),
-                                z: +m.pos.z.toFixed(2),
-                                h: m.health,
-                                yaw: +(m.yaw || 0).toFixed(2)
-                            }));
-                        }
-                    }
                 }
                 this.send(msg);
+            }
+            // Host-only: push mob snapshot to all clients
+            sendMobs() {
+                if (!this.enabled || !this.isHost || !this.game || !this.game.mobs) return;
+                const list = this.game.mobs.filter(m => !m.dead && !m._mpRemote).slice(0, 32).map(m => ({
+                    id: m.mpId || (m.type + '_' + Math.floor(m.pos.x) + '_' + Math.floor(m.pos.z)),
+                    t: m.type,
+                    x: +m.pos.x.toFixed(2),
+                    y: +m.pos.y.toFixed(2),
+                    z: +m.pos.z.toFixed(2),
+                    h: m.health,
+                    yaw: +(m.yaw || 0).toFixed(2)
+                }));
+                this._broadcast({ type: 'mobs', list }, null);
             }
             sendChat(text) {
                 if (!text) return;
@@ -4949,42 +4955,46 @@
 
             applyHostMobs(list) {
                 if (!list || !this.world || !this.scene) return;
+                if (!this.mobs) this.mobs = [];
                 if (!this._mpMobMap) this._mpMobMap = {};
                 const seen = {};
                 for (let i = 0; i < list.length; i++) {
                     const d = list[i];
-                    if (!d || !d.t) continue;
-                    const key = d.id || (d.t + '_' + i);
+                    if (!d || !d.t || !MOB_TYPES[d.t]) continue;
+                    const key = String(d.id || (d.t + '_' + i));
                     seen[key] = true;
                     let mob = this._mpMobMap[key];
                     if (!mob || mob.dead || mob.type !== d.t) {
                         if (mob && mob.mesh) {
-                            this.scene.remove(mob.mesh);
-                            this.mobs = (this.mobs || []).filter(x => x !== mob);
+                            try { this.scene.remove(mob.mesh); } catch (e) {}
+                            this.mobs = this.mobs.filter(x => x !== mob);
                         }
                         try {
                             mob = new Mob(d.t, d.x, d.y, d.z, this.world, this.scene);
                             mob._mpRemote = true;
                             mob.mpId = key;
                             this._mpMobMap[key] = mob;
-                            if (!this.mobs) this.mobs = [];
                             this.mobs.push(mob);
-                        } catch (e) { console.warn(e); continue; }
+                        } catch (e) {
+                            console.warn('[MP] mob spawn fail', d.t, e);
+                            continue;
+                        }
                     }
-                    mob._mpTarget = new THREE.Vector3(d.x, d.y, d.z);
-                    // Snap if far (teleport / first update)
-                    if (mob.pos.distanceTo(mob._mpTarget) > 4) {
+                    if (!mob._mpTarget) mob._mpTarget = new THREE.Vector3();
+                    mob._mpTarget.set(d.x, d.y, d.z);
+                    if (mob.pos.distanceTo(mob._mpTarget) > 5) {
                         mob.pos.copy(mob._mpTarget);
                     }
                     mob.yaw = d.yaw || 0;
                     if (d.h != null) mob.health = d.h;
+                    mob.dead = false;
                 }
                 for (const key of Object.keys(this._mpMobMap)) {
                     if (!seen[key]) {
                         const m = this._mpMobMap[key];
-                        if (m && m.mesh) this.scene.remove(m.mesh);
+                        if (m && m.mesh) try { this.scene.remove(m.mesh); } catch (e) {}
                         delete this._mpMobMap[key];
-                        this.mobs = (this.mobs || []).filter(x => x !== m);
+                        this.mobs = this.mobs.filter(x => x !== m);
                     }
                 }
             }
@@ -5865,7 +5875,7 @@
                 }
             }
 
-            handleInteract(action) {
+            handleInteract(action, opts = {}) {
                 if (this.gameMode === 'spectator') return; // can't interact
                 let target = this.player.raycast();
                 
@@ -5876,7 +5886,8 @@
                         this.shootArrow();
                         return;
                     }
-                    // Hit mobs first (not in creative one-shot unless wanted)
+                    // Continuous hold-to-mine must NOT re-hit mobs every frame
+                    if (!opts.mineOnly) {
                     for (let mob of this.mobs) {
                         if (mob.dead) continue;
                         const toMob = new THREE.Vector3().subVectors(mob.pos, this.player.pos);
@@ -5913,6 +5924,7 @@
                             }
                         }
                     }
+                    } // end !mineOnly mob hits
 
                     if(!target) { this.cancelMining(); return; }
                     // Creative: instant break
@@ -6594,7 +6606,7 @@
                     if (this.isMobile) this.applyMobileInput(dt);
                     // Hold-to-mine (PC left mouse or mobile break hold)
                     if (this._mouseBreaking && this.state === 'play' && this.gameMode !== 'creative') {
-                        this.handleInteract('break');
+                        this.handleInteract('break', { mineOnly: true });
                     }
                     this.updateMining(dt);
                     this.updateAllFurnaces(dt);
@@ -6608,6 +6620,11 @@
                     if (this.mp && this.mp.enabled && this._mpPosT > 0.08) {
                         this._mpPosT = 0;
                         this.mp.sendPos();
+                    }
+                    this._mpMobT = (this._mpMobT || 0) + dt;
+                    if (this.mp && this.mp.enabled && this.mp.isHost && this._mpMobT > 0.2) {
+                        this._mpMobT = 0;
+                        this.mp.sendMobs();
                     }
                     // First-person arms + held item
                     if (this.playerView && this.player) {
