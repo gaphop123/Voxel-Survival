@@ -1931,13 +1931,17 @@
             setBlock(x, y, z, id) {
                 if (y < 0 || y >= CHUNK_HEIGHT) return;
                 const cx = Math.floor(x / CHUNK_SIZE), cz = Math.floor(z / CHUNK_SIZE);
+                const lx = x - cx * CHUNK_SIZE, lz = z - cz * CHUNK_SIZE;
+                const key = this.getChunkKey(cx, cz);
+                // Always record so multiplayer / unloaded chunks keep the change
+                if (!this.modifications[key]) this.modifications[key] = {};
+                this.modifications[key][`${lx},${y},${lz}`] = id;
                 const chunk = this.getChunk(cx, cz);
-                if(chunk && chunk.loaded) {
-                    let lx = x - cx*CHUNK_SIZE, lz = z - cz*CHUNK_SIZE;
+                if (chunk && chunk.loaded) {
                     chunk.setBlock(lx, y, lz, id);
-                    let key = this.getChunkKey(cx,cz);
-                    if(!this.modifications[key]) this.modifications[key] = {};
-                    this.modifications[key][`${lx},${y},${lz}`] = id;
+                } else {
+                    // Ensure chunk will load with this mod applied
+                    this.requestChunk(cx, cz);
                 }
             }
 
@@ -2785,6 +2789,7 @@
                 this.pos = new THREE.Vector3(x, y, z);
                 this.vel = new THREE.Vector3();
                 this.health = this.data.health;
+                this.mpId = (type || 'M') + '_' + Math.floor(Math.random() * 1e9).toString(36) + '_' + Date.now().toString(36);
                 this.world = world;
                 this.scene = scene;
                 this.onGround = false;
@@ -3166,11 +3171,21 @@
 
             update(dt, player, isNight) {
                 if (this.dead) return;
-                // Client-side host-synced mob: only animate, no AI
+                // Client-side host-synced mob: lerp + walk anim, no AI
                 if (this._mpRemote) {
+                    if (this._mpTarget) {
+                        this.pos.lerp(this._mpTarget, Math.min(1, dt * 12));
+                    }
                     if (this.mesh) {
                         this.mesh.position.copy(this.pos);
                         this.mesh.rotation.y = this.yaw || 0;
+                        // Simple leg bob
+                        if (this.parts && this.parts.legL && this.parts.legR) {
+                            this._walkPhase = (this._walkPhase || 0) + dt * 8;
+                            const s = Math.sin(this._walkPhase) * 0.4;
+                            this.parts.legL.rotation.x = s;
+                            this.parts.legR.rotation.x = -s;
+                        }
                     }
                     return;
                 }
@@ -3709,10 +3724,10 @@
                         if (d.mobs) this.game.applyHostMobs(d.mobs);
                     }
                 } else if (d.type === 'block') {
-                    if (this.game.world) {
+                    if (this.game && this.game.world) {
                         this.game.world.setBlock(d.x, d.y, d.z, d.id);
                     }
-                    // Relay to others if host
+                    // Host relays to all other clients
                     if (this.isHost) this._broadcast(d, fromConn);
                 } else if (d.type === 'chat') {
                     this.game.addChatMessage(d.name || '?', d.msg);
@@ -3814,13 +3829,14 @@
                     if (this.game.mobs && this._mobSyncT !== false) {
                         this._mobTick = (this._mobTick || 0) + 1;
                         if (this._mobTick % 3 === 0) { // every 3rd pos packet
-                            msg.mobs = this.game.mobs.filter(m => !m.dead).slice(0, 24).map(m => ({
+                            msg.mobs = this.game.mobs.filter(m => !m.dead && !m._mpRemote).slice(0, 28).map(m => ({
+                                id: m.mpId,
                                 t: m.type,
                                 x: +m.pos.x.toFixed(2),
                                 y: +m.pos.y.toFixed(2),
                                 z: +m.pos.z.toFixed(2),
                                 h: m.health,
-                                yaw: +m.yaw.toFixed(2)
+                                yaw: +(m.yaw || 0).toFixed(2)
                             }));
                         }
                     }
@@ -4576,24 +4592,25 @@
                     this._pendingMobSpawn = false;
                     return;
                 }
-                const c = this.world.getChunk(0, 0);
-                if (!c || !c.loaded) return;
-                // Ensure a few neighbor chunks exist
+                const pcx = this.player ? Math.floor(this.player.pos.x / CHUNK_SIZE) : 0;
+                const pcz = this.player ? Math.floor(this.player.pos.z / CHUNK_SIZE) : 0;
                 let loaded = 0;
                 for (let dx = -1; dx <= 1; dx++)
                     for (let dz = -1; dz <= 1; dz++) {
-                        const ch = this.world.getChunk(dx, dz);
+                        const ch = this.world.getChunk(pcx + dx, pcz + dz);
                         if (ch && ch.loaded) loaded++;
                     }
-                if (loaded < 4) return;
+                if (loaded < 2) return;
 
                 const passives = ['COW', 'PIG', 'CHICKEN', 'SHEEP', 'SHEEP'];
                 let spawned = 0;
-                for (let attempt = 0; attempt < 80 && spawned < 14; attempt++) {
-                    const ox = (Math.random() - 0.5) * 40;
-                    const oz = (Math.random() - 0.5) * 40;
+                const ox0 = this.player ? this.player.pos.x : 8;
+                const oz0 = this.player ? this.player.pos.z : 8;
+                for (let attempt = 0; attempt < 100 && spawned < 16; attempt++) {
+                    const ox = (Math.random() - 0.5) * 48;
+                    const oz = (Math.random() - 0.5) * 48;
                     const type = passives[Math.floor(Math.random() * passives.length)];
-                    if (this.spawnMobAt(type, 8 + ox, 8 + oz)) spawned++;
+                    if (this.spawnMobAt(type, ox0 + ox, oz0 + oz)) spawned++;
                 }
                 this._pendingMobSpawn = false;
                 console.log('[Voxel] Spawned', spawned, 'passive mobs');
@@ -4675,26 +4692,30 @@
                 for (let i = 0; i < list.length; i++) {
                     const d = list[i];
                     if (!d || !d.t) continue;
-                    const key = d.t + '_' + i;
+                    const key = d.id || (d.t + '_' + i);
                     seen[key] = true;
                     let mob = this._mpMobMap[key];
                     if (!mob || mob.dead || mob.type !== d.t) {
-                        if (mob && mob.mesh) this.scene.remove(mob.mesh);
+                        if (mob && mob.mesh) {
+                            this.scene.remove(mob.mesh);
+                            this.mobs = (this.mobs || []).filter(x => x !== mob);
+                        }
                         try {
                             mob = new Mob(d.t, d.x, d.y, d.z, this.world, this.scene);
                             mob._mpRemote = true;
+                            mob.mpId = key;
                             this._mpMobMap[key] = mob;
                             if (!this.mobs) this.mobs = [];
                             this.mobs.push(mob);
                         } catch (e) { console.warn(e); continue; }
                     }
-                    mob.pos.set(d.x, d.y, d.z);
+                    mob._mpTarget = new THREE.Vector3(d.x, d.y, d.z);
+                    // Snap if far (teleport / first update)
+                    if (mob.pos.distanceTo(mob._mpTarget) > 4) {
+                        mob.pos.copy(mob._mpTarget);
+                    }
                     mob.yaw = d.yaw || 0;
                     if (d.h != null) mob.health = d.h;
-                    if (mob.mesh) {
-                        mob.mesh.position.copy(mob.pos);
-                        mob.mesh.rotation.y = mob.yaw;
-                    }
                 }
                 for (const key of Object.keys(this._mpMobMap)) {
                     if (!seen[key]) {
@@ -5459,6 +5480,7 @@
                     let id = this.world.getBlock(target.hit.x, target.hit.y, target.hit.z);
                     if(id !== BLOCKS.AIR && !BlockRegistry[id]?.unbreakable) {
                         this.world.setBlock(target.hit.x, target.hit.y, target.hit.z, BLOCKS.AIR);
+                        if (this.mp && this.mp.enabled) this.mp.sendBlock(target.hit.x, target.hit.y, target.hit.z, BLOCKS.AIR);
                         audio.playSound('break');
                         const col = id === BLOCKS.GRASS ? 0x4caf50
                             : id === BLOCKS.STONE || id === BLOCKS.COBBLESTONE ? 0x9e9e9e
@@ -5936,14 +5958,15 @@
                             continue;
                         }
                         mob.update(dt, this.player, this.isNight);
-                        if (mob.data.hostile && mob.pos.distanceTo(this.player.pos) > 48) {
+                        // Only host despawns far hostiles; clients keep host-synced mobs
+                        if (!mob._mpRemote && mob.data.hostile && this.player && mob.pos.distanceTo(this.player.pos) > 64) {
                             mob.die();
                             this.mobs.splice(i, 1);
                         }
                     }
 
                     // Spawn hostiles at night
-                    if (this.isNight && Math.random() < 0.008) {
+                    if (this.isNight && Math.random() < 0.015) {
                         this.spawnHostileMobs();
                     }
 
