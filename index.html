@@ -120,6 +120,13 @@
         .inv-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
         .inv-section { margin-bottom: 16px; }
         .inv-title { color: #222; font-weight: bold; margin-bottom: 6px; font-size: 14px; text-transform: uppercase; }
+        .inv-close-btn {
+            margin-top: 14px; padding: 10px 28px; font-size: 16px; font-weight: bold;
+            background: #8b0000; color: #fff; border: 3px solid #c00; border-radius: 6px;
+            cursor: pointer; pointer-events: auto; touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent; font-family: inherit;
+        }
+        .inv-close-btn:active { background: #c62828; }
         .crafting-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: max-content; }
         .crafting-grid-3x3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: max-content; }
         .slot-dark { background: #8b8b8b; border: 2px solid #373737; border-right-color: #eee; border-bottom-color: #eee; }
@@ -433,6 +440,8 @@
                 </div>
             </div>
         </div>
+        <button type="button" class="inv-close-btn" id="btn-close-inventory">✕ CLOSE</button>
+        <div style="margin-top:8px; color:#ccc; font-size:13px;">Press E or Esc to close</div>
     </div>
 
     <!-- Crafting Table 3x3 Screen -->
@@ -458,7 +467,8 @@
                 </div>
             </div>
         </div>
-        <div style="margin-top:12px; color:#ccc; font-size:13px;">Press E or Esc to close</div>
+        <button type="button" class="inv-close-btn" id="btn-close-crafting">✕ CLOSE</button>
+        <div style="margin-top:8px; color:#ccc; font-size:13px;">Press E or Esc to close</div>
     </div>
 
     <div id="drag-container">
@@ -4412,6 +4422,18 @@
                 this.setupMobileControls();
                 this.setMobileControlsVisible(false);
                 document.getElementById('btn-pause-resume').onclick = () => this.togglePause('resume');
+                const closeInv = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } this.toggleInventory(); };
+                const invCloseBtn = document.getElementById('btn-close-inventory');
+                if (invCloseBtn) {
+                    invCloseBtn.onclick = closeInv;
+                    invCloseBtn.addEventListener('touchend', closeInv, { passive: false });
+                }
+                const closeCraft = (e) => { if (e) { e.preventDefault(); e.stopPropagation(); } this.closeCraftingTable(); };
+                const craftCloseBtn = document.getElementById('btn-close-crafting');
+                if (craftCloseBtn) {
+                    craftCloseBtn.onclick = closeCraft;
+                    craftCloseBtn.addEventListener('touchend', closeCraft, { passive: false });
+                }
                 document.getElementById('btn-pause-settings').onclick = () => this.openSettings();
                 document.getElementById('btn-settings-close').onclick = () => this.closeSettings();
                 document.getElementById('btn-pause-save').onclick = () => {
