@@ -185,15 +185,22 @@
             pointer-events: none;
         }
         .mob-btn {
-            position: absolute; width: 56px; height: 56px; border-radius: 50%;
-            background: rgba(0,0,0,0.45); border: 2px solid rgba(255,255,255,0.35);
-            color: #fff; font-size: 18px; pointer-events: auto; touch-action: none;
+            position: absolute; width: 72px; height: 72px; border-radius: 50%;
+            background: rgba(0,0,0,0.55); border: 3px solid rgba(255,255,255,0.45);
+            color: #fff; font-size: 22px; pointer-events: auto; touch-action: none;
             display: flex; align-items: center; justify-content: center; user-select: none;
+            -webkit-user-select: none; z-index: 160;
         }
-        #btn-jump { right: 100px; bottom: 160px; }
-        #btn-place { right: 24px; bottom: 160px; }
-        #btn-break { right: 24px; bottom: 230px; }
-        #btn-chat-mob { left: 24px; bottom: 160px; font-size: 14px; }
+        .mob-btn:active { background: rgba(76,175,80,0.55); }
+        #btn-jump { right: 110px; bottom: 170px; }
+        #btn-place { right: 20px; bottom: 170px; }
+        #btn-break { right: 20px; bottom: 255px; }
+        #btn-chat-mob { left: 20px; bottom: 170px; font-size: 16px; }
+        .joy-zone {
+            position: absolute; width: 140px; height: 140px; border-radius: 50%;
+            background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3);
+            pointer-events: auto; touch-action: none; z-index: 160;
+        }
         .name-tag {
             background: rgba(0,0,0,0.55); color: #fff; padding: 2px 6px; border-radius: 3px;
             font-size: 12px; white-space: nowrap; pointer-events: none;
@@ -214,10 +221,13 @@
         </div>
         <div id="menu-join" class="menu-panel">
             <div class="menu-title">JOIN MULTIPLAYER</div>
-            <div class="menu-subtitle">ENTER HOST JOIN ID</div>
-            <input type="text" id="join-id-input" placeholder="Host Join ID" style="width:90%;max-width:320px;padding:10px;margin:8px 0;font-size:14px;">
+            <div class="menu-subtitle">5-LETTER CODE (e.g. A7K2P)</div>
+            <input type="text" id="join-id-input" placeholder="CODE" maxlength="8" autocomplete="off" autocapitalize="characters"
+                style="width:90%;max-width:320px;padding:14px;margin:8px 0;font-size:22px;letter-spacing:4px;text-align:center;text-transform:uppercase;">
             <input type="text" id="join-name-input" placeholder="Your Name" value="Player" style="width:90%;max-width:320px;padding:10px;margin:8px 0;font-size:14px;">
             <button class="menu-btn" id="btn-join-start">JOIN WORLD</button>
+            <button class="menu-btn" id="btn-scan-nearby">SCAN NEARBY WORLDS</button>
+            <div id="nearby-list" style="margin:8px 0;max-height:140px;overflow-y:auto;width:100%;max-width:320px;"></div>
             <button class="menu-btn" id="btn-back-join">BACK</button>
             <div id="join-status" style="color:#aaa;font-size:12px;margin-top:8px;"></div>
         </div>
@@ -3464,27 +3474,79 @@
                 this.enabled = false;
                 this.playerName = 'Player';
             }
+            _shortCode() {
+                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                let s = '';
+                for (let i = 0; i < 5; i++) s += chars[Math.floor(Math.random() * chars.length)];
+                return s;
+            }
+            _fullId(code) {
+                const c = String(code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (c.startsWith('VS')) return 'vs' + c.slice(2);
+                if (c.startsWith('vs')) return c;
+                return 'vs' + c;
+            }
+            _registerRoom(code, name) {
+                try {
+                    const key = 'voxel_mp_rooms';
+                    const list = JSON.parse(localStorage.getItem(key) || '[]');
+                    const now = Date.now();
+                    const filtered = list.filter(r => now - r.ts < 30 * 60 * 1000 && r.code !== code);
+                    filtered.unshift({ code, name: name || 'World', ts: now });
+                    localStorage.setItem(key, JSON.stringify(filtered.slice(0, 20)));
+                } catch (e) {}
+            }
+            static listNearbyRooms() {
+                try {
+                    const list = JSON.parse(localStorage.getItem('voxel_mp_rooms') || '[]');
+                    const now = Date.now();
+                    return list.filter(r => now - r.ts < 30 * 60 * 1000);
+                } catch (e) { return []; }
+            }
             async startHost(playerName) {
                 this.playerName = playerName || 'Host';
                 this.isHost = true;
                 this.enabled = true;
+                const code = this._shortCode();
+                const fullId = this._fullId(code);
+                this.shortCode = code;
                 return new Promise((resolve, reject) => {
                     if (typeof Peer === 'undefined') {
                         reject(new Error('PeerJS not loaded'));
                         return;
                     }
-                    this.peer = new Peer({ debug: 1 });
+                    // Short custom ID for easy mobile typing
+                    this.peer = new Peer(fullId, { debug: 1 });
                     this.peer.on('open', (id) => {
                         this.peerId = id;
-                        console.log('[MP] Host ID:', id);
-                        this.game.notify('Multiplayer host ready — press O for Join ID');
-                        resolve(id);
+                        this.shortCode = code;
+                        this._registerRoom(code, this.playerName);
+                        // Refresh room listing while hosting
+                        this._roomPulse = setInterval(() => this._registerRoom(code, this.playerName), 15000);
+                        console.log('[MP] Host code:', code, 'id:', id);
+                        this.game.notify('Join code: ' + code + ' (press O)');
+                        resolve(code);
                     });
                     this.peer.on('connection', (c) => this._onClientConnect(c));
                     this.peer.on('error', (e) => {
                         console.error('[MP]', e);
-                        this.game.notify('MP error: ' + (e.type || e.message || e));
-                        reject(e);
+                        // Retry with random if ID taken
+                        if (e.type === 'unavailable-id') {
+                            this.peer.destroy();
+                            const code2 = this._shortCode();
+                            this.shortCode = code2;
+                            this.peer = new Peer(this._fullId(code2), { debug: 1 });
+                            this.peer.on('open', (id) => {
+                                this.peerId = id;
+                                this._registerRoom(code2, this.playerName);
+                                resolve(code2);
+                            });
+                            this.peer.on('connection', (c) => this._onClientConnect(c));
+                            this.peer.on('error', (e2) => reject(e2));
+                        } else {
+                            this.game.notify('MP error: ' + (e.type || e.message || e));
+                            reject(e);
+                        }
                     });
                 });
             }
@@ -3492,6 +3554,7 @@
                 this.playerName = playerName || 'Player';
                 this.isHost = false;
                 this.enabled = true;
+                const fullId = this._fullId(hostId);
                 return new Promise((resolve, reject) => {
                     if (typeof Peer === 'undefined') {
                         reject(new Error('PeerJS not loaded'));
@@ -3500,7 +3563,7 @@
                     this.peer = new Peer({ debug: 1 });
                     this.peer.on('open', () => {
                         this.peerId = this.peer.id;
-                        this.conn = this.peer.connect(hostId, { reliable: true });
+                        this.conn = this.peer.connect(fullId, { reliable: true });
                         this.conn.on('open', () => {
                             this.conn.send({ type: 'hello', name: this.playerName });
                             this.conn.send({ type: 'request_world' });
@@ -3509,6 +3572,10 @@
                         });
                         this.conn.on('data', (d) => this._onData(d, this.conn));
                         this.conn.on('close', () => this.game.notify('Disconnected from host'));
+                        this.conn.on('error', (e) => {
+                            this.game.notify('Join failed');
+                            reject(e);
+                        });
                     });
                     this.peer.on('error', (e) => {
                         console.error('[MP]', e);
@@ -3568,8 +3635,14 @@
                     if (this.isHost) this._broadcast(d, fromConn);
                 } else if (d.type === 'chat') {
                     this.game.addChatMessage(d.name || '?', d.msg);
-                    // Relay chat from host
-                    if (this.isHost) this._broadcast(d, fromConn);
+                    // Host relays to every other client
+                    if (this.isHost) {
+                        for (const c of this.conns) {
+                            if (c !== fromConn && c.open) {
+                                try { c.send(d); } catch (e) { console.warn(e); }
+                            }
+                        }
+                    }
                 }
             }
             _updateRemote(id, d) {
@@ -3626,7 +3699,9 @@
             }
             _broadcast(data, except) {
                 for (const c of this.conns) {
-                    if (c !== except && c.open) c.send(data);
+                    if (c !== except && c.open) {
+                        try { c.send(data); } catch (e) { console.warn('[MP] broadcast fail', e); }
+                    }
                 }
             }
             send(data) {
@@ -3659,13 +3734,22 @@
             }
             sendChat(text) {
                 if (!text) return;
-                this.send({ type: 'chat', name: this.playerName, msg: text });
+                const payload = { type: 'chat', name: this.playerName || 'Player', msg: String(text).slice(0, 120) };
+                console.log('[MP] chat send', payload, 'host=', this.isHost, 'conns=', this.conns.length);
+                if (this.isHost) {
+                    // Host: show already local; broadcast to all clients
+                    this._broadcast(payload, null);
+                } else if (this.conn && this.conn.open) {
+                    this.conn.send(payload);
+                } else {
+                    console.warn('[MP] chat not sent — no open connection');
+                }
             }
             sendBlock(x, y, z, id) {
                 this.send({ type: 'block', x, y, z, id });
             }
             getJoinId() {
-                return this.peerId || null;
+                return this.shortCode || this.peerId || null;
             }
             destroy() {
                 try {
@@ -4027,27 +4111,29 @@
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-join').style.display = 'flex';
                     document.getElementById('join-status').textContent = '';
+                    this.refreshNearbyList();
                 };
                 document.getElementById('btn-back-join').onclick = () => {
                     document.getElementById('menu-join').style.display = 'none';
                     document.getElementById('menu-main').style.display = 'flex';
                 };
+                document.getElementById('btn-scan-nearby').onclick = () => this.refreshNearbyList(true);
                 document.getElementById('btn-join-start').onclick = async () => {
-                    const hostId = (document.getElementById('join-id-input').value || '').trim();
-                    const name = (document.getElementById('join-name-input').value || 'Player').trim();
+                    let hostId = (document.getElementById('join-id-input').value || '').trim().toUpperCase();
+                    hostId = hostId.replace(/[^A-Z0-9]/g, '');
+                    const name = (document.getElementById('join-name-input').value || 'Player').trim() || 'Player';
                     const st = document.getElementById('join-status');
-                    if (!hostId) { st.textContent = 'Enter a Join ID'; return; }
-                    st.textContent = 'Connecting...';
+                    if (!hostId || hostId.length < 4) { st.textContent = 'Enter the 5-letter code'; return; }
+                    st.textContent = 'Connecting to ' + hostId + '...';
                     try {
-                        // Start a local world first, then connect
-                        const seed = 'join_' + hostId.slice(0, 8);
+                        const seed = 'join_' + hostId;
                         this._joinAsClient = { hostId, name };
                         await this.startWorld('MP_' + name, seed);
                         this.mp = new Multiplayer(this);
                         await this.mp.join(hostId, name);
                         st.textContent = 'Connected!';
                     } catch (e) {
-                        st.textContent = 'Failed: ' + (e.message || e);
+                        st.textContent = 'Failed: ' + (e.type || e.message || e);
                         console.error(e);
                     }
                 };
@@ -4785,12 +4871,16 @@
 
 
             setupMobileControls() {
-                const isTouch = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-                if (!isTouch) return;
+                const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+                if (!isTouch && window.innerWidth > 900) return;
+                // Show on touch OR small screens
+                if (!isTouch && window.innerWidth > 700) return;
                 this.isMobile = true;
                 const mc = document.getElementById('mobile-controls');
                 if (mc) mc.classList.add('show');
                 this.mobile = { moveX: 0, moveZ: 0, lookDX: 0, lookDY: 0, jump: false };
+                this.input = this.input || { keys: {}, mouse: {} };
+                this.input.keys = this.input.keys || {};
 
                 const bindJoy = (zoneId, knobId, mode) => {
                     const zone = document.getElementById(zoneId);
@@ -4799,66 +4889,91 @@
                     let active = null;
                     const center = () => {
                         const r = zone.getBoundingClientRect();
-                        return { x: r.left + r.width/2, y: r.top + r.height/2, max: r.width/2 };
+                        return { x: r.left + r.width / 2, y: r.top + r.height / 2, max: r.width / 2 };
+                    };
+                    const setKnob = (dx, dy) => {
+                        knob.style.left = (zone.clientWidth / 2 - 24 + dx) + 'px';
+                        knob.style.top = (zone.clientHeight / 2 - 24 + dy) + 'px';
                     };
                     const onStart = (e) => {
                         e.preventDefault();
-                        active = e.changedTouches[0].identifier;
+                        e.stopPropagation();
+                        const t = e.changedTouches ? e.changedTouches[0] : e;
+                        active = e.changedTouches ? t.identifier : 'mouse';
                         onMove(e);
                     };
                     const onMove = (e) => {
                         if (active == null) return;
+                        e.preventDefault();
                         let t = null;
-                        for (const touch of e.touches) if (touch.identifier === active) t = touch;
+                        if (e.touches) {
+                            for (const touch of e.touches) if (touch.identifier === active) t = touch;
+                        } else if (active === 'mouse') t = e;
                         if (!t) return;
                         const c = center();
                         let dx = t.clientX - c.x, dy = t.clientY - c.y;
                         const len = Math.hypot(dx, dy) || 1;
-                        const max = c.max - 10;
+                        const max = Math.max(20, c.max - 16);
                         if (len > max) { dx = dx / len * max; dy = dy / len * max; }
-                        knob.style.left = (36 + dx) + 'px';
-                        knob.style.top = (36 + dy) + 'px';
+                        setKnob(dx, dy);
                         const nx = dx / max, ny = dy / max;
                         if (mode === 'move') {
                             this.mobile.moveX = nx;
                             this.mobile.moveZ = ny;
                         } else {
-                            this.mobile.lookDX = nx * 2.5;
-                            this.mobile.lookDY = ny * 2.0;
+                            this.mobile.lookDX = nx * 2.8;
+                            this.mobile.lookDY = ny * 2.2;
                         }
                     };
                     const onEnd = (e) => {
-                        for (const touch of e.changedTouches) {
-                            if (touch.identifier === active) {
-                                active = null;
-                                knob.style.left = '36px'; knob.style.top = '36px';
-                                if (mode === 'move') { this.mobile.moveX = 0; this.mobile.moveZ = 0; }
-                                else { this.mobile.lookDX = 0; this.mobile.lookDY = 0; }
+                        if (e.changedTouches) {
+                            for (const touch of e.changedTouches) {
+                                if (touch.identifier === active) active = null;
                             }
+                        } else active = null;
+                        if (active == null) {
+                            setKnob(0, 0);
+                            if (mode === 'move') { this.mobile.moveX = 0; this.mobile.moveZ = 0; }
+                            else { this.mobile.lookDX = 0; this.mobile.lookDY = 0; }
                         }
                     };
                     zone.addEventListener('touchstart', onStart, { passive: false });
                     zone.addEventListener('touchmove', onMove, { passive: false });
-                    zone.addEventListener('touchend', onEnd);
-                    zone.addEventListener('touchcancel', onEnd);
+                    zone.addEventListener('touchend', onEnd, { passive: false });
+                    zone.addEventListener('touchcancel', onEnd, { passive: false });
                 };
                 bindJoy('joy-move', 'knob-move', 'move');
                 bindJoy('joy-look', 'knob-look', 'look');
 
-                const press = (id, down, up) => {
+                const bindBtn = (id, onDown, onUp) => {
                     const el = document.getElementById(id);
                     if (!el) return;
-                    el.addEventListener('touchstart', (e) => { e.preventDefault(); down(); }, { passive: false });
-                    el.addEventListener('touchend', (e) => { e.preventDefault(); if (up) up(); });
+                    const down = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        el.style.background = 'rgba(76,175,80,0.6)';
+                        onDown();
+                    };
+                    const up = (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        el.style.background = '';
+                        if (onUp) onUp();
+                    };
+                    el.addEventListener('touchstart', down, { passive: false });
+                    el.addEventListener('touchend', up, { passive: false });
+                    el.addEventListener('touchcancel', up, { passive: false });
+                    el.addEventListener('mousedown', down);
+                    el.addEventListener('mouseup', up);
+                    el.addEventListener('mouseleave', up);
                 };
-                press('btn-jump', () => { this.mobile.jump = true; this.input.keys['Space'] = true; },
-                      () => { this.mobile.jump = false; this.input.keys['Space'] = false; });
-                press('btn-break', () => this.handleInteract('break'));
-                press('btn-place', () => this.handleInteract('place'));
-                press('btn-chat-mob', () => this.openChat());
-
-                // Tap center screen to lock / place when not on controls — optional
-                this.notify('Mobile controls enabled');
+                bindBtn('btn-jump',
+                    () => { this.mobile.jump = true; if (this.input && this.input.keys) this.input.keys['Space'] = true; },
+                    () => { this.mobile.jump = false; if (this.input && this.input.keys) this.input.keys['Space'] = false; }
+                );
+                bindBtn('btn-break', () => { if (this.state === 'play') this.handleInteract('break'); });
+                bindBtn('btn-place', () => { if (this.state === 'play') this.handleInteract('place'); });
+                bindBtn('btn-chat-mob', () => { if (this.state === 'play') this.openChat(); });
             }
 
             applyMobileInput(dt) {
