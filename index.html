@@ -1900,6 +1900,178 @@
             }
         }
 
+
+        // First-person arms + held item, and third-person body for remote players
+        function makePlayerLimb(w, h, d, color) {
+            const geo = new THREE.BoxGeometry(w, h, d);
+            const mat = new THREE.MeshLambertMaterial({ color });
+            return new THREE.Mesh(geo, mat);
+        }
+
+        function createHeldItemMesh(itemId, texAtlas) {
+            const group = new THREE.Group();
+            if (itemId == null) return group;
+            const isBlock = itemId < 100 && BlockRegistry[itemId] && itemId !== BLOCKS.AIR;
+            if (isBlock) {
+                const mesh = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.28, 0.28, 0.28),
+                    new THREE.MeshLambertMaterial({ map: texAtlas, color: 0xffffff })
+                );
+                // Approximate UV from block tex index if available
+                group.add(mesh);
+            } else {
+                // Tool / item as flat-ish stick or blade
+                const col = itemId === ITEMS.BOW ? 0x8d6e63 :
+                    (ItemRegistry[itemId]?.toolType === 'sword' ? 0xb0bec5 :
+                    (ItemRegistry[itemId]?.toolType === 'pickaxe' ? 0x90a4ae :
+                    (ItemRegistry[itemId]?.toolType === 'shovel' ? 0xa1887f : 0xc8a070)));
+                const blade = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.08, 0.45, 0.08),
+                    new THREE.MeshLambertMaterial({ color: col })
+                );
+                blade.position.y = 0.15;
+                const handle = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.06, 0.2, 0.06),
+                    new THREE.MeshLambertMaterial({ color: 0x5d4037 })
+                );
+                handle.position.y = -0.12;
+                group.add(blade, handle);
+            }
+            return group;
+        }
+
+        class PlayerViewModel {
+            constructor(camera, texAtlas) {
+                this.camera = camera;
+                this.texAtlas = texAtlas;
+                this.walkPhase = 0;
+                this.swing = 0;
+                this.heldId = null;
+
+                // First-person arms (children of camera)
+                this.fpRoot = new THREE.Group();
+                this.camera.add(this.fpRoot);
+
+                // Right arm
+                this.armR = makePlayerLimb(0.22, 0.55, 0.22, 0xffcc80);
+                this.armR.position.set(0.35, -0.45, -0.45);
+                this.armR.rotation.x = 0.4;
+                this.fpRoot.add(this.armR);
+
+                // Left arm (slightly visible)
+                this.armL = makePlayerLimb(0.2, 0.5, 0.2, 0xffcc80);
+                this.armL.position.set(-0.32, -0.5, -0.4);
+                this.armL.rotation.x = 0.35;
+                this.fpRoot.add(this.armL);
+
+                // Sleeve tops
+                const sleeveR = makePlayerLimb(0.24, 0.18, 0.24, 0x3f51b5);
+                sleeveR.position.y = 0.2;
+                this.armR.add(sleeveR);
+                const sleeveL = makePlayerLimb(0.22, 0.16, 0.22, 0x3f51b5);
+                sleeveL.position.y = 0.18;
+                this.armL.add(sleeveL);
+
+                this.heldRoot = new THREE.Group();
+                this.heldRoot.position.set(0.05, -0.25, -0.15);
+                this.armR.add(this.heldRoot);
+            }
+
+            setHeldItem(itemId) {
+                if (itemId === this.heldId) return;
+                this.heldId = itemId;
+                while (this.heldRoot.children.length) {
+                    const c = this.heldRoot.children[0];
+                    this.heldRoot.remove(c);
+                    if (c.geometry) c.geometry.dispose();
+                }
+                if (itemId != null) {
+                    const item = createHeldItemMesh(itemId, this.texAtlas);
+                    this.heldRoot.add(item);
+                }
+            }
+
+            triggerSwing() {
+                this.swing = 1.0;
+            }
+
+            update(dt, moving, onGround) {
+                if (moving && onGround) this.walkPhase += dt * 10;
+                else this.walkPhase *= 0.9;
+
+                // Arm bob while walking
+                const bob = Math.sin(this.walkPhase) * 0.08;
+                this.armR.rotation.x = 0.4 + bob + (this.swing > 0 ? -this.swing * 1.2 : 0);
+                this.armL.rotation.x = 0.35 - bob * 0.8;
+                this.armR.position.y = -0.45 + Math.abs(Math.sin(this.walkPhase)) * 0.03;
+                this.armL.position.y = -0.5 + Math.abs(Math.cos(this.walkPhase)) * 0.03;
+
+                // Swing decay
+                if (this.swing > 0) this.swing = Math.max(0, this.swing - dt * 4);
+
+                // Slight idle sway
+                this.fpRoot.position.x = Math.sin(this.walkPhase * 0.5) * 0.01;
+                this.fpRoot.position.y = Math.sin(this.walkPhase) * 0.015;
+            }
+
+            setVisible(v) {
+                this.fpRoot.visible = v;
+            }
+        }
+
+        // Third-person avatar for remote multiplayer players
+        function createRemotePlayerAvatar(texAtlas) {
+            const root = new THREE.Group();
+            const skin = 0xffcc80, shirt = 0x3f51b5, pants = 0x1a237e, shoes = 0x212121;
+
+            const body = makePlayerLimb(0.5, 0.7, 0.28, shirt);
+            body.position.y = 1.15;
+            const head = makePlayerLimb(0.45, 0.45, 0.45, skin);
+            head.position.y = 1.75;
+            const armL = makePlayerLimb(0.18, 0.65, 0.18, skin);
+            armL.position.set(-0.38, 1.15, 0);
+            const armR = makePlayerLimb(0.18, 0.65, 0.18, skin);
+            armR.position.set(0.38, 1.15, 0);
+            const legL = makePlayerLimb(0.2, 0.7, 0.2, pants);
+            legL.position.set(-0.12, 0.35, 0);
+            const legR = makePlayerLimb(0.2, 0.7, 0.2, pants);
+            legR.position.set(0.12, 0.35, 0);
+
+            // Held item attachment on right arm
+            const held = new THREE.Group();
+            held.position.set(0, -0.35, -0.1);
+            armR.add(held);
+
+            root.add(body, head, armL, armR, legL, legR);
+            root.userData = { armL, armR, legL, legR, head, held, walkPhase: 0, heldId: null };
+            return root;
+        }
+
+        function updateRemoteAvatar(root, dt, moving, heldId, texAtlas) {
+            const u = root.userData;
+            if (!u) return;
+            if (moving) u.walkPhase += dt * 10;
+            else u.walkPhase *= 0.85;
+            const s = Math.sin(u.walkPhase);
+            u.legL.rotation.x = s * 0.6;
+            u.legR.rotation.x = -s * 0.6;
+            u.armL.rotation.x = -s * 0.5;
+            u.armR.rotation.x = s * 0.5;
+            // Held item
+            if (heldId !== u.heldId) {
+                u.heldId = heldId;
+                while (u.held.children.length) {
+                    const c = u.held.children[0];
+                    u.held.remove(c);
+                }
+                if (heldId != null) {
+                    const item = createHeldItemMesh(heldId, texAtlas);
+                    item.scale.setScalar(0.9);
+                    u.held.add(item);
+                }
+            }
+        }
+
         class Player {
             constructor(camera, world, game) {
                 this.camera = camera; 
@@ -3296,25 +3468,17 @@
                 if (!this.game.scene) return;
                 let rp = this.remotePlayers[id];
                 if (!rp) {
-                    const g = new THREE.Group();
-                    const body = new THREE.Mesh(
-                        new THREE.BoxGeometry(0.6, 1.6, 0.4),
-                        new THREE.MeshLambertMaterial({ color: 0x2196f3 })
-                    );
-                    body.position.y = 0.9;
-                    const head = new THREE.Mesh(
-                        new THREE.BoxGeometry(0.5, 0.5, 0.5),
-                        new THREE.MeshLambertMaterial({ color: 0xffcc80 })
-                    );
-                    head.position.y = 1.85;
-                    g.add(body); g.add(head);
+                    const g = createRemotePlayerAvatar(this.game.texAtlas);
                     this.game.scene.add(g);
-                    rp = { mesh: g, name: d.name || 'Player' };
+                    rp = { mesh: g, name: d.name || 'Player', lastPos: new THREE.Vector3() };
                     this.remotePlayers[id] = rp;
                 }
                 if (d.x != null) {
+                    const moving = d.moving || (rp.lastPos && rp.lastPos.distanceTo(new THREE.Vector3(d.x, d.y, d.z)) > 0.02);
                     rp.mesh.position.set(d.x, d.y, d.z);
                     if (d.yaw != null) rp.mesh.rotation.y = d.yaw;
+                    rp.lastPos.set(d.x, d.y, d.z);
+                    updateRemoteAvatar(rp.mesh, 0.1, !!moving, d.held, this.game.texAtlas);
                 }
             }
             _removeRemote(id) {
@@ -3340,12 +3504,15 @@
             sendPos() {
                 if (!this.enabled || !this.game.player) return;
                 const p = this.game.player.pos;
+                const held = this.game.player.inventory[this.game.player.hotbarSelect];
                 this.send({
                     type: 'pos',
                     id: this.peerId,
                     name: this.playerName,
                     x: p.x, y: p.y, z: p.z,
-                    yaw: this.game.player.yaw || 0
+                    yaw: this.game.player.yaw || 0,
+                    held: held ? held.id : null,
+                    moving: (Math.abs(this.game.player.vel.x) + Math.abs(this.game.player.vel.z)) > 0.3
                 });
             }
             sendBlock(x, y, z, id) {
@@ -3823,6 +3990,10 @@
                 this.world = new World(this.scene, this.texAtlas, seedNum);
                 this.world.genOptions = this.genOptions;
                 this.player = new Player(this.camera, this.world, this);
+                if (this.playerView) {
+                    this.camera.remove(this.playerView.fpRoot);
+                }
+                this.playerView = new PlayerViewModel(this.camera, this.texAtlas);
                 setGen(30, 'Spawning player...', 'Terrain streaming live');
                 
                 this.player.addItem(ITEMS.WOODEN_PICKAXE, 1);
@@ -4098,6 +4269,10 @@
                 if(data.mods) this.world.modifications = data.mods;
 
                 this.player = new Player(this.camera, this.world, this);
+                if (this.playerView) {
+                    try { this.camera.remove(this.playerView.fpRoot); } catch(e) {}
+                }
+                this.playerView = new PlayerViewModel(this.camera, this.texAtlas);
                 if(data.pos) this.player.pos.set(data.pos.x, data.pos.y, data.pos.z);
                 if(data.inv) this.player.inventory = data.inv;
 
@@ -4329,6 +4504,7 @@
                 let target = this.player.raycast();
                 
                 if(action === 'break') {
+                    if (this.playerView) this.playerView.triggerSwing();
                     const held = this.player.inventory[this.player.hotbarSelect];
                     if (held && held.id === ITEMS.BOW) {
                         this.shootArrow();
@@ -4821,6 +4997,14 @@
                     if (this.mp && this.mp.enabled && this._mpPosT > 0.1) {
                         this._mpPosT = 0;
                         this.mp.sendPos();
+                    }
+                    // First-person arms + held item
+                    if (this.playerView && this.player) {
+                        const held = this.player.inventory[this.player.hotbarSelect];
+                        this.playerView.setHeldItem(held ? held.id : null);
+                        const moving = Math.abs(this.player.vel.x) + Math.abs(this.player.vel.z) > 0.4;
+                        this.playerView.update(dt, moving, this.player.onGround);
+                        this.playerView.setVisible(this.gameMode !== 'spectator');
                     }
                     this.checkPortal();
                     if (this._pendingNetherSpawn) this.tryNetherSafeSpawn();
