@@ -217,8 +217,7 @@
             pointer-events: auto; touch-action: none;
         }
         #joy-move { left: 24px; bottom: 24px; }
-        #joy-look { right: 24px; bottom: 24px; }
-        .joy-knob {
+                .joy-knob {
             position: absolute; width: 48px; height: 48px; border-radius: 50%;
             background: rgba(255,255,255,0.35); left: 36px; top: 36px;
             pointer-events: none;
@@ -356,7 +355,6 @@
     </div>
     <div id="mobile-controls">
         <div class="joy-zone" id="joy-move"><div class="joy-knob" id="knob-move"></div></div>
-        <div class="joy-zone" id="joy-look"><div class="joy-knob" id="knob-look"></div></div>
         <div class="mob-btn" id="btn-jump">⬆</div>
         <div class="mob-btn" id="btn-break">⛏</div>
         <div class="mob-btn" id="btn-place">⬚</div>
@@ -5241,11 +5239,9 @@
             setupMobileControls() {
                 const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
                 if (!isTouch && window.innerWidth > 900) return;
-                // Show on touch OR small screens
                 if (!isTouch && window.innerWidth > 700) return;
                 this.isMobile = true;
                 const mc = document.getElementById('mobile-controls');
-                // Do NOT show on menu — only during play
                 if (mc) {
                     mc.classList.remove('show');
                     mc.style.display = 'none';
@@ -5254,7 +5250,8 @@
                 this.input = this.input || { keys: {}, mouse: {} };
                 this.input.keys = this.input.keys || {};
 
-                const bindJoy = (zoneId, knobId, mode) => {
+                // --- Movement joystick only (left) ---
+                const bindJoy = (zoneId, knobId) => {
                     const zone = document.getElementById(zoneId);
                     const knob = document.getElementById(knobId);
                     if (!zone || !knob) return;
@@ -5288,14 +5285,8 @@
                         const max = Math.max(20, c.max - 16);
                         if (len > max) { dx = dx / len * max; dy = dy / len * max; }
                         setKnob(dx, dy);
-                        const nx = dx / max, ny = dy / max;
-                        if (mode === 'move') {
-                            this.mobile.moveX = nx;
-                            this.mobile.moveZ = ny;
-                        } else {
-                            this.mobile.lookDX = nx * 2.8;
-                            this.mobile.lookDY = ny * 2.2;
-                        }
+                        this.mobile.moveX = dx / max;
+                        this.mobile.moveZ = dy / max;
                     };
                     const onEnd = (e) => {
                         if (e.changedTouches) {
@@ -5305,8 +5296,8 @@
                         } else active = null;
                         if (active == null) {
                             setKnob(0, 0);
-                            if (mode === 'move') { this.mobile.moveX = 0; this.mobile.moveZ = 0; }
-                            else { this.mobile.lookDX = 0; this.mobile.lookDY = 0; }
+                            this.mobile.moveX = 0;
+                            this.mobile.moveZ = 0;
                         }
                     };
                     zone.addEventListener('touchstart', onStart, { passive: false });
@@ -5314,8 +5305,62 @@
                     zone.addEventListener('touchend', onEnd, { passive: false });
                     zone.addEventListener('touchcancel', onEnd, { passive: false });
                 };
-                bindJoy('joy-move', 'knob-move', 'move');
-                bindJoy('joy-look', 'knob-look', 'look');
+                bindJoy('joy-move', 'knob-move');
+
+                // --- Look: drag on empty screen (not on buttons/joystick) ---
+                this._lookTouchId = null;
+                this._lookLast = null;
+                const isOnControl = (target) => {
+                    if (!target || !target.closest) return false;
+                    return !!(target.closest('.mob-btn') || target.closest('.joy-zone') ||
+                        target.closest('#chat-box') || target.closest('#pause-screen') ||
+                        target.closest('#death-screen') || target.closest('#main-menu') ||
+                        target.closest('#inventory-screen') || target.closest('#crafting-table-screen'));
+                };
+                const onLookStart = (e) => {
+                    if (this.state !== 'play' || this.chatOpen) return;
+                    for (const t of e.changedTouches) {
+                        if (isOnControl(t.target)) continue;
+                        // Prefer right half of screen for look, but allow any blank area
+                        this._lookTouchId = t.identifier;
+                        this._lookLast = { x: t.clientX, y: t.clientY };
+                        break;
+                    }
+                };
+                const onLookMove = (e) => {
+                    if (this._lookTouchId == null || this.state !== 'play') return;
+                    for (const t of e.touches) {
+                        if (t.identifier !== this._lookTouchId) continue;
+                        if (!this._lookLast) {
+                            this._lookLast = { x: t.clientX, y: t.clientY };
+                            break;
+                        }
+                        const dx = t.clientX - this._lookLast.x;
+                        const dy = t.clientY - this._lookLast.y;
+                        this._lookLast = { x: t.clientX, y: t.clientY };
+                        // Sensitivity — pixels to radians
+                        const sens = 0.0055;
+                        this.camera.rotation.order = 'YXZ';
+                        this.camera.rotation.y -= dx * sens;
+                        this.camera.rotation.x -= dy * sens;
+                        this.camera.rotation.x = Math.max(-Math.PI / 2 + 0.1, Math.min(Math.PI / 2 - 0.1, this.camera.rotation.x));
+                        e.preventDefault();
+                        break;
+                    }
+                };
+                const onLookEnd = (e) => {
+                    for (const t of e.changedTouches) {
+                        if (t.identifier === this._lookTouchId) {
+                            this._lookTouchId = null;
+                            this._lookLast = null;
+                        }
+                    }
+                };
+                // Listen on document so blank UI (no buttons) works; controls stopPropagation
+                document.addEventListener('touchstart', onLookStart, { passive: true });
+                document.addEventListener('touchmove', onLookMove, { passive: false });
+                document.addEventListener('touchend', onLookEnd, { passive: true });
+                document.addEventListener('touchcancel', onLookEnd, { passive: true });
 
                 const bindBtn = (id, onDown, onUp) => {
                     const el = document.getElementById(id);
@@ -5361,15 +5406,8 @@
 
             applyMobileInput(dt) {
                 if (!this.isMobile || !this.mobile || !this.player || this.chatOpen) return;
-                // Look
-                if (this.player.yaw == null) this.player.yaw = 0;
-                if (this.player.pitch == null) this.player.pitch = 0;
-                // Use camera rotation if player uses euler from pointer
-                this.camera.rotation.order = 'YXZ';
-                this.camera.rotation.y -= this.mobile.lookDX * dt * 1.8;
-                this.camera.rotation.x -= this.mobile.lookDY * dt * 1.4;
-                this.camera.rotation.x = Math.max(-Math.PI/2+0.1, Math.min(Math.PI/2-0.1, this.camera.rotation.x));
-                // Movement keys simulation
+                // Look is handled by blank-area touch drag (not joystick)
+                // Movement from left joystick only
                 this.input.keys['KeyW'] = this.mobile.moveZ < -0.25;
                 this.input.keys['KeyS'] = this.mobile.moveZ > 0.25;
                 this.input.keys['KeyA'] = this.mobile.moveX < -0.25;
