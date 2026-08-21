@@ -107,14 +107,14 @@
             cursor: pointer;
         }
         .slot.active { border-color: #fff; box-shadow: 0 0 5px rgba(255,255,255,0.8); }
-        .slot-img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; }
-        .slot-count { position: absolute; bottom: 2px; right: 4px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px #000; color: #fff; }
+        .slot-img { width: 100%; height: 100%; image-rendering: pixelated; object-fit: contain; pointer-events: none; }
+        .slot-count { position: absolute; bottom: 2px; right: 4px; font-size: 12px; font-weight: bold; text-shadow: 1px 1px #000; color: #fff; pointer-events: none; }
 
         /* Inventory */
         #inventory-screen {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.75); justify-content: center; align-items: center;
-            pointer-events: auto; z-index: 50; flex-direction: column;
+            pointer-events: auto; z-index: 280; flex-direction: column;
         }
         .inv-container { background: #b8b8b8; padding: 20px; border: 4px solid #444; border-radius: 6px; display: flex; gap: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         .inv-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; }
@@ -125,9 +125,9 @@
         .slot-dark { background: #8b8b8b; border: 2px solid #373737; border-right-color: #eee; border-bottom-color: #eee; }
         .slot-dark:hover { background: #9a9a9a; }
         #crafting-table-screen {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.75); justify-content: center; align-items: center;
-            pointer-events: auto; z-index: 50; flex-direction: column;
+            pointer-events: auto; z-index: 280; flex-direction: column;
         }
         
         /* Drag Element */
@@ -2736,7 +2736,7 @@
             ENDERMAN: { name: 'Enderman', health: 40, speed: 2.5, hostile: true, size: [0.6, 2.9, 0.6], damage: 4, teleports: true, drops: [{id: ITEMS.ENDER_PEARL, min:0, max:1}] },
             SILVERFISH: { name: 'Silverfish', health: 8, speed: 2.4, hostile: true, size: [0.4, 0.3, 0.8], damage: 1, drops: [] },
             VILLAGER: { name: 'Villager', health: 20, speed: 1.5, hostile: false, size: [0.6, 1.95, 0.6], villager: true, drops: [] },
-            IRON_GOLEM: { name: 'Iron Golem', health: 100, speed: 1.4, hostile: false, size: [1.4, 2.7, 1.4], golem: true, damage: 7, drops: [{id: ITEMS.IRON_INGOT, min: 3, max: 5}] }
+            IRON_GOLEM: { name: 'Iron Golem', health: 50, speed: 1.4, hostile: false, size: [1.4, 2.7, 1.4], golem: true, damage: 7, drops: [{id: ITEMS.IRON_INGOT, min: 3, max: 5}] }
         };
 
         // Entity textures from mc-assets (assets/minecraft/textures/entity/...)
@@ -3215,21 +3215,33 @@
             }
 
             takeDamage(amount, fromPlayer = false) {
+                if (this.dead) return;
                 this.health -= amount;
                 this.hurtFlash = 0.25;
                 if (this.data.golem && fromPlayer) this.angryAtPlayer = true;
-                this.mesh.traverse(c => {
-                    if (c.isMesh && c.material && c.material.color) {
-                        c.userData.origColor = c.material.color.getHex();
-                        c.material.color.setHex(0xffffff);
-                    }
-                });
+                this._killedByPlayer = !!fromPlayer;
+                try {
+                    this.mesh.traverse(c => {
+                        if (c.isMesh && c.material) {
+                            const mats = Array.isArray(c.material) ? c.material : [c.material];
+                            for (const mat of mats) {
+                                if (mat && mat.color) {
+                                    if (c.userData.origColor === undefined) c.userData.origColor = mat.color.getHex();
+                                    mat.color.setHex(0xffffff);
+                                }
+                            }
+                        }
+                    });
+                } catch (e) {}
                 if (this.health <= 0) this.die();
             }
 
             die() {
+                if (this.dead) return;
                 this.dead = true;
-                this.scene.remove(this.mesh);
+                try { this.scene.remove(this.mesh); } catch (e) {}
+                // Drops handled by Game when player kills, or here as fallback
+                this._justDied = true;
             }
 
             update(dt, player, isNight) {
@@ -4233,10 +4245,13 @@
                         this.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.camera.rotation.x));
                         this.camera.rotation.order = 'YXZ';
                     }
-                    if(this.state === 'inventory' && this.dragItem) {
+                    if((this.state === 'inventory' || this.state === 'crafting') && this.dragItem) {
                         let d = document.getElementById('drag-container');
-                        d.style.left = e.clientX - 18 + 'px'; 
-                        d.style.top = e.clientY - 18 + 'px';
+                        if (d) {
+                            d.style.left = e.clientX - 18 + 'px';
+                            d.style.top = e.clientY - 18 + 'px';
+                            d.style.display = 'block';
+                        }
                     }
                 });
                 
@@ -5683,7 +5698,8 @@
                     for (let mob of this.mobs) {
                         if (mob.dead) continue;
                         const toMob = new THREE.Vector3().subVectors(mob.pos, this.player.pos);
-                        if (toMob.length() < 3.5) {
+                        const reach = 3.5 + (mob.data.size ? mob.data.size[1] * 0.25 : 0);
+                        if (toMob.length() < reach) {
                             const ray = new THREE.Vector3();
                             this.camera.getWorldDirection(ray);
                             if (toMob.normalize().dot(ray) > 0.7) {
@@ -5693,13 +5709,20 @@
                                     dmg = ItemRegistry[held.id].damage || 2;
                                 } else if (held && ItemRegistry[held.id]?.toolType === 'pickaxe') {
                                     dmg = 2;
+                                } else if (held && ItemRegistry[held.id]?.toolType === 'axe') {
+                                    dmg = 3;
                                 }
+                                if (mob.type === 'IRON_GOLEM') dmg = Math.max(dmg, 5);
                                 mob.takeDamage(dmg, true);
                                 audio.playSound('hurt');
                                 if (mob.dead) {
                                     for (let drop of (mob.data.drops || [])) {
-                                        const cnt = drop.min + Math.floor(Math.random() * (drop.max - drop.min + 1));
-                                        if (cnt > 0) this.player.addItem(drop.id, cnt);
+                                        const span = Math.max(0, (drop.max || 1) - (drop.min || 0));
+                                        const cnt = (drop.min || 0) + Math.floor(Math.random() * (span + 1));
+                                        if (cnt > 0 && drop.id != null) this.player.addItem(drop.id, cnt);
+                                    }
+                                    if (mob.type === 'IRON_GOLEM') {
+                                        this.player.addItem(ITEMS.IRON_INGOT, 3 + Math.floor(Math.random() * 3));
                                     }
                                     this.notify(`${mob.data.name} slain`);
                                     this.updateHUD();
@@ -5876,6 +5899,10 @@
                 this.checkCrafting();
             }
 
+            stackMax(id) {
+                return (ItemRegistry[id] && ItemRegistry[id].maxStack) || 64;
+            }
+
             handleInvClick(idx, isRight=false) {
                 let slot = this.player.inventory[idx];
                 if(this.dragItem) {
@@ -5886,17 +5913,20 @@
                             this.player.inventory[idx] = this.dragItem; this.dragItem = null;
                         }
                     } else if(slot.id === this.dragItem.id) {
+                        const max = this.stackMax(slot.id);
                         if(isRight) {
-                            if(slot.count < (ItemRegistry[slot.id].maxStack||64)) { slot.count++; this.dragItem.count--; }
+                            if(slot.count < max) { slot.count++; this.dragItem.count--; }
                         } else {
-                            let max = ItemRegistry[slot.id].maxStack||64;
                             let space = max - slot.count;
                             if(space > 0) {
                                 let move = Math.min(space, this.dragItem.count);
                                 slot.count += move; this.dragItem.count -= move;
+                            } else {
+                                // swap if full
+                                this.player.inventory[idx] = this.dragItem; this.dragItem = slot;
                             }
                         }
-                        if(this.dragItem.count <= 0) this.dragItem = null;
+                        if(this.dragItem && this.dragItem.count <= 0) this.dragItem = null;
                     } else {
                         this.player.inventory[idx] = this.dragItem; this.dragItem = slot;
                     }
@@ -5906,7 +5936,8 @@
                         this.dragItem = {id: slot.id, count: half};
                         slot.count -= half;
                     } else {
-                        this.dragItem = slot; this.player.inventory[idx] = null;
+                        this.dragItem = { id: slot.id, count: slot.count };
+                        this.player.inventory[idx] = null;
                     }
                 }
                 audio.playSound('click');
