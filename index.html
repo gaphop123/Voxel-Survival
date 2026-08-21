@@ -4371,6 +4371,7 @@
             }
 
             async startWorld(name, seedStr) {
+                this.clearChat();
                 // Show generation progress UI
                 document.getElementById('menu-main').style.display = 'none';
                 document.getElementById('menu-create').style.display = 'none';
@@ -4733,6 +4734,7 @@
             }
 
             async loadWorld(name) {
+                this.clearChat();
                 document.getElementById('main-menu').style.display = 'none';
                 document.getElementById('hud').style.display = 'block';
                 await saveSys.init();
@@ -4874,6 +4876,7 @@
 
             quitToMenu() {
                 this.state = 'menu';
+                this.clearChat();
                 this.setMobileControlsVisible(false);
                 document.getElementById('pause-screen')?.classList.remove('show');
                 document.getElementById('hud').style.display = 'none';
@@ -5025,6 +5028,23 @@
                 audio.playSound('click');
             }
 
+
+            clearChat() {
+                this._chatHistory = [];
+                this.chatOpen = false;
+                clearTimeout(this._chatBoxHide);
+                const log = document.getElementById('chat-log');
+                if (log) log.innerHTML = '';
+                const box = document.getElementById('chat-box');
+                if (box) {
+                    box.style.display = 'none';
+                    box.classList.remove('open-chat');
+                }
+                const wrap = document.getElementById('chat-input-wrap');
+                if (wrap) wrap.classList.remove('open');
+                const inp = document.getElementById('chat-input');
+                if (inp) inp.value = '';
+            }
 
             addChatMessage(name, msg) {
                 if (!this._chatHistory) this._chatHistory = [];
