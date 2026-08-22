@@ -157,6 +157,29 @@
         .stat-bar { color: #ff5555; text-shadow: 1px 1px #000; letter-spacing: 2px; }
         .oxygen-bar { color: #55ffff; text-shadow: 1px 1px #000; letter-spacing: 2px; display: none; }
         .hunger-bar { color: #ffaa00; text-shadow: 1px 1px #000; letter-spacing: 2px; }
+        .stat-bar, .hunger-bar, .oxygen-bar {
+            display: flex; gap: 2px; align-items: center;
+        }
+        .stat-bar svg, .hunger-bar svg, .oxygen-bar svg {
+            width: 18px; height: 18px; flex-shrink: 0;
+        }
+        .stat-bar svg.full { fill: #e53935; stroke: #b71c1c; }
+        .stat-bar svg.empty { fill: #333; stroke: #555; opacity: 0.55; }
+        .hunger-bar svg.full { fill: #ff9800; stroke: #e65100; }
+        .hunger-bar svg.empty { fill: #333; stroke: #555; opacity: 0.55; }
+        .oxygen-bar svg.full { fill: #29b6f6; stroke: #0277bd; }
+        .oxygen-bar svg.empty { fill: #333; stroke: #555; opacity: 0.55; }
+        #compass-hud {
+            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px; padding: 6px 14px; color: #eee; font-size: 13px;
+            pointer-events: none; text-align: center; min-width: 140px;
+            text-shadow: 1px 1px 0 #000; letter-spacing: 0.04em;
+        }
+        #compass-hud .death-way {
+            color: #ff8a80; font-size: 12px; margin-top: 2px;
+        }
+        #btn-vc-mob { left: 20px; bottom: 340px; }
 
         #hotbar {
             position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
@@ -504,11 +527,17 @@
         <div class="mob-btn" id="btn-hotbar-next" title="Next"><i data-lucide="chevron-right"></i></div>
         <div class="mob-btn" id="btn-inv-mob" title="Inventory"><i data-lucide="backpack"></i></div>
         <div class="mob-btn" id="btn-settings-mob" title="Settings"><i data-lucide="settings"></i></div>
+        <div class="mob-btn" id="btn-vc-mob" title="Voice Chat"><i data-lucide="mic"></i></div>
     </div>
     <div id="mine-bar-wrap"><div id="mine-bar"></div></div>
 
     <!-- Game HUD -->
     <div id="hud">
+        <div id="compass-hud">
+            <div id="compass-dir">N</div>
+            <div id="compass-coords">0 0 0</div>
+            <div class="death-way" id="death-waypoint" style="display:none;"></div>
+        </div>
         <div id="crosshair"></div>
         <div id="stats">
             <div class="stat-bar" id="health-bar">❤️❤️❤️❤️❤️❤️❤️❤️❤️❤️</div>
@@ -5723,6 +5752,10 @@ NOTES
                 try { document.exitPointerLock(); } catch (e) {}
                 this.setMobileControlsVisible(false);
                 this.closeChat();
+                // New feature: remember death location for compass waypoint
+                if (this.player && this.player.pos) {
+                    this.deathWaypoint = this.player.pos.clone();
+                }
                 this.dropInventoryOnDeath();
                 if (this.worldRules && this.worldRules.showDeathMessages !== false) {
                     if (this.mp && this.mp.enabled) this.mp.sendChat('[Death] ' + (msg || 'died'));
@@ -6927,6 +6960,14 @@ NOTES
                 bindBtn('btn-pause-mob', () => this.togglePause());
                 bindBtn('btn-inv-mob', () => { if (this.state === 'play' || this.state === 'inventory') this.toggleInventory(); });
                 bindBtn('btn-settings-mob', () => this.openSettings());
+                bindBtn('btn-vc-mob', async () => {
+                    if (!this.mp || !this.mp.enabled) {
+                        this.notify('Voice chat needs multiplayer');
+                        return;
+                    }
+                    await this.mp.toggleVoiceChat();
+                    try { if (window.lucide) lucide.createIcons(); } catch (e) {}
+                });
                 bindBtn('btn-hotbar-prev', () => {
                     if (!this.player || this.state !== 'play') return;
                     this.player.hotbarSelect = (this.player.hotbarSelect + 8) % 9;
@@ -8014,36 +8055,87 @@ NOTES
                 } else dc.style.display = 'none';
             }
 
+            updateCompassHud() {
+                if (!this.player || !this.camera) return;
+                const dirEl = document.getElementById('compass-dir');
+                const coordEl = document.getElementById('compass-coords');
+                const wayEl = document.getElementById('death-waypoint');
+                const yaw = this.camera.rotation.y;
+                // Minecraft-like: 0 looks -Z (north in our world convention)
+                let deg = ((-yaw * 180 / Math.PI) % 360 + 360) % 360;
+                const dirs = ['S', 'SW', 'W', 'NW', 'N', 'NE', 'E', 'SE'];
+                // map 0=deg looking south-ish depending on three.js; use simple 8-way
+                const idx = Math.round(deg / 45) % 8;
+                const faces = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+                // In Three.js, rotation.y=0 faces -Z
+                const faceIdx = Math.round((((-yaw) % (Math.PI*2)) + Math.PI*2) % (Math.PI*2) / (Math.PI/4)) % 8;
+                if (dirEl) dirEl.textContent = '✦ ' + faces[faceIdx];
+                if (coordEl) {
+                    const p = this.player.pos;
+                    coordEl.textContent = Math.floor(p.x) + '  ' + Math.floor(p.y) + '  ' + Math.floor(p.z);
+                }
+                if (wayEl) {
+                    if (this.deathWaypoint) {
+                        const dx = this.deathWaypoint.x - this.player.pos.x;
+                        const dz = this.deathWaypoint.z - this.player.pos.z;
+                        const dist = Math.sqrt(dx*dx + dz*dz);
+                        if (dist < 3) {
+                            wayEl.style.display = 'none';
+                            this.deathWaypoint = null; // arrived
+                        } else {
+                            // angle to death relative to look
+                            const ang = Math.atan2(dx, dz);
+                            let rel = ang - (-yaw);
+                            while (rel > Math.PI) rel -= Math.PI*2;
+                            while (rel < -Math.PI) rel += Math.PI*2;
+                            let arrow = '↑';
+                            if (rel > Math.PI*0.6) arrow = '←';
+                            else if (rel < -Math.PI*0.6) arrow = '→';
+                            else if (Math.abs(rel) > Math.PI*0.25) arrow = rel > 0 ? '↖' : '↗';
+                            wayEl.style.display = 'block';
+                            wayEl.textContent = arrow + ' Death ' + Math.floor(dist) + 'm';
+                        }
+                    } else {
+                        wayEl.style.display = 'none';
+                    }
+                }
+            }
+
             updateHUD() {
                 if(!this.player) return;
 
-                // Update Health Bar UI
+                const heartSvg = (full) => full
+                    ? '<svg class="full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>'
+                    : '<svg class="empty" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
+                // Lucide-style drumstick
+                const drumSvg = (full) => full
+                    ? '<svg class="full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2"><path d="M15.4 15.63a2 2 0 1 1-2.83-2.83l6.36-6.36a2 2 0 1 1 2.83 2.83z"/><path d="M8.5 8.5 5 12l7 7 3.5-3.5"/><path d="m3 21 3-3"/></svg>'
+                    : '<svg class="empty" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.4 15.63a2 2 0 1 1-2.83-2.83l6.36-6.36a2 2 0 1 1 2.83 2.83z"/><path d="M8.5 8.5 5 12l7 7 3.5-3.5"/><path d="m3 21 3-3"/></svg>';
+                const dropSvg = (full) => full
+                    ? '<svg class="full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>'
+                    : '<svg class="empty" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>';
+
                 const healthEl = document.getElementById('health-bar');
                 if (healthEl) {
                     let hHtml = '';
-                    for (let i = 0; i < 10; i++) {
-                        hHtml += i < this.player.health ? '❤️' : '🖤';
-                    }
+                    for (let i = 0; i < 10; i++) hHtml += heartSvg(i < this.player.health);
                     healthEl.innerHTML = hHtml;
                 }
 
-                // Update Hunger Bar UI
                 const hungerEl = document.getElementById('hunger-bar');
                 if (hungerEl) {
                     let hgHtml = '';
-                    for (let i = 0; i < 10; i++) {
-                        hgHtml += i < this.player.hunger ? '🍗' : '🦴';
-                    }
+                    for (let i = 0; i < 10; i++) hgHtml += drumSvg(i < this.player.hunger);
                     hungerEl.innerHTML = hgHtml;
                 }
 
                 const oxygenEl = document.getElementById('oxygen-bar');
                 if (oxygenEl) {
                     if (this.player.headInWater || this.player.oxygen < this.player.maxOxygen) {
-                        oxygenEl.style.display = 'block';
+                        oxygenEl.style.display = 'flex';
                         let oHtml = '';
                         for (let i = 0; i < this.player.maxOxygen; i++) {
-                            oHtml += i < Math.ceil(this.player.oxygen) ? '🫧' : '⚪';
+                            oHtml += dropSvg(i < Math.ceil(this.player.oxygen));
                         }
                         oxygenEl.innerHTML = oHtml;
                     } else {
@@ -8130,6 +8222,7 @@ NOTES
                     this.updateMining(dt);
                     this.updateAllFurnaces(dt);
                     this.updateGroundItems(dt);
+                    this.updateCompassHud();
                     this.player.update(dt, this.input);
                     this.world.update(this.player.pos);
                     this.particles.update(dt);
