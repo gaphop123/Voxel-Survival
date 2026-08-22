@@ -2832,21 +2832,28 @@
                     : (this.isSprinting ? PLAYER_SPEED * SPRINT_MULTIPLIER : PLAYER_SPEED);
 
                 let move = new THREE.Vector3();
+                // Arrow keys: move (WASD) unless Alt held (then look — handled in Game)
+                const arrowMove = !(input.keys['AltLeft'] || input.keys['AltRight']);
+                const goFwd = input.keys['KeyW'] || (arrowMove && input.keys['ArrowUp']);
+                const goBack = input.keys['KeyS'] || (arrowMove && input.keys['ArrowDown']);
+                const goRight = input.keys['KeyD'] || (arrowMove && input.keys['ArrowRight']);
+                const goLeft = input.keys['KeyA'] || (arrowMove && input.keys['ArrowLeft']);
+
                 if (this.flying || isSpectator) {
                     // Full 3D flight using look direction
-                    if (input.keys['KeyW']) move.add(dir);
-                    if (input.keys['KeyS']) move.sub(dir);
-                    if (input.keys['KeyD']) move.add(right);
-                    if (input.keys['KeyA']) move.sub(right);
+                    if (goFwd) move.add(dir);
+                    if (goBack) move.sub(dir);
+                    if (goRight) move.add(right);
+                    if (goLeft) move.sub(right);
                     if (input.keys['Space']) move.y += 1;
                     if (input.keys['ShiftLeft'] || input.keys['KeyC']) move.y -= 1;
                     if (move.lengthSq() > 0) move.normalize().multiplyScalar(speed);
                     this.vel.copy(move);
                 } else {
-                    if (input.keys['KeyW']) move.add(flatDir);
-                    if (input.keys['KeyS']) move.sub(flatDir);
-                    if (input.keys['KeyD']) move.add(right);
-                    if (input.keys['KeyA']) move.sub(right);
+                    if (goFwd) move.add(flatDir);
+                    if (goBack) move.sub(flatDir);
+                    if (goRight) move.add(right);
+                    if (goLeft) move.sub(right);
                     if (move.lengthSq() > 0) move.normalize().multiplyScalar(speed);
                     this.vel.x = move.x; this.vel.z = move.z;
 
@@ -5146,6 +5153,9 @@ NOTES
                 });
                 
                 document.addEventListener('keydown', e => {
+                    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space'].includes(e.code) && this.state === 'play' && !this.chatOpen) {
+                        e.preventDefault();
+                    }
                     this.input.keys[e.code] = true;
                     if(this.state === 'play') {
                         if(e.code === 'KeyE') {
@@ -5182,6 +5192,11 @@ NOTES
                             } else {
                                 this.notify('Multiplayer not active');
                             }
+                        }
+                        if(e.code === 'KeyM' && this.state === 'play' && !this.chatOpen) {
+                            e.preventDefault();
+                            if (this.mp && this.mp.enabled) this.mp.toggleVoiceChat();
+                            else this.notify('Voice chat needs multiplayer');
                         }
                         if(e.code === 'KeyT' && this.state === 'play' && !this.chatOpen) {
                             e.preventDefault();
@@ -8215,6 +8230,19 @@ NOTES
                     }
 
                     if (this.isMobile) this.applyMobileInput(dt);
+                    // Arrow keys look when Alt held (otherwise arrows move)
+                    if (this.input && this.input.keys && !this.chatOpen) {
+                        const lookMode = this.input.keys['AltLeft'] || this.input.keys['AltRight'] || this.input.keys['ShiftRight'];
+                        if (lookMode) {
+                            const sens = 1.8 * ((this.settings && this.settings.mouseSens) || 1);
+                            this.camera.rotation.order = 'YXZ';
+                            if (this.input.keys['ArrowLeft']) this.camera.rotation.y += sens * dt;
+                            if (this.input.keys['ArrowRight']) this.camera.rotation.y -= sens * dt;
+                            if (this.input.keys['ArrowUp']) this.camera.rotation.x += sens * dt;
+                            if (this.input.keys['ArrowDown']) this.camera.rotation.x -= sens * dt;
+                            this.camera.rotation.x = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, this.camera.rotation.x));
+                        }
+                    }
                     // Hold-to-mine (PC left mouse or mobile break hold)
                     if (this._mouseBreaking && this.state === 'play' && this.gameMode !== 'creative') {
                         this.handleInteract('break', { mineOnly: true });
