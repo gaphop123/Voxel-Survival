@@ -305,6 +305,13 @@
             <button class="menu-btn" id="btn-new-world">CREATE NEW WORLD</button>
             <button class="menu-btn" id="btn-load-world">LOAD WORLD</button>
             <button class="menu-btn" id="btn-join-mp">JOIN MULTIPLAYER</button>
+            <div style="margin-top:12px;color:#ccc;font-size:13px;">
+                Language / Ngôn ngữ:
+                <select id="menu-lang" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
+                    <option value="en">English</option>
+                    <option value="vi">Tiếng Việt</option>
+                </select>
+            </div>
         </div>
         <div id="menu-join" class="menu-panel">
             <div class="menu-title">JOIN MULTIPLAYER</div>
@@ -382,6 +389,12 @@
         <div class="settings-row"><span>Render distance</span><input type="range" id="set-render-dist" min="3" max="10" step="1" value="6"></div>
         <div class="settings-row"><span>Sound</span><input type="checkbox" id="set-sound" checked></div>
         <div class="settings-row"><span>Show FPS (F3)</span><input type="checkbox" id="set-debug"></div>
+        <div class="settings-row"><span>Language</span>
+            <select id="set-lang" style="background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
+                <option value="en">English</option>
+                <option value="vi">Tiếng Việt</option>
+            </select>
+        </div>
         <button class="menu-btn" id="btn-settings-close">BACK</button>
     </div>
 
@@ -3838,6 +3851,198 @@
         }
 
         
+
+        // ========== Language EN / VI ==========
+        const LANG = {
+            en: {
+                title: 'VOXEL SURVIVAL',
+                subtitle: 'Minecraft-inspired survival',
+                create_world: 'CREATE NEW WORLD',
+                load_world: 'LOAD WORLD',
+                join_mp: 'JOIN MULTIPLAYER',
+                join_title: 'JOIN MULTIPLAYER',
+                join_code_ph: 'CODE',
+                your_name: 'Your Name',
+                join_world: 'JOIN WORLD',
+                scan_nearby: 'SCAN NEARBY WORLDS',
+                back: 'BACK',
+                create_title: 'CREATE WORLD',
+                world_name: 'World Name',
+                seed_ph: 'Seed (Optional — blank = random)',
+                host_name: 'Host Name (blank = Host)',
+                generate: 'GENERATE WORLD',
+                generating: 'GENERATING...',
+                preparing: 'Preparing terrain',
+                load_title: 'LOAD WORLD',
+                delete_all: 'DELETE ALL WORLDS',
+                paused: 'PAUSED',
+                resume: 'RESUME',
+                save_world: 'SAVE WORLD',
+                settings: 'SETTINGS',
+                copy_join: 'COPY JOIN ID',
+                quit_menu: 'QUIT TO MENU',
+                mouse_sens: 'Mouse sensitivity',
+                touch_sens: 'Touch look sensitivity',
+                render_dist: 'Render distance',
+                sound: 'Sound',
+                show_fps: 'Show FPS (F3)',
+                language: 'Language',
+                settings_back: 'BACK',
+                you_died: 'You died',
+                respawn: 'RESPAWN',
+                close: '✕ CLOSE',
+                inventory: 'Inventory',
+                crafting: 'Crafting (2x2)',
+                crafting_table: 'Crafting Table (3x3)',
+                furnace: 'Furnace',
+                chest: 'Chest',
+                trades: 'Villager Trades',
+                multiplayer: 'Multiplayer',
+                mountains: 'Mountains',
+                caves: 'Caves',
+                villages: 'Villages',
+                no_nearby: 'No nearby hosts found. Share the join code (press O in-game).',
+                scanning: 'Scanning...',
+                saved: 'World saved',
+                lang_en: 'English',
+                lang_vi: 'Tiếng Việt'
+            },
+            vi: {
+                title: 'VOXEL SINH TỒN',
+                subtitle: 'Sinh tồn kiểu Minecraft',
+                create_world: 'TẠO THẾ GIỚI MỚI',
+                load_world: 'TẢI THẾ GIỚI',
+                join_mp: 'VÀO ĐA NGƯỜI CHƠI',
+                join_title: 'VÀO ĐA NGƯỜI CHƠI',
+                join_code_ph: 'MÃ',
+                your_name: 'Tên của bạn',
+                join_world: 'VÀO THẾ GIỚI',
+                scan_nearby: 'QUÉT THẾ GIỚI GẦN',
+                back: 'QUAY LẠI',
+                create_title: 'TẠO THẾ GIỚI',
+                world_name: 'Tên thế giới',
+                seed_ph: 'Seed (tuỳ chọn — trống = ngẫu nhiên)',
+                host_name: 'Tên host (trống = Host)',
+                generate: 'TẠO THẾ GIỚI',
+                generating: 'ĐANG TẠO...',
+                preparing: 'Đang chuẩn bị địa hình',
+                load_title: 'TẢI THẾ GIỚI',
+                delete_all: 'XÓA TẤT CẢ THẾ GIỚI',
+                paused: 'TẠM DỪNG',
+                resume: 'TIẾP TỤC',
+                save_world: 'LƯU THẾ GIỚI',
+                settings: 'CÀI ĐẶT',
+                copy_join: 'SAO CHÉP MÃ JOIN',
+                quit_menu: 'VỀ MENU',
+                mouse_sens: 'Độ nhạy chuột',
+                touch_sens: 'Độ nhạy nhìn (cảm ứng)',
+                render_dist: 'Tầm nhìn',
+                sound: 'Âm thanh',
+                show_fps: 'Hiện FPS (F3)',
+                language: 'Ngôn ngữ',
+                settings_back: 'QUAY LẠI',
+                you_died: 'Bạn đã chết',
+                respawn: 'HỒI SINH',
+                close: '✕ ĐÓNG',
+                inventory: 'Túi đồ',
+                crafting: 'Chế tạo (2x2)',
+                crafting_table: 'Bàn chế tạo (3x3)',
+                furnace: 'Lò nung',
+                chest: 'Rương',
+                trades: 'Giao dịch dân làng',
+                multiplayer: 'Đa người chơi',
+                mountains: 'Núi',
+                caves: 'Hang động',
+                villages: 'Làng',
+                no_nearby: 'Không tìm thấy host gần. Chia sẻ mã join (nhấn O trong game).',
+                scanning: 'Đang quét...',
+                saved: 'Đã lưu thế giới',
+                lang_en: 'English',
+                lang_vi: 'Tiếng Việt'
+            }
+        };
+        let currentLang = 'en';
+        try {
+            const s = JSON.parse(localStorage.getItem('voxel_settings') || '{}');
+            if (s.lang === 'vi' || s.lang === 'en') currentLang = s.lang;
+        } catch (e) {}
+        function t(key) {
+            const pack = LANG[currentLang] || LANG.en;
+            return pack[key] || LANG.en[key] || key;
+        }
+        function applyLanguage(lang) {
+            if (lang) currentLang = lang;
+            const L = LANG[currentLang] || LANG.en;
+            const set = (id, key, attr) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                if (attr === 'placeholder') el.placeholder = L[key] || key;
+                else el.textContent = L[key] || key;
+            };
+            // Main menu
+            const mainTitle = document.querySelector('#menu-main .menu-title');
+            if (mainTitle) mainTitle.textContent = L.title;
+            const mainSub = document.querySelector('#menu-main .menu-subtitle');
+            if (mainSub) mainSub.textContent = L.subtitle;
+            set('btn-new-world', 'create_world');
+            set('btn-load-world', 'load_world');
+            set('btn-join-mp', 'join_mp');
+            // Join
+            const joinTitle = document.querySelector('#menu-join .menu-title');
+            if (joinTitle) joinTitle.textContent = L.join_title;
+            set('join-id-input', 'join_code_ph', 'placeholder');
+            set('join-name-input', 'your_name', 'placeholder');
+            set('btn-join-start', 'join_world');
+            set('btn-scan-nearby', 'scan_nearby');
+            set('btn-back-join', 'back');
+            // Create
+            const createTitle = document.querySelector('#menu-create .menu-title');
+            if (createTitle) createTitle.textContent = L.create_title;
+            set('world-name', 'world_name', 'placeholder');
+            set('world-seed', 'seed_ph', 'placeholder');
+            set('host-name', 'host_name', 'placeholder');
+            set('btn-start-new', 'generate');
+            set('btn-back-create', 'back');
+            // Generating
+            const genTitle = document.querySelector('#menu-generating .menu-title');
+            if (genTitle) genTitle.textContent = L.generating;
+            set('gen-status', 'preparing');
+            // Load
+            const loadTitle = document.querySelector('#menu-load .menu-title');
+            if (loadTitle) loadTitle.textContent = L.load_title;
+            set('btn-delete-all', 'delete_all');
+            set('btn-back-load', 'back');
+            // Pause
+            const pauseTitle = document.querySelector('#pause-screen .menu-title');
+            if (pauseTitle) pauseTitle.textContent = L.paused;
+            set('btn-pause-resume', 'resume');
+            set('btn-pause-save', 'save_world');
+            set('btn-pause-settings', 'settings');
+            set('btn-pause-copy-id', 'copy_join');
+            set('btn-pause-quit', 'quit_menu');
+            // Settings
+            const setTitle = document.querySelector('#settings-screen .menu-title');
+            if (setTitle) setTitle.textContent = L.settings;
+            set('btn-settings-close', 'settings_back');
+            const rows = document.querySelectorAll('#settings-screen .settings-row span');
+            const rowKeys = ['mouse_sens', 'touch_sens', 'render_dist', 'sound', 'show_fps', 'language'];
+            rows.forEach((span, i) => { if (rowKeys[i]) span.textContent = L[rowKeys[i]]; });
+            // Death
+            const respawn = document.getElementById('btn-respawn');
+            if (respawn) respawn.textContent = L.respawn;
+            // Close buttons
+            ['btn-close-inventory','btn-close-crafting','btn-close-furnace','btn-close-chest','btn-close-trade'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = L.close;
+            });
+            // Lang select value
+            const sel = document.getElementById('set-lang');
+            if (sel) sel.value = currentLang;
+            const menuLang = document.getElementById('menu-lang');
+            if (menuLang) menuLang.value = currentLang;
+            document.documentElement.lang = currentLang === 'vi' ? 'vi' : 'en';
+        }
+
         // ========== Multiplayer (PeerJS P2P — free public broker) ==========
         class Multiplayer {
             constructor(game) {
@@ -3866,11 +4071,16 @@
             _registerRoom(code, name) {
                 try {
                     const key = 'voxel_mp_rooms';
+                    const c = String(code || '').toUpperCase();
                     const list = JSON.parse(localStorage.getItem(key) || '[]');
                     const now = Date.now();
-                    const filtered = list.filter(r => now - r.ts < 30 * 60 * 1000 && r.code !== code);
-                    filtered.unshift({ code, name: name || 'World', ts: now });
+                    const filtered = list.filter(r => now - r.ts < 30 * 60 * 1000 && String(r.code).toUpperCase() !== c);
+                    filtered.unshift({ code: c, name: name || 'World', ts: now });
                     localStorage.setItem(key, JSON.stringify(filtered.slice(0, 20)));
+                    try {
+                        if (!Multiplayer._sharedBC) Multiplayer._sharedBC = new BroadcastChannel('voxel_mp_rooms');
+                        Multiplayer._sharedBC.postMessage({ type: 'host', code: c, name: name || 'World', ts: now });
+                    } catch (e2) {}
                 } catch (e) {}
             }
             static listNearbyRooms() {
@@ -4019,6 +4229,28 @@
                         this.game.world.setBlock(d.x, d.y, d.z, d.id);
                     }
                     // Host relays to all other clients
+                    if (this.isHost) this._broadcast(d, fromConn);
+                } else if (d.type === 'drop') {
+                    if (this.game && typeof this.game.spawnGroundItem === 'function') {
+                        // spawn without re-broadcast
+                        const before = (this.game.groundItems || []).length;
+                        this.game.spawnGroundItem(d.id, d.count, d.x, d.y, d.z, false);
+                        // set gid to match remote
+                        const list = this.game.groundItems || [];
+                        if (list.length > before && d.gid) {
+                            list[list.length - 1].gid = d.gid;
+                        }
+                    }
+                    if (this.isHost) this._broadcast(d, fromConn);
+                } else if (d.type === 'pickup') {
+                    if (this.game && this.game.groundItems) {
+                        const idx = this.game.groundItems.findIndex(g => g.gid === d.gid);
+                        if (idx >= 0) {
+                            const g = this.game.groundItems[idx];
+                            if (g.mesh) try { this.game.scene.remove(g.mesh); } catch (e) {}
+                            this.game.groundItems.splice(idx, 1);
+                        }
+                    }
                     if (this.isHost) this._broadcast(d, fromConn);
                 } else if (d.type === 'pvp_hit') {
                     // Apply damage if we are the target
@@ -4251,6 +4483,7 @@
                 };
                 this.groundItems = [];
                 this.loadSettings();
+                this.setupRoomDiscovery();
                 this.time = 0;
                 this.isNight = false;
                 this.craftingSlots3 = new Array(9).fill(null);
@@ -4519,6 +4752,36 @@
             }
 
             setupUI() {
+                // Language
+                applyLanguage(currentLang);
+                const menuLang = document.getElementById('menu-lang');
+                if (menuLang) {
+                    menuLang.value = currentLang;
+                    menuLang.onchange = () => {
+                        currentLang = menuLang.value;
+                        try {
+                            const s = JSON.parse(localStorage.getItem('voxel_settings') || '{}');
+                            s.lang = currentLang;
+                            localStorage.setItem('voxel_settings', JSON.stringify(s));
+                        } catch (e) {}
+                        applyLanguage(currentLang);
+                    };
+                }
+                const setLang = document.getElementById('set-lang');
+                if (setLang) {
+                    setLang.value = currentLang;
+                    setLang.onchange = () => {
+                        currentLang = setLang.value;
+                        try {
+                            const s = JSON.parse(localStorage.getItem('voxel_settings') || '{}');
+                            s.lang = currentLang;
+                            localStorage.setItem('voxel_settings', JSON.stringify(s));
+                        } catch (e) {}
+                        if (this.settings) this.settings.lang = currentLang;
+                        applyLanguage(currentLang);
+                    };
+                }
+
                 document.getElementById('btn-new-world').onclick = () => {
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-create').style.display = 'flex';
@@ -5027,8 +5290,19 @@
 
             trySpawnMobs() {
                 if (!this._pendingMobSpawn || !this.world) return;
+                // Multiplayer clients: host is sole authority for mobs
                 if (this.mp && this.mp.enabled && !this.mp.isHost) {
                     this._pendingMobSpawn = false;
+                    // Remove any locally spawned non-synced mobs
+                    if (this.mobs) {
+                        for (let i = this.mobs.length - 1; i >= 0; i--) {
+                            const m = this.mobs[i];
+                            if (!m._mpRemote) {
+                                if (m.mesh) try { this.scene.remove(m.mesh); } catch (e) {}
+                                this.mobs.splice(i, 1);
+                            }
+                        }
+                    }
                     return;
                 }
                 const pcx = this.player ? Math.floor(this.player.pos.x / CHUNK_SIZE) : 0;
@@ -5827,6 +6101,67 @@
                 }
             }
 
+
+            refreshNearbyList(notifyEmpty = false) {
+                const el = document.getElementById('nearby-list');
+                if (!el) return;
+                el.innerHTML = '<div style="color:#aaa;font-size:12px;">Scanning...</div>';
+                let rooms = [];
+                try {
+                    if (typeof Multiplayer !== 'undefined' && Multiplayer.listNearbyRooms) {
+                        rooms = Multiplayer.listNearbyRooms();
+                    }
+                } catch (e) { console.warn(e); }
+                // Also listen BroadcastChannel announcements
+                try {
+                    if (!this._bcRooms) this._bcRooms = {};
+                    rooms = rooms.concat(Object.values(this._bcRooms || {}));
+                } catch (e) {}
+                // Dedupe by code
+                const seen = {};
+                rooms = rooms.filter(r => {
+                    if (!r || !r.code) return false;
+                    const c = String(r.code).toUpperCase();
+                    if (seen[c]) return false;
+                    seen[c] = true;
+                    r.code = c;
+                    return true;
+                });
+                if (!rooms.length) {
+                    el.innerHTML = '<div style="color:#888;font-size:12px;line-height:1.4;">No nearby hosts found.<br>Hosts appear here when they enable multiplayer on this device/browser, or share the join code (press O in-game).</div>';
+                    if (notifyEmpty) this.notify && this.notify('No nearby worlds found');
+                    return;
+                }
+                el.innerHTML = '';
+                for (const r of rooms) {
+                    const btn = document.createElement('button');
+                    btn.className = 'menu-btn';
+                    btn.style.cssText = 'font-size:13px;padding:8px;margin:4px 0;width:100%;';
+                    const age = r.ts ? Math.max(0, Math.floor((Date.now() - r.ts) / 1000)) : 0;
+                    btn.textContent = (r.name || 'World') + ' — ' + r.code + (age ? ' (' + age + 's ago)' : '');
+                    btn.onclick = () => {
+                        const input = document.getElementById('join-id-input');
+                        if (input) input.value = r.code;
+                        this.notify && this.notify('Code filled: ' + r.code);
+                    };
+                    el.appendChild(btn);
+                }
+            }
+
+            setupRoomDiscovery() {
+                try {
+                    this._bcRooms = {};
+                    this._roomBC = new BroadcastChannel('voxel_mp_rooms');
+                    this._roomBC.onmessage = (ev) => {
+                        const d = ev.data;
+                        if (!d || d.type !== 'host') return;
+                        this._bcRooms[d.code] = { code: d.code, name: d.name, ts: Date.now() };
+                    };
+                } catch (e) {
+                    console.warn('BroadcastChannel unavailable', e);
+                }
+            }
+
             setupMobileControls() {
                 const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
                 if (!isTouch && window.innerWidth > 900) return;
@@ -6066,10 +6401,10 @@
                 if (this.particles) this.particles.spawnBreak(x, y, z, col);
                 if (this.gameMode !== 'creative') {
                     let dropId = BlockRegistry[id]?.drops || id;
-                    this.player.addItem(dropId, 1);
-                    // Gravel has a chance to drop flint
+                    // Drop on ground so anyone can pick up (stealable)
+                    this.spawnGroundItem(dropId, 1, x + 0.5, y + 0.3, z + 0.5, true);
                     if (id === BLOCKS.GRAVEL && Math.random() < 0.25) {
-                        this.player.addItem(ITEMS.FLINT, 1);
+                        this.spawnGroundItem(ITEMS.FLINT, 1, x + 0.5, y + 0.4, z + 0.5, true);
                         this.notify('Flint!');
                     }
                 }
@@ -6545,21 +6880,29 @@
             }
 
 
-            spawnGroundItem(id, count, x, y, z) {
+            spawnGroundItem(id, count, x, y, z, sync = false) {
                 if (!id || count <= 0) return;
                 if (!this.groundItems) this.groundItems = [];
+                const gid = 'g_' + Date.now().toString(36) + '_' + Math.floor(Math.random() * 1e6).toString(36);
                 const mesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.25, 0.25, 0.25),
+                    new THREE.BoxGeometry(0.28, 0.28, 0.28),
                     new THREE.MeshLambertMaterial({ map: this.texAtlas, color: 0xffffff })
                 );
-                mesh.position.set(x + (Math.random()-0.5)*0.4, y + 0.2, z + (Math.random()-0.5)*0.4);
+                const px = x + (Math.random()-0.5)*0.35;
+                const py = y + 0.15;
+                const pz = z + (Math.random()-0.5)*0.35;
+                mesh.position.set(px, py, pz);
                 this.scene.add(mesh);
-                this.groundItems.push({
-                    id, count, mesh,
+                const entry = {
+                    gid, id, count, mesh,
                     pos: mesh.position.clone(),
                     life: 300, // 5 minutes
                     bob: Math.random() * Math.PI * 2
-                });
+                };
+                this.groundItems.push(entry);
+                if (sync && this.mp && this.mp.enabled) {
+                    this.mp.send({ type: 'drop', gid, id, count, x: px, y: py, z: pz });
+                }
             }
 
             updateGroundItems(dt) {
@@ -6577,10 +6920,13 @@
                         this.groundItems.splice(i, 1);
                         continue;
                     }
-                    // Pickup
-                    if (this.player.pos.distanceTo(g.mesh.position) < 1.4) {
+                    // Pickup (any player can steal)
+                    if (this.player.pos.distanceTo(g.mesh.position) < 1.5) {
                         this.player.addItem(g.id, g.count);
                         if (g.mesh) this.scene.remove(g.mesh);
+                        if (this.mp && this.mp.enabled && g.gid) {
+                            this.mp.send({ type: 'pickup', gid: g.gid });
+                        }
                         this.groundItems.splice(i, 1);
                         audio.playSound('click');
                         this.updateHUD();
@@ -6595,7 +6941,7 @@
                 for (let i = 0; i < 36; i++) {
                     const it = this.player.inventory[i];
                     if (it && it.count > 0) {
-                        this.spawnGroundItem(it.id, it.count, p.x, p.y + 0.5, p.z);
+                        this.spawnGroundItem(it.id, it.count, p.x, p.y + 0.5, p.z, true);
                     }
                     this.player.inventory[i] = null;
                 }
@@ -7112,7 +7458,7 @@
                         this.mp.sendPos();
                     }
                     this._mpMobT = (this._mpMobT || 0) + dt;
-                    if (this.mp && this.mp.enabled && this.mp.isHost && this._mpMobT > 0.2) {
+                    if (this.mp && this.mp.enabled && this.mp.isHost && this._mpMobT > 0.15) {
                         this._mpMobT = 0;
                         this.mp.sendMobs();
                     }
