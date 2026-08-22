@@ -63,7 +63,68 @@
             border-color: #8cf; color: #fff; transform: translateY(-2px) scale(1.02);
             box-shadow: 0 4px 20px rgba(100,180,255,0.25);
         }
-        .menu-panel { display: none; flex-direction: column; align-items: center; position: relative; z-index: 1; }
+        .menu-panel {
+            display: none; flex-direction: column; align-items: center; position: relative; z-index: 1;
+            background: linear-gradient(165deg, rgba(18,28,42,0.92), rgba(8,12,20,0.95));
+            border: 1px solid rgba(120,180,255,0.22);
+            border-radius: 16px;
+            padding: 28px 32px 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            min-width: min(360px, 92vw);
+            max-width: 96vw;
+        }
+        #menu-main.menu-panel { display: flex; }
+        .menu-title {
+            font-size: clamp(28px, 6vw, 42px);
+            letter-spacing: 0.12em;
+            background: linear-gradient(180deg, #fff 20%, #8ec8ff 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: none;
+            filter: drop-shadow(0 2px 8px rgba(80,160,255,0.35));
+            margin-bottom: 6px;
+        }
+        .menu-subtitle { color: #9ab; font-size: 13px; margin-bottom: 18px; letter-spacing: 0.04em; }
+        .menu-btn {
+            width: min(300px, 85vw);
+            background: linear-gradient(180deg, rgba(55,75,100,0.95), rgba(25,35,50,0.98));
+            border: 1px solid rgba(140,190,255,0.35);
+            border-radius: 10px;
+            padding: 12px 18px;
+            margin: 6px 0;
+            font-size: 15px;
+            letter-spacing: 0.06em;
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+        }
+        .menu-btn:hover {
+            border-color: #9cf;
+            box-shadow: 0 6px 24px rgba(80,160,255,0.3);
+            transform: translateY(-2px);
+        }
+        .menu-badge {
+            display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px;
+            background: rgba(76,175,80,0.25); color: #a5d6a7; border: 1px solid rgba(76,175,80,0.4);
+            margin-left: 6px; vertical-align: middle;
+        }
+        #main-menu {
+            background:
+                radial-gradient(ellipse 80% 50% at 50% -10%, rgba(60,120,200,0.35), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 80%, rgba(40,80,40,0.2), transparent 50%),
+                linear-gradient(180deg, #0a1220 0%, #152238 40%, #1a2a1a 100%) !important;
+        }
+        #main-menu::before {
+            content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0.15;
+            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 20h40M20 0v40' stroke='%23fff' stroke-width='0.5' fill='none'/%3E%3C/svg%3E");
+        }
+        .mob-btn svg { width: 28px; height: 28px; stroke: #fff; fill: none; stroke-width: 2; pointer-events: none; }
+        .mob-btn { display: flex; align-items: center; justify-content: center; }
+        #btn-vc-toggle {
+            padding: 6px 12px; margin-left: 6px; background: #333; color: #ccc; border: 1px solid #555;
+            border-radius: 4px; cursor: pointer; font-size: 12px; pointer-events: auto;
+        }
+        #btn-vc-toggle.on { background: #1b5e20; color: #fff; border-color: #4caf50; }
         #death-screen {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(80,0,0,0.75); justify-content: center; align-items: center;
@@ -294,6 +355,7 @@
         .settings-row input[type=range] { flex: 1; }
     </style>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
 </head>
 <body>
 
@@ -301,7 +363,7 @@
     <div id="main-menu">
         <div id="menu-main" class="menu-panel" style="display: flex;">
             <div class="menu-title">VOXEL SURVIVAL</div>
-            <div class="menu-subtitle">BETA ADVENTURE UPDATE</div>
+            <div class="menu-subtitle">Survival · Multiplayer · Mods · BETA</div>
             <button class="menu-btn" id="btn-new-world">CREATE NEW WORLD</button>
             <button class="menu-btn" id="btn-load-world">LOAD WORLD</button>
             <button class="menu-btn" id="btn-join-mp">JOIN MULTIPLAYER</button>
@@ -343,6 +405,9 @@
                 </label>
                 <label style="display:flex;align-items:center;gap:8px;margin:6px 0;color:#8bc34a;">
                     <input type="checkbox" id="gen-multiplayer"> Enable Multiplayer (Host)
+                </label>
+                <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+                    <input type="checkbox" id="gen-allow-vc" checked> Allow Voice Chat (VC)
                 </label>
                 <input type="text" id="host-name" placeholder="Host Name (blank = Host)" style="width:90%;max-width:280px;padding:8px;margin:4px 0;font-size:13px;">
                 <div style="font-size:11px;color:#888;margin-left:4px;">P2P via PeerJS — press O for 5-letter Join code</div>
@@ -430,15 +495,15 @@
     </div>
     <div id="mobile-controls">
         <div class="joy-zone" id="joy-move"><div class="joy-knob" id="knob-move"></div></div>
-        <div class="mob-btn" id="btn-jump">⬆</div>
-        <div class="mob-btn" id="btn-break">⛏</div>
-        <div class="mob-btn" id="btn-place">⬚</div>
-        <div class="mob-btn" id="btn-chat-mob">T</div>
-        <div class="mob-btn" id="btn-pause-mob">❚❚</div>
-        <div class="mob-btn" id="btn-hotbar-prev">◀</div>
-        <div class="mob-btn" id="btn-hotbar-next">▶</div>
-        <div class="mob-btn" id="btn-inv-mob">🎒</div>
-        <div class="mob-btn" id="btn-settings-mob">⚙</div>
+        <div class="mob-btn" id="btn-jump" title="Jump"><i data-lucide="chevrons-up"></i></div>
+        <div class="mob-btn" id="btn-break" title="Mine"><i data-lucide="pickaxe"></i></div>
+        <div class="mob-btn" id="btn-place" title="Place"><i data-lucide="box"></i></div>
+        <div class="mob-btn" id="btn-chat-mob" title="Chat"><i data-lucide="message-square"></i></div>
+        <div class="mob-btn" id="btn-pause-mob" title="Pause"><i data-lucide="pause"></i></div>
+        <div class="mob-btn" id="btn-hotbar-prev" title="Prev"><i data-lucide="chevron-left"></i></div>
+        <div class="mob-btn" id="btn-hotbar-next" title="Next"><i data-lucide="chevron-right"></i></div>
+        <div class="mob-btn" id="btn-inv-mob" title="Inventory"><i data-lucide="backpack"></i></div>
+        <div class="mob-btn" id="btn-settings-mob" title="Settings"><i data-lucide="settings"></i></div>
     </div>
     <div id="mine-bar-wrap"><div id="mine-bar"></div></div>
 
@@ -4364,10 +4429,19 @@ NOTES
                 return s;
             }
             _fullId(code) {
-                const c = String(code || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-                if (c.startsWith('VS')) return 'vs' + c.slice(2);
-                if (c.startsWith('vs')) return c;
+                let c = String(code || '').trim();
+                // strip common prefixes people paste
+                c = c.replace(/^join\s*[:=]?\s*/i, '').replace(/^code\s*[:=]?\s*/i, '');
+                c = c.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (c.startsWith('VS')) c = c.slice(2);
                 return 'vs' + c;
+            }
+            _normalizeJoinCode(code) {
+                let c = String(code || '').trim();
+                c = c.replace(/^join\s*[:=]?\s*/i, '').replace(/^code\s*[:=]?\s*/i, '');
+                c = c.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (c.startsWith('VS')) c = c.slice(2);
+                return c;
             }
             _registerRoom(code, name) {
                 try {
@@ -4439,6 +4513,8 @@ NOTES
                 });
             }
             async join(hostId, playerName) {
+                hostId = this._normalizeJoinCode(hostId);
+                this.allowVC = true;
                 this.playerName = playerName || 'Player';
                 this.isHost = false;
                 this.enabled = true;
@@ -4451,6 +4527,7 @@ NOTES
                     this.peer = new Peer({ debug: 1 });
                     this.peer.on('open', () => {
                         this.peerId = this.peer.id;
+                        this._setupVcAnswer();
                         this.conn = this.peer.connect(fullId, { reliable: true });
                         this.conn.on('open', () => {
                             this.conn.send({ type: 'hello', name: this.playerName });
@@ -4691,6 +4768,129 @@ NOTES
             }
             sendBlock(x, y, z, id) {
                 this.send({ type: 'block', x, y, z, id });
+            }
+
+            // ---- Voice chat (WebRTC via PeerJS) ----
+            async toggleVoiceChat() {
+                if (!this.enabled) {
+                    this.game.notify('Join multiplayer first');
+                    return false;
+                }
+                if (this.game.genOptions && this.game.genOptions.allowVC === false) {
+                    this.game.notify('Voice chat disabled for this world');
+                    return false;
+                }
+                if (this.vcEnabled) {
+                    this.stopVoiceChat();
+                    return false;
+                }
+                try {
+                    this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                    this.vcEnabled = true;
+                    this.vcCalls = this.vcCalls || {};
+                    this.vcAudioEls = this.vcAudioEls || {};
+                    // Call all existing peers
+                    if (this.isHost) {
+                        for (const c of this.conns) {
+                            if (c.open) this._vcCallPeer(c.peer);
+                        }
+                    } else if (this.conn && this.conn.open) {
+                        this._vcCallPeer(this.conn.peer);
+                    }
+                    this.send({ type: 'vc_status', on: true, name: this.playerName });
+                    this.game.notify('Voice chat ON');
+                    this._updateVcButton();
+                    return true;
+                } catch (e) {
+                    console.warn(e);
+                    this.game.notify('Mic permission denied');
+                    this._updateVcButton();
+                    return false;
+                }
+            }
+            stopVoiceChat() {
+                this.vcEnabled = false;
+                if (this.localStream) {
+                    this.localStream.getTracks().forEach(t => t.stop());
+                    this.localStream = null;
+                }
+                if (this.vcCalls) {
+                    for (const id of Object.keys(this.vcCalls)) {
+                        try { this.vcCalls[id].close(); } catch (e) {}
+                    }
+                    this.vcCalls = {};
+                }
+                if (this.vcAudioEls) {
+                    for (const id of Object.keys(this.vcAudioEls)) {
+                        try { this.vcAudioEls[id].remove(); } catch (e) {}
+                    }
+                    this.vcAudioEls = {};
+                }
+                this.send({ type: 'vc_status', on: false, name: this.playerName });
+                this.game.notify('Voice chat OFF');
+                this._updateVcButton();
+            }
+            _updateVcButton() {
+                const b = document.getElementById('btn-vc-toggle');
+                if (!b) return;
+                if (this.vcEnabled) {
+                    b.textContent = 'VC ON';
+                    b.classList.add('on');
+                } else {
+                    b.textContent = 'VC OFF';
+                    b.classList.remove('on');
+                }
+            }
+            _vcCallPeer(peerId) {
+                if (!this.peer || !this.localStream || !peerId) return;
+                if (this.vcCalls && this.vcCalls[peerId]) return;
+                try {
+                    const call = this.peer.call(peerId, this.localStream);
+                    this._bindVcCall(call, peerId);
+                } catch (e) { console.warn('vc call', e); }
+            }
+            _bindVcCall(call, peerId) {
+                if (!call) return;
+                this.vcCalls = this.vcCalls || {};
+                this.vcCalls[peerId] = call;
+                call.on('stream', (remoteStream) => {
+                    this.vcAudioEls = this.vcAudioEls || {};
+                    let audio = this.vcAudioEls[peerId];
+                    if (!audio) {
+                        audio = document.createElement('audio');
+                        audio.autoplay = true;
+                        audio.playsInline = true;
+                        audio.style.display = 'none';
+                        document.body.appendChild(audio);
+                        this.vcAudioEls[peerId] = audio;
+                    }
+                    audio.srcObject = remoteStream;
+                    audio.play().catch(() => {});
+                });
+                call.on('close', () => {
+                    if (this.vcCalls) delete this.vcCalls[peerId];
+                    if (this.vcAudioEls && this.vcAudioEls[peerId]) {
+                        this.vcAudioEls[peerId].remove();
+                        delete this.vcAudioEls[peerId];
+                    }
+                });
+            }
+            _setupVcAnswer() {
+                if (!this.peer) return;
+                this.peer.on('call', async (call) => {
+                    try {
+                        if (!this.localStream && this.vcEnabled) {
+                            this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+                        }
+                        if (this.vcEnabled && this.localStream) {
+                            call.answer(this.localStream);
+                        } else {
+                            // Answer with empty — still receive? better request enable
+                            call.answer();
+                        }
+                        this._bindVcCall(call, call.peer);
+                    } catch (e) { console.warn('vc answer', e); }
+                });
             }
             getJoinId() {
                 return this.shortCode || this.peerId || null;
@@ -5198,23 +5398,7 @@ NOTES
                 };
                 document.getElementById('btn-scan-nearby').onclick = () => this.refreshNearbyList(true);
                 document.getElementById('btn-join-start').onclick = async () => {
-                    let hostId = (document.getElementById('join-id-input').value || '').trim().toUpperCase();
-                    hostId = hostId.replace(/[^A-Z0-9]/g, '');
-                    const name = (document.getElementById('join-name-input').value || 'Player').trim() || 'Player';
-                    const st = document.getElementById('join-status');
-                    if (!hostId || hostId.length < 4) { st.textContent = 'Enter the 5-letter code'; return; }
-                    st.textContent = 'Connecting to ' + hostId + '...';
-                    try {
-                        const seed = 'join_' + hostId;
-                        this._joinAsClient = { hostId, name };
-                        await this.startWorld('MP_' + name, seed);
-                        this.mp = new Multiplayer(this);
-                        await this.mp.join(hostId, name);
-                        st.textContent = 'Connected!';
-                    } catch (e) {
-                        st.textContent = 'Failed: ' + (e.type || e.message || e);
-                        console.error(e);
-                    }
+                    await this.doJoinFromMenu();
                 };
 
                 document.getElementById('btn-start-new').onclick = () => {
@@ -5226,6 +5410,7 @@ NOTES
                         villages: document.getElementById('gen-villages')?.checked !== false,
                         struct: document.getElementById('gen-struct')?.value || 'normal',
                         multiplayer: !!document.getElementById('gen-multiplayer')?.checked,
+                        allowVC: document.getElementById('gen-allow-vc')?.checked !== false,
                         hostName: (document.getElementById('host-name')?.value || '').trim() || 'Host'
                     };
                     this.startWorld(name, s);
@@ -5269,6 +5454,25 @@ NOTES
                     chatSend.addEventListener('click', sendFn);
                     chatSend.addEventListener('touchend', sendFn, { passive: false });
                 }
+                const vcBtn = document.getElementById('btn-vc-toggle');
+                if (vcBtn) {
+                    vcBtn.onclick = async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!this.mp || !this.mp.enabled) {
+                            this.notify('Voice chat needs multiplayer');
+                            return;
+                        }
+                        await this.mp.toggleVoiceChat();
+                    };
+                }
+                // Lucide icons for mobile controls
+                try {
+                    if (window.lucide && typeof lucide.createIcons === 'function') {
+                        lucide.createIcons();
+                    }
+                } catch (e) {}
+
                 const chatClose = document.getElementById('chat-close-btn');
                 if (chatClose) {
                     const closeFn = (e) => {
@@ -6465,6 +6669,41 @@ NOTES
                 ).join('');
             }
 
+            async doJoinFromMenu(codeOverride) {
+                const input = document.getElementById('join-id-input');
+                let hostId = codeOverride || (input && input.value) || '';
+                hostId = String(hostId || '').trim().replace(/^join\s*[:=]?\s*/i, '').replace(/^code\s*[:=]?\s*/i, '');
+                hostId = hostId.toUpperCase().replace(/[^A-Z0-9]/g, '');
+                if (hostId.startsWith('VS')) hostId = hostId.slice(2);
+                const name = (document.getElementById('join-name-input')?.value || 'Player').trim() || 'Player';
+                const st = document.getElementById('join-status');
+                if (!hostId || hostId.length < 4) {
+                    if (st) st.textContent = 'Enter the 5-letter code (from host key O)';
+                    return;
+                }
+                if (input) input.value = hostId;
+                if (st) st.textContent = 'Connecting to ' + hostId + ' (vs' + hostId + ')...';
+                try {
+                    if (this.mp) { try { this.mp.destroy(); } catch (e) {} this.mp = null; }
+                    const seed = 'join_' + hostId;
+                    this._joinAsClient = { hostId, name };
+                    this.genOptions = this.genOptions || {};
+                    this.genOptions.multiplayer = true;
+                    this.genOptions.allowVC = true;
+                    await this.startWorld('MP_' + name, seed);
+                    this.mp = new Multiplayer(this);
+                    this.mp.allowVC = true;
+                    await this.mp.join(hostId, name);
+                    if (st) st.textContent = 'Connected!';
+                    this.notify('Joined world ' + hostId);
+                } catch (e) {
+                    const msg = (e && (e.type || e.message)) || String(e);
+                    if (st) st.textContent = 'Failed: ' + msg + ' — check host is online & code matches';
+                    console.error('[Join]', e);
+                    this.notify('Join failed: ' + msg);
+                }
+            }
+
             refreshNearbyList(notifyEmpty = false) {
                 const el = document.getElementById('nearby-list');
                 if (!el) return;
@@ -6501,11 +6740,12 @@ NOTES
                     btn.className = 'menu-btn';
                     btn.style.cssText = 'font-size:13px;padding:8px;margin:4px 0;width:100%;';
                     const age = r.ts ? Math.max(0, Math.floor((Date.now() - r.ts) / 1000)) : 0;
-                    btn.textContent = (r.name || 'World') + ' — ' + r.code + (age ? ' (' + age + 's ago)' : '');
+                    const code = String(r.code || '').toUpperCase().replace(/^VS/, '');
+                    btn.textContent = (r.name || 'World') + ' — ' + code + (age ? ' (' + age + 's ago)' : '') + '  ·  TAP TO JOIN';
                     btn.onclick = () => {
                         const input = document.getElementById('join-id-input');
-                        if (input) input.value = r.code;
-                        this.notify && this.notify('Code filled: ' + r.code);
+                        if (input) input.value = code;
+                        this.doJoinFromMenu(code);
                     };
                     el.appendChild(btn);
                 }
