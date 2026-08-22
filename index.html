@@ -305,6 +305,7 @@
             <button class="menu-btn" id="btn-new-world">CREATE NEW WORLD</button>
             <button class="menu-btn" id="btn-load-world">LOAD WORLD</button>
             <button class="menu-btn" id="btn-join-mp">JOIN MULTIPLAYER</button>
+            <button class="menu-btn" id="btn-mods">MODS (.vxm)</button>
             <div style="margin-top:12px;color:#ccc;font-size:13px;">
                 Language / Ngôn ngữ:
                 <select id="menu-lang" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
@@ -364,6 +365,20 @@
                 <div id="gen-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#4caf50,#8bc34a);transition:width 0.2s;"></div>
             </div>
             <div id="gen-detail" style="color:#aaa;font-size:12px;">Seed: —</div>
+        </div>
+        <div id="menu-mods" class="menu-panel" style="display:none;flex-direction:column;align-items:center;max-width:520px;">
+            <div class="menu-title">VOXEL MODS</div>
+            <div class="menu-subtitle" style="max-width:480px;text-align:left;font-size:12px;line-height:1.45;color:#bbb;">
+                Load a <b>.vxm</b> file (JSON). Mods can add blocks, items, mobs, assets (textures as data URLs), and UI strings.<br>
+                See guide below or example mod.
+            </div>
+            <input type="file" id="mod-file-input" accept=".vxm,.json,application/json" style="margin:10px 0;color:#fff;">
+            <div id="mod-list" style="width:100%;max-height:160px;overflow:auto;margin:8px 0;font-size:13px;"></div>
+            <button class="menu-btn" id="btn-mod-example">LOAD EXAMPLE MOD</button>
+            <button class="menu-btn" id="btn-mod-clear">UNLOAD ALL MODS</button>
+            <button class="menu-btn" id="btn-mod-guide">HOW TO MAKE A MOD</button>
+            <button class="menu-btn" id="btn-back-mods">BACK</button>
+            <pre id="mod-guide" style="display:none;text-align:left;font-size:11px;background:#111;padding:12px;max-height:280px;overflow:auto;width:100%;color:#cfc;white-space:pre-wrap;"></pre>
         </div>
         <div id="menu-load" class="menu-panel">
             <div class="menu-title">LOAD WORLD</div>
@@ -2891,7 +2906,8 @@
             }
 
             // Accurate 3D DDA (Digital Differential Analyzer) Voxel Raycasting
-            raycast(maxDist = 6.0) {
+            raycast(maxDist = 6.0, opts = {}) {
+                const includeFluids = !!(opts && opts.includeFluids);
                 const ray = new THREE.Vector3();
                 this.camera.getWorldDirection(ray);
                 const origin = this.camera.position;
@@ -2917,37 +2933,30 @@
 
                 while (totalDist < maxDist) {
                     let b = this.world.getBlock(x, y, z);
-                    // Hit any non-air block including non-solid (torch, door open, mushrooms, plants)
-                    if (b && b !== BLOCKS.AIR && b !== BLOCKS.WATER && b !== BLOCKS.LAVA && b !== BLOCKS.FIRE) {
-                        return {
-                            hit: new THREE.Vector3(x, y, z),
-                            prev: new THREE.Vector3(prevX, prevY, prevZ)
-                        };
+                    if (b && b !== BLOCKS.AIR) {
+                        const isFluid = (b === BLOCKS.WATER || b === BLOCKS.LAVA || b === BLOCKS.FIRE);
+                        if (!isFluid || includeFluids) {
+                            return {
+                                hit: new THREE.Vector3(x, y, z),
+                                prev: new THREE.Vector3(prevX, prevY, prevZ),
+                                blockId: b
+                            };
+                        }
                     }
 
-                    prevX = x;
-                    prevY = y;
-                    prevZ = z;
+                    prevX = x; prevY = y; prevZ = z;
 
                     if (distX < distY) {
                         if (distX < distZ) {
-                            totalDist = distX;
-                            distX += deltaX;
-                            x += stepX;
+                            totalDist = distX; distX += deltaX; x += stepX;
                         } else {
-                            totalDist = distZ;
-                            distZ += deltaZ;
-                            z += stepZ;
+                            totalDist = distZ; distZ += deltaZ; z += stepZ;
                         }
                     } else {
                         if (distY < distZ) {
-                            totalDist = distY;
-                            distY += deltaY;
-                            y += stepY;
+                            totalDist = distY; distY += deltaY; y += stepY;
                         } else {
-                            totalDist = distZ;
-                            distZ += deltaZ;
-                            z += stepZ;
+                            totalDist = distZ; distZ += deltaZ; z += stepZ;
                         }
                     }
                 }
@@ -4070,6 +4079,271 @@
             document.documentElement.lang = currentLang === 'vi' ? 'vi' : 'en';
         }
 
+
+        // ========== Voxel Mod System (.vxm JSON) ==========
+        // Spec: a .vxm file is JSON (optionally wrapped). See loadExampleVxm().
+        const ModAPI = {
+            nextBlockId: 200,
+            nextItemId: 500,
+            nextMobKey: 0,
+            loaded: [],
+            assetCache: {}, // path -> dataURL or URL
+            ui: {},
+            registerBlock(def) {
+                const id = def.id != null ? def.id : (this.nextBlockId++);
+                if (id < 1) throw new Error('block id invalid');
+                BLOCKS[def.key || ('MOD_BLOCK_' + id)] = id;
+                BlockRegistry[id] = {
+                    name: def.name || ('ModBlock ' + id),
+                    solid: def.solid !== false,
+                    transparent: !!def.transparent,
+                    fluid: !!def.fluid,
+                    unbreakable: !!def.unbreakable,
+                    tex: def.tex || [3,3,3,3,3,3],
+                    type: def.type || 'stone',
+                    drops: def.drops != null ? def.drops : id,
+                    door: !!def.door,
+                    bed: !!def.bed
+                };
+                if (def.hardness != null) BLOCK_HARDNESS[id] = def.hardness;
+                if (def.tool) BLOCK_TOOL[id] = def.tool;
+                return id;
+            },
+            registerItem(def) {
+                const id = def.id != null ? def.id : (this.nextItemId++);
+                const key = def.key || ('MOD_ITEM_' + id);
+                ITEMS[key] = id;
+                ItemRegistry[id] = {
+                    name: def.name || key,
+                    maxStack: def.maxStack || 64,
+                    type: def.type || 'item',
+                    toolType: def.toolType,
+                    tier: def.tier,
+                    damage: def.damage,
+                    heal: def.heal
+                };
+                if (def.icon) {
+                    // applied after icons exist
+                    this._pendingIcons = this._pendingIcons || [];
+                    this._pendingIcons.push({ id, icon: def.icon });
+                }
+                return id;
+            },
+            registerMob(def) {
+                const key = def.key || ('MOD_MOB_' + (this.nextMobKey++));
+                MOB_TYPES[key] = {
+                    name: def.name || key,
+                    health: def.health || 10,
+                    speed: def.speed || 1.5,
+                    hostile: !!def.hostile,
+                    size: def.size || [0.6, 1.8, 0.6],
+                    damage: def.damage || 1,
+                    drops: def.drops || [],
+                    color: def.color || 0x888888
+                };
+                if (def.texture) ENTITY_TEX_PATHS[key] = def.texture;
+                return key;
+            },
+            applyAssets(assets) {
+                if (!assets) return;
+                for (const [k, v] of Object.entries(assets)) {
+                    this.assetCache[k] = v;
+                }
+            },
+            applyUI(ui) {
+                if (!ui) return;
+                Object.assign(this.ui, ui);
+            },
+            applyPendingIcons(game) {
+                if (!this._pendingIcons || !game) return;
+                for (const p of this._pendingIcons) {
+                    let src = p.icon;
+                    if (this.assetCache[src]) src = this.assetCache[src];
+                    if (game.itemIcons) game.itemIcons[p.id] = src;
+                }
+            }
+        };
+
+        function normalizeVxm(raw) {
+            if (typeof raw === 'string') {
+                raw = JSON.parse(raw);
+            }
+            // Support { voxelMod: true, ... } or plain
+            if (raw.voxelMod === false) throw new Error('Not a voxel mod');
+            return raw;
+        }
+
+        function applyVxmMod(mod, game) {
+            const name = mod.name || mod.id || 'Unnamed Mod';
+            const ver = mod.version || '1.0.0';
+            if (mod.assets) ModAPI.applyAssets(mod.assets);
+            if (mod.ui) ModAPI.applyUI(mod.ui);
+            const reg = { name, ver, blocks: [], items: [], mobs: [] };
+            if (Array.isArray(mod.blocks)) {
+                for (const b of mod.blocks) reg.blocks.push(ModAPI.registerBlock(b));
+            }
+            if (Array.isArray(mod.items)) {
+                for (const it of mod.items) reg.items.push(ModAPI.registerItem(it));
+            }
+            if (Array.isArray(mod.mobs)) {
+                for (const m of mod.mobs) reg.mobs.push(ModAPI.registerMob(m));
+            }
+            if (Array.isArray(mod.recipes)) {
+                for (const r of mod.recipes) {
+                    if (r.shape || r.in) Recipes.push(r);
+                }
+            }
+            ModAPI.loaded.push(reg);
+            if (game) {
+                ModAPI.applyPendingIcons(game);
+                if (game.notify) game.notify('Mod loaded: ' + name + ' v' + ver);
+            }
+            try {
+                const store = JSON.parse(localStorage.getItem('voxel_mods') || '[]');
+                store.push(mod);
+                localStorage.setItem('voxel_mods', JSON.stringify(store.slice(-10)));
+            } catch (e) {}
+            return reg;
+        }
+
+        function loadExampleVxm() {
+            return {
+                voxelMod: true,
+                name: 'Example Ruby Mod',
+                id: 'example_ruby',
+                version: '1.0.0',
+                author: 'VoxelSurvival',
+                description: 'Adds ruby ore, ruby item, and a friendly ruby slime.',
+                assets: {
+                    // Optional: data-URL textures
+                    // 'textures/ruby.png': 'data:image/png;base64,...'
+                },
+                ui: {
+                    ruby_hello: 'Ruby glows warmly.'
+                },
+                blocks: [
+                    {
+                        key: 'RUBY_ORE',
+                        id: 210,
+                        name: 'Ruby Ore',
+                        solid: true,
+                        tex: [19, 19, 19, 19, 19, 19],
+                        type: 'stone',
+                        hardness: 3.5,
+                        tool: 'pickaxe',
+                        drops: 510
+                    },
+                    {
+                        key: 'RUBY_BLOCK',
+                        id: 211,
+                        name: 'Block of Ruby',
+                        solid: true,
+                        tex: [64, 64, 64, 64, 64, 64],
+                        type: 'metal',
+                        hardness: 5,
+                        tool: 'pickaxe'
+                    }
+                ],
+                items: [
+                    {
+                        key: 'RUBY',
+                        id: 510,
+                        name: 'Ruby',
+                        maxStack: 64,
+                        type: 'item'
+                    }
+                ],
+                mobs: [
+                    {
+                        key: 'RUBY_SLIME',
+                        name: 'Ruby Slime',
+                        health: 12,
+                        speed: 1.2,
+                        hostile: false,
+                        size: [0.8, 0.8, 0.8],
+                        color: 0xe53935,
+                        drops: [{ id: 510, min: 0, max: 2 }]
+                    }
+                ],
+                recipes: [
+                    {
+                        shape: [510,510,510, 510,510,510, 510,510,510],
+                        out: 211,
+                        count: 1
+                    }
+                ]
+            };
+        }
+
+        const VXM_GUIDE = `HOW TO MAKE A .vxm MOD
+========================
+A .vxm file is JSON. Save as mymod.vxm or mymod.json.
+
+Minimal structure:
+{
+  "voxelMod": true,
+  "name": "My Mod",
+  "id": "my_mod",
+  "version": "1.0.0",
+  "author": "You",
+  "description": "What it does",
+  "assets": {
+    "icon_ruby": "data:image/png;base64,...."
+  },
+  "ui": {
+    "custom_key": "Hello from mod"
+  },
+  "blocks": [
+    {
+      "key": "COOL_BLOCK",
+      "id": 220,
+      "name": "Cool Block",
+      "solid": true,
+      "transparent": false,
+      "tex": [3,3,3,3,3,3],
+      "type": "stone",
+      "hardness": 2,
+      "tool": "pickaxe",
+      "drops": 220
+    }
+  ],
+  "items": [
+    {
+      "key": "COOL_GEM",
+      "id": 520,
+      "name": "Cool Gem",
+      "maxStack": 64,
+      "type": "item",
+      "icon": "icon_ruby"
+    }
+  ],
+  "mobs": [
+    {
+      "key": "COOL_MOB",
+      "name": "Cool Mob",
+      "health": 20,
+      "speed": 1.5,
+      "hostile": false,
+      "size": [0.6, 1.8, 0.6],
+      "color": 16711680,
+      "drops": [{ "id": 520, "min": 1, "max": 2 }]
+    }
+  ],
+  "recipes": [
+    { "in": [520, 520], "out": 220, "count": 1 },
+    { "shape": [520,null,null, null,520,null, null,null,520], "out": 220, "count": 1 }
+  ]
+}
+
+NOTES
+- Block IDs: prefer 200–400. Item IDs: prefer 500+.
+- tex: 6 face tile indices into the game atlas (same as vanilla).
+- assets: map name -> data URL or https URL for icons.
+- ui: string table; use from chat or future hooks.
+- recipes: "in" = shapeless list; "shape" = 9 slots (3x3).
+- Reload mods from MODS menu before creating a world for best results.
+`;
+
         // ========== Multiplayer (PeerJS P2P — free public broker) ==========
         class Multiplayer {
             constructor(game) {
@@ -4808,6 +5082,52 @@
                         applyLanguage(currentLang);
                     };
                 }
+
+                // Mods menu
+                document.getElementById('btn-mods')?.addEventListener('click', () => {
+                    document.getElementById('menu-main').style.display = 'none';
+                    document.getElementById('menu-mods').style.display = 'flex';
+                    this.refreshModList();
+                });
+                document.getElementById('btn-back-mods')?.addEventListener('click', () => {
+                    document.getElementById('menu-mods').style.display = 'none';
+                    document.getElementById('menu-main').style.display = 'flex';
+                });
+                document.getElementById('btn-mod-guide')?.addEventListener('click', () => {
+                    const g = document.getElementById('mod-guide');
+                    if (!g) return;
+                    if (g.style.display === 'none') {
+                        g.style.display = 'block';
+                        g.textContent = VXM_GUIDE;
+                    } else g.style.display = 'none';
+                });
+                document.getElementById('btn-mod-example')?.addEventListener('click', () => {
+                    try {
+                        applyVxmMod(loadExampleVxm(), this);
+                        this.refreshModList();
+                        this.notify('Example Ruby mod loaded');
+                    } catch (e) { this.notify('Mod error: ' + e.message); console.error(e); }
+                });
+                document.getElementById('btn-mod-clear')?.addEventListener('click', () => {
+                    ModAPI.loaded = [];
+                    try { localStorage.removeItem('voxel_mods'); } catch (e) {}
+                    this.refreshModList();
+                    this.notify('Mods cleared (reload page to fully reset registries)');
+                });
+                document.getElementById('mod-file-input')?.addEventListener('change', async (ev) => {
+                    const f = ev.target.files && ev.target.files[0];
+                    if (!f) return;
+                    try {
+                        const txt = await f.text();
+                        const mod = normalizeVxm(txt);
+                        applyVxmMod(mod, this);
+                        this.refreshModList();
+                    } catch (e) {
+                        this.notify('Failed to load mod: ' + e.message);
+                        console.error(e);
+                    }
+                    ev.target.value = '';
+                });
 
                 document.getElementById('btn-new-world').onclick = () => {
                     document.getElementById('menu-main').style.display = 'none';
@@ -6129,6 +6449,22 @@
             }
 
 
+            refreshModList() {
+                const el = document.getElementById('mod-list');
+                if (!el) return;
+                if (!ModAPI.loaded.length) {
+                    el.innerHTML = '<div style="color:#888;">No mods loaded</div>';
+                    return;
+                }
+                el.innerHTML = ModAPI.loaded.map(m =>
+                    '<div style="padding:6px;border:1px solid #444;margin:4px 0;border-radius:4px;">' +
+                    '<b>' + m.name + '</b> v' + m.ver +
+                    ' — blocks:' + (m.blocks||[]).length +
+                    ' items:' + (m.items||[]).length +
+                    ' mobs:' + (m.mobs||[]).length + '</div>'
+                ).join('');
+            }
+
             refreshNearbyList(notifyEmpty = false) {
                 const el = document.getElementById('nearby-list');
                 if (!el) return;
@@ -6499,7 +6835,9 @@
 
             handleInteract(action, opts = {}) {
                 if (this.gameMode === 'spectator') return; // can't interact
-                let target = this.player.raycast();
+                const heldPre = this.player.inventory[this.player.hotbarSelect];
+                const wantFluid = heldPre && (heldPre.id === ITEMS.BUCKET || heldPre.id === ITEMS.WATER_BUCKET || heldPre.id === ITEMS.LAVA_BUCKET);
+                let target = this.player.raycast(6.0, { includeFluids: !!wantFluid && action === 'place' });
                 
                 if(action === 'break') {
                     if (this.playerView) this.playerView.triggerSwing();
