@@ -704,6 +704,8 @@
             [BLOCKS.BRICK]: 2.0, [BLOCKS.GLASS]: 0.3, [BLOCKS.ICE]: 0.5, [BLOCKS.SNOW]: 0.2,
             [BLOCKS.CRAFTING_TABLE]: 2.5, [BLOCKS.DOOR_CLOSED]: 3.0, [BLOCKS.DOOR_OPEN]: 3.0,
             [BLOCKS.BED]: 0.2, [BLOCKS.TORCH]: 0.05, [BLOCKS.FENCE]: 2.0, [BLOCKS.FENCE_GATE]: 2.0,
+            [BLOCKS.RED_MUSHROOM]: 0.05, [BLOCKS.BROWN_MUSHROOM]: 0.05, [BLOCKS.FLOWER]: 0.05,
+            [BLOCKS.VINES]: 0.2, [BLOCKS.SUGAR_CANE]: 0.05, [BLOCKS.FIRE]: 0.01,
             [BLOCKS.WOOL]: 0.8, [BLOCKS.WOOL_RED]: 0.8,
             [BLOCKS.GOLD_BLOCK]: 3, [BLOCKS.IRON_BLOCK]: 5, [BLOCKS.DIAMOND_BLOCK]: 5
         };
@@ -1939,37 +1941,61 @@
                     }
                 }
 
-                // Village house on flat grass — report coords so game can spawn villagers there
+                // Village (~5% of chunks) — improved wooden house
                 let village = null;
-                if (!isNether && hashRand(cx, 777, cz) < 0.06) {
-                    let hx = 4 + Math.floor(hashRand(cx, 778, cz) * 6);
-                    let hz = 4 + Math.floor(hashRand(cx, 779, cz) * 6);
+                if (!isNether && hashRand(cx, 777, cz) < 0.05) {
+                    let hx = 3 + Math.floor(hashRand(cx, 778, cz) * 5);
+                    let hz = 3 + Math.floor(hashRand(cx, 779, cz) * 5);
                     let hy = 0;
                     for (let y = 60; y > 5; y--) {
                         const idx = hx + y * size + hz * size * height;
                         if (data[idx] === 1 || data[idx] === 2 || data[idx] === 8) { hy = y; break; }
                     }
-                    if (hy > 28 && hy < 45) {
-                        for (let dx = 0; dx < 5; dx++) {
-                            for (let dz = 0; dz < 5; dz++) {
-                                for (let dy = 0; dy < 4; dy++) {
-                                    let xx = hx + dx, zz = hz + dz, yy = hy + 1 + dy;
+                    if (hy > 28 && hy < 48) {
+                        const W = 7, D = 6, H = 5;
+                        for (let dx = 0; dx < W; dx++) {
+                            for (let dz = 0; dz < D; dz++) {
+                                // Floor
+                                let fidx = (hx+dx) + hy * size + (hz+dz) * size * height;
+                                if (hx+dx < size && hz+dz < size) data[fidx] = 6; // planks
+                                for (let dy = 1; dy <= H; dy++) {
+                                    let xx = hx + dx, zz = hz + dz, yy = hy + dy;
                                     if (xx >= size || zz >= size || yy >= height) continue;
                                     let idx = xx + yy * size + zz * size * height;
-                                    const wall = (dx === 0 || dx === 4 || dz === 0 || dz === 4);
-                                    if (dy === 3) data[idx] = 6;
-                                    else if (wall && !(dx === 2 && dz === 0 && dy < 2)) data[idx] = 6;
-                                    else if (dy === 0 && !wall) data[idx] = 0;
+                                    const wall = (dx === 0 || dx === W-1 || dz === 0 || dz === D-1);
+                                    const door = (dz === 0 && dx === Math.floor(W/2) && dy <= 2);
+                                    const window = (dy === 2 && ((dx === 0 || dx === W-1) && dz === Math.floor(D/2)));
+                                    if (dy === H) {
+                                        // Roof planks / cobble ridge
+                                        data[idx] = (dx === 0 || dx === W-1 || dz === 0 || dz === D-1) ? 4 : 6;
+                                    } else if (door) {
+                                        data[idx] = 0; // doorway
+                                    } else if (window) {
+                                        data[idx] = 9; // glass
+                                    } else if (wall) {
+                                        data[idx] = 6; // plank walls
+                                    } else if (dy === 1 && dx === 2 && dz === 3) {
+                                        data[idx] = 13; // crafting table inside
+                                    } else if (dy === 1 && dx === 4 && dz === 3) {
+                                        data[idx] = 50; // furnace
+                                    } else {
+                                        data[idx] = 0;
+                                    }
                                 }
-                                let fidx = (hx+dx) + hy * size + (hz+dz) * size * height;
-                                if (hx+dx < size && hz+dz < size) data[fidx] = 6;
                             }
                         }
-                        let tidx = (hx+2) + (hy+3) * size + (hz+2) * size * height;
-                        if (hx+2 < size && hz+2 < size && hy+3 < height) data[tidx] = 23;
-                        // World coords of village center (doorway)
+                        // Torch on wall inside
+                        let tidx = (hx+3) + (hy+3) * size + (hz+2) * size * height;
+                        if (hx+3 < size && hz+2 < size && hy+3 < height) data[tidx] = 23;
+                        // Door blocks
+                        const doorX = hx + Math.floor(W/2), doorZ = hz;
+                        if (doorX < size && doorZ < size) {
+                            const d1 = doorX + (hy+1) * size + doorZ * size * height;
+                            const d2 = doorX + (hy+2) * size + doorZ * size * height;
+                            data[d1] = 61; data[d2] = 61; // DOOR_CLOSED
+                        }
                         village = {
-                            x: cx * size + hx + 2,
+                            x: cx * size + hx + Math.floor(W/2),
                             y: hy + 1,
                             z: cz * size + hz
                         };
@@ -2891,7 +2917,8 @@
 
                 while (totalDist < maxDist) {
                     let b = this.world.getBlock(x, y, z);
-                    if (b && BlockRegistry[b].solid) {
+                    // Hit any non-air block including non-solid (torch, door open, mushrooms, plants)
+                    if (b && b !== BLOCKS.AIR && b !== BLOCKS.WATER && b !== BLOCKS.LAVA && b !== BLOCKS.FIRE) {
                         return {
                             hit: new THREE.Vector3(x, y, z),
                             prev: new THREE.Vector3(prevX, prevY, prevZ)
@@ -5701,8 +5728,8 @@
                 if (!this.player || !this.world) return;
                 if (!this.torchLights) {
                     this.torchLights = [];
-                    for (let i = 0; i < 12; i++) {
-                        const pl = new THREE.PointLight(0xffaa55, 0, 10, 2);
+                    for (let i = 0; i < 16; i++) {
+                        const pl = new THREE.PointLight(0xffc070, 1.85, 14, 1.15);
                         pl.visible = false;
                         this.scene.add(pl);
                         this.torchLights.push(pl);
@@ -5740,8 +5767,8 @@
                     const L = this.torchLights[i];
                     if (i < found.length) {
                         L.position.set(found[i][0], found[i][1], found[i][2]);
-                        L.intensity = 1.2;
-                        L.distance = 12;
+                        L.intensity = 2.2;
+                        L.distance = 16;
                         L.visible = true;
                     } else {
                         L.intensity = 0;
@@ -6391,6 +6418,26 @@
             finishBreakBlock(x, y, z, id) {
                 this.world.setBlock(x, y, z, BLOCKS.AIR);
                 if (this.mp && this.mp.enabled) this.mp.sendBlock(x, y, z, BLOCKS.AIR);
+                // Remove other door half
+                if (id === BLOCKS.DOOR_CLOSED || id === BLOCKS.DOOR_OPEN) {
+                    for (const oy of [1, -1]) {
+                        const oid = this.world.getBlock(x, y + oy, z);
+                        if (oid === BLOCKS.DOOR_CLOSED || oid === BLOCKS.DOOR_OPEN) {
+                            this.world.setBlock(x, y + oy, z, BLOCKS.AIR);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(x, y + oy, z, BLOCKS.AIR);
+                        }
+                    }
+                }
+                // Remove adjacent bed half
+                if (id === BLOCKS.BED) {
+                    for (const [ox, oz] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+                        if (this.world.getBlock(x+ox, y, z+oz) === BLOCKS.BED) {
+                            this.world.setBlock(x+ox, y, z+oz, BLOCKS.AIR);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(x+ox, y, z+oz, BLOCKS.AIR);
+                            break;
+                        }
+                    }
+                }
                 audio.playSound('break');
                 const col = id === BLOCKS.GRASS ? 0x4caf50
                     : id === BLOCKS.STONE || id === BLOCKS.COBBLESTONE ? 0x9e9e9e
@@ -6401,6 +6448,7 @@
                 if (this.particles) this.particles.spawnBreak(x, y, z, col);
                 if (this.gameMode !== 'creative') {
                     let dropId = BlockRegistry[id]?.drops || id;
+                    if (id === BLOCKS.DOOR_OPEN) dropId = BLOCKS.DOOR_CLOSED;
                     // Drop on ground so anyone can pick up (stealable)
                     this.spawnGroundItem(dropId, 1, x + 0.5, y + 0.3, z + 0.5, true);
                     if (id === BLOCKS.GRAVEL && Math.random() < 0.25) {
@@ -6554,29 +6602,61 @@
                             this.trySleep(target.hit.x, target.hit.y, target.hit.z);
                             return;
                         }
-                        // Toggle door
+                        // Toggle door (works both open and closed — raycast hits non-solid open door)
                         if (id === BLOCKS.DOOR_CLOSED || id === BLOCKS.DOOR_OPEN || BlockRegistry[id]?.door) {
-                            const nx = id === BLOCKS.DOOR_CLOSED ? BLOCKS.DOOR_OPEN : BLOCKS.DOOR_CLOSED;
-                            this.world.setBlock(target.hit.x, target.hit.y, target.hit.z, nx);
-                            // toggle upper half if present
-                            const above = this.world.getBlock(target.hit.x, target.hit.y + 1, target.hit.z);
-                            if (above === BLOCKS.DOOR_CLOSED || above === BLOCKS.DOOR_OPEN) {
-                                this.world.setBlock(target.hit.x, target.hit.y + 1, target.hit.z, nx);
-                            }
-                            const below = this.world.getBlock(target.hit.x, target.hit.y - 1, target.hit.z);
-                            if (below === BLOCKS.DOOR_CLOSED || below === BLOCKS.DOOR_OPEN) {
-                                this.world.setBlock(target.hit.x, target.hit.y - 1, target.hit.z, nx);
+                            const hx = target.hit.x, hy = target.hit.y, hz = target.hit.z;
+                            const nx = (id === BLOCKS.DOOR_CLOSED) ? BLOCKS.DOOR_OPEN : BLOCKS.DOOR_CLOSED;
+                            // Find bottom of door
+                            let by = hy;
+                            const below = this.world.getBlock(hx, hy - 1, hz);
+                            if (below === BLOCKS.DOOR_CLOSED || below === BLOCKS.DOOR_OPEN) by = hy - 1;
+                            this.world.setBlock(hx, by, hz, nx);
+                            this.world.setBlock(hx, by + 1, hz, nx);
+                            if (this.mp && this.mp.enabled) {
+                                this.mp.sendBlock(hx, by, hz, nx);
+                                this.mp.sendBlock(hx, by + 1, hz, nx);
                             }
                             audio.playSound('door');
-                            if (this.mp && this.mp.enabled) {
-                                this.mp.sendBlock(target.hit.x, target.hit.y, target.hit.z, nx);
-                            }
                             return;
                         }
                     }
 
                     let item = this.player.inventory[this.player.hotbarSelect];
                     if(!item) return;
+
+                    // Empty bucket: scoop water/lava
+                    if (item.id === ITEMS.BUCKET && target) {
+                        const hx = target.hit.x, hy = target.hit.y, hz = target.hit.z;
+                        const hid = this.world.getBlock(hx, hy, hz);
+                        if (hid === BLOCKS.WATER || hid === BLOCKS.LAVA) {
+                            this.world.setBlock(hx, hy, hz, BLOCKS.AIR);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(hx, hy, hz, BLOCKS.AIR);
+                            const filled = hid === BLOCKS.WATER ? ITEMS.WATER_BUCKET : ITEMS.LAVA_BUCKET;
+                            if (this.gameMode !== 'creative') {
+                                item.count--;
+                                if (item.count <= 0) this.player.inventory[this.player.hotbarSelect] = null;
+                            }
+                            this.player.addItem(filled, 1);
+                            audio.playSound('place');
+                            this.updateHUD();
+                            return;
+                        }
+                    }
+                    // Place water/lava from bucket
+                    if ((item.id === ITEMS.WATER_BUCKET || item.id === ITEMS.LAVA_BUCKET) && target) {
+                        const fluid = item.id === ITEMS.WATER_BUCKET ? BLOCKS.WATER : BLOCKS.LAVA;
+                        const fx = target.prev.x, fy = target.prev.y, fz = target.prev.z;
+                        if (!this.world.getBlock(fx, fy, fz) || this.world.getBlock(fx, fy, fz) === BLOCKS.AIR) {
+                            this.world.setBlock(fx, fy, fz, fluid);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(fx, fy, fz, fluid);
+                            if (this.gameMode !== 'creative') {
+                                this.player.inventory[this.player.hotbarSelect] = { id: ITEMS.BUCKET, count: 1 };
+                            }
+                            audio.playSound('place');
+                            this.updateHUD();
+                            return;
+                        }
+                    }
 
                     // Flint and Steel
                     if (item.id === ITEMS.FLINT_AND_STEEL && target) {
@@ -6618,12 +6698,25 @@
                         if(box.intersectsBox(this.player.getAABB(this.player.pos))) return;
                         
                         this.world.setBlock(target.prev.x, target.prev.y, target.prev.z, item.id);
-                        // Door: place upper half
+                        // Door: 1 wide x 2 tall
                         if (item.id === BLOCKS.DOOR_CLOSED) {
                             const uy = target.prev.y + 1;
                             if (uy < CHUNK_HEIGHT && !this.world.getBlock(target.prev.x, uy, target.prev.z)) {
                                 this.world.setBlock(target.prev.x, uy, target.prev.z, BLOCKS.DOOR_CLOSED);
                                 if (this.mp && this.mp.enabled) this.mp.sendBlock(target.prev.x, uy, target.prev.z, BLOCKS.DOOR_CLOSED);
+                            }
+                        }
+                        // Bed: 2 long x 1 wide (along look direction)
+                        if (item.id === BLOCKS.BED) {
+                            const yaw = this.camera.rotation.y;
+                            let dx = 0, dz = 0;
+                            const ax = Math.abs(Math.sin(yaw)), az = Math.abs(Math.cos(yaw));
+                            if (ax > az) dx = Math.sin(yaw) > 0 ? -1 : 1;
+                            else dz = Math.cos(yaw) > 0 ? -1 : 1;
+                            const bx = target.prev.x + dx, by = target.prev.y, bz = target.prev.z + dz;
+                            if (!this.world.getBlock(bx, by, bz)) {
+                                this.world.setBlock(bx, by, bz, BLOCKS.BED);
+                                if (this.mp && this.mp.enabled) this.mp.sendBlock(bx, by, bz, BLOCKS.BED);
                             }
                         }
                         if (this.mp && this.mp.enabled) this.mp.sendBlock(target.prev.x, target.prev.y, target.prev.z, item.id);
@@ -6910,9 +7003,22 @@
                 for (let i = this.groundItems.length - 1; i >= 0; i--) {
                     const g = this.groundItems[i];
                     g.life -= dt;
-                    g.bob += dt * 3;
+                    g.bob = (g.bob || 0) + dt * 3;
+                    if (g.vy == null) g.vy = 0;
+                    // Gravity + settle on ground
+                    g.vy -= 18 * dt;
+                    let ny = g.mesh.position.y + g.vy * dt;
+                    const gx = Math.floor(g.mesh.position.x);
+                    const gz = Math.floor(g.mesh.position.z);
+                    const belowY = Math.floor(ny - 0.1);
+                    const below = this.world.getBlock(gx, belowY, gz);
+                    if (below && BlockRegistry[below]?.solid) {
+                        ny = belowY + 1.15;
+                        g.vy = 0;
+                        g.pos.y = ny;
+                    }
                     if (g.mesh) {
-                        g.mesh.position.y = g.pos.y + Math.sin(g.bob) * 0.08;
+                        g.mesh.position.y = ny + Math.sin(g.bob) * 0.06;
                         g.mesh.rotation.y += dt * 2;
                     }
                     if (g.life <= 0) {
