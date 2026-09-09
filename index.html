@@ -31,8 +31,9 @@
         #main-menu {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(180deg, #1a3a5c 0%, #2d5a3d 40%, #1a2a1a 70%, #0a0a12 100%);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            pointer-events: auto; z-index: 100; overflow: hidden;
+            display: flex; flex-direction: column; align-items: center; justify-content: safe center;
+            pointer-events: auto; z-index: 100; overflow-x: hidden; overflow-y: auto;
+            -webkit-overflow-scrolling: touch; padding: 12px 0; box-sizing: border-box;
         }
         #main-menu::before {
             content: ''; position: absolute; inset: 0;
@@ -80,7 +81,31 @@
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             min-width: min(360px, 92vw);
-            max-width: 96vw;
+            max-width: min(96vw, 520px);
+            max-height: min(92vh, 100%);
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            box-sizing: border-box;
+            --menu-scale: 1;
+            transform: scale(var(--menu-scale));
+            transform-origin: center center;
+            margin: auto;
+        }
+        @media (max-height: 720px) {
+            .menu-panel {
+                padding: 14px 16px 12px;
+                border-radius: 12px;
+                max-height: 94vh;
+            }
+            .menu-title { font-size: clamp(18px, 5vw, 28px) !important; margin-bottom: 4px !important; }
+            .menu-subtitle { font-size: 11px !important; margin-bottom: 8px !important; }
+            .menu-btn { padding: 10px 14px; margin: 4px 0; font-size: 13px; }
+        }
+        @media (max-height: 560px) {
+            .menu-panel { padding: 10px 12px 8px; max-height: 96vh; }
+            .menu-btn { padding: 8px 12px; font-size: 12px; }
+            input[type="text"] { padding: 8px; font-size: 13px; margin: 6px; }
         }
         #menu-main.menu-panel { display: flex; }
         .menu-title {
@@ -637,7 +662,7 @@
             <div class="menu-subtitle">WORLD GENERATION</div>
             <input type="text" id="world-name" placeholder="World Name" value="New World">
             <input type="text" id="world-seed" placeholder="Seed (Optional — blank = random)">
-            <div style="text-align:left;width:100%;max-width:320px;margin:8px auto;font-size:13px;color:#ccc;">
+            <div style="text-align:left;width:100%;max-width:320px;margin:4px auto;font-size:12px;color:#ccc;line-height:1.25;">
                 <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
                     <input type="checkbox" id="gen-mountains" checked> Mountains
                 </label>
@@ -658,7 +683,7 @@
                     <input type="text" id="gen-password" placeholder="Blank = auto-generate" maxlength="32"
                         style="width:min(200px,70vw);padding:6px;margin:4px 0;font-size:12px;font-family:'Press Start 2P',monospace;">
                 </label>
-                <div style="font-size:10px;color:#888;margin:0 0 6px 4px;line-height:1.35;">Leave blank to auto-generate a password when hosting. Shown in pause with join code. Leave multiplayer off = no password needed.</div>
+                <div style="font-size:10px;color:#888;margin:0 0 4px 4px;line-height:1.3;">Blank = auto password when host. Off MP = no password.</div>
                 <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
                     Gamemode:
                     <select id="gen-gamemode" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 6px;font-family:'Press Start 2P',monospace;font-size:10px;">
@@ -6561,9 +6586,13 @@ TIPS
                     this.camera.updateProjectionMatrix();
                     this.renderer.setSize(window.innerWidth, window.innerHeight);
                     if (this.isMobile) this.fitMobileControlsScale();
+                    this.fitMenuPanelsScale();
                 });
                 window.addEventListener('orientationchange', () => {
-                    setTimeout(() => { if (this.isMobile) this.fitMobileControlsScale(); }, 200);
+                    setTimeout(() => {
+                        if (this.isMobile) this.fitMobileControlsScale();
+                        this.fitMenuPanelsScale();
+                    }, 200);
                 });
                 
                 document.addEventListener('keydown', e => {
@@ -6772,10 +6801,12 @@ TIPS
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-mods').style.display = 'flex';
                     this.refreshModList();
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 });
                 document.getElementById('btn-back-mods')?.addEventListener('click', () => {
                     document.getElementById('menu-mods').style.display = 'none';
                     document.getElementById('menu-main').style.display = 'flex';
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 });
                 document.getElementById('btn-mod-guide')?.addEventListener('click', () => {
                     const g = document.getElementById('mod-guide');
@@ -6856,10 +6887,12 @@ TIPS
                 document.getElementById('btn-new-world').onclick = () => {
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-create').style.display = 'flex';
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
                 document.getElementById('btn-back-create').onclick = () => {
                     document.getElementById('menu-create').style.display = 'none';
                     document.getElementById('menu-main').style.display = 'flex';
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
                 const refreshSaveList = async () => {
                     await saveSys.init();
@@ -6894,6 +6927,7 @@ TIPS
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-load').style.display = 'flex';
                     await refreshSaveList();
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
                 document.getElementById('btn-delete-all').onclick = async () => {
                     const list = await saveSys.listWorlds();
@@ -6908,6 +6942,7 @@ TIPS
                 document.getElementById('btn-back-load').onclick = () => {
                     document.getElementById('menu-load').style.display = 'none';
                     document.getElementById('menu-main').style.display = 'flex';
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
 
                 document.getElementById('btn-join-mp').onclick = () => {
@@ -6915,10 +6950,12 @@ TIPS
                     document.getElementById('menu-join').style.display = 'flex';
                     document.getElementById('join-status').textContent = '';
                     this.refreshNearbyList();
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
                 document.getElementById('btn-back-join').onclick = () => {
                     document.getElementById('menu-join').style.display = 'none';
                     document.getElementById('menu-main').style.display = 'flex';
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
                 document.getElementById('btn-scan-nearby').onclick = () => this.refreshNearbyList(true);
                 document.getElementById('btn-join-start').onclick = async () => {
@@ -8708,6 +8745,61 @@ TIPS
                 }
             }
 
+
+
+            fitMenuPanelsScale() {
+                const root = document.getElementById('main-menu');
+                if (!root || root.style.display === 'none') return;
+                const vw = window.innerWidth || document.documentElement.clientWidth || 1;
+                const vh = window.innerHeight || document.documentElement.clientHeight || 1;
+                const pad = 8;
+                const panels = root.querySelectorAll('.menu-panel');
+                panels.forEach(panel => {
+                    const style = getComputedStyle(panel);
+                    if (style.display === 'none') return;
+
+                    // Reset
+                    panel.style.setProperty('--menu-scale', '1');
+                    panel.style.maxHeight = '';
+                    void panel.offsetWidth;
+
+                    // Prefer scroll inside panel first (no scale) so text stays readable
+                    const maxH = Math.max(180, vh - pad * 2);
+                    panel.style.maxHeight = maxH + 'px';
+                    void panel.offsetWidth;
+
+                    let scale = 1;
+                    const minScale = 0.55;
+                    for (let i = 0; i < 18; i++) {
+                        panel.style.setProperty('--menu-scale', String(scale.toFixed(4)));
+                        void panel.offsetWidth;
+                        const r = panel.getBoundingClientRect();
+                        // With transform scale, visual size is r; ensure fully on screen
+                        const out =
+                            r.top < pad ||
+                            r.bottom > vh - pad ||
+                            r.left < pad ||
+                            r.right > vw - pad ||
+                            r.width > vw - pad * 2 ||
+                            r.height > vh - pad * 2;
+                        if (!out) break;
+                        const needW = Math.max(1, r.width);
+                        const needH = Math.max(1, r.height);
+                        let next = scale;
+                        next = Math.min(next, scale * ((vw - pad * 2) / needW));
+                        next = Math.min(next, scale * ((vh - pad * 2) / needH));
+                        next = Math.min(next, scale * 0.92);
+                        next = Math.max(minScale, Math.min(1, next));
+                        if (Math.abs(next - scale) < 0.004) {
+                            scale = Math.max(minScale, scale * 0.9);
+                            if (scale <= minScale + 0.001) break;
+                            continue;
+                        }
+                        scale = next;
+                    }
+                    panel.style.setProperty('--menu-scale', String(scale.toFixed(4)));
+                });
+            }
 
             refreshModList() {
                 const el = document.getElementById('mod-list');
@@ -10604,7 +10696,14 @@ GPU: ${this.rendererBackend}
             }
         }
 
-        window.onload = () => { window.game = new Game(); };
+        window.onload = () => {
+            window.game = new Game();
+            // Fit menu panels on first paint (mobile / short screens)
+            requestAnimationFrame(() => {
+                try { window.game.fitMenuPanelsScale(); } catch (e) {}
+                setTimeout(() => { try { window.game.fitMenuPanelsScale(); } catch (e) {} }, 100);
+            });
+        };
     </script>
 </body>
 </html>
