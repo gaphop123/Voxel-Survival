@@ -1343,7 +1343,7 @@
             [BLOCKS.NOTE_BLOCK]: { name: "Note Block", solid: true, tex: [7, 7, 7, 7, 7, 7], type: 'wood' },
             [BLOCKS.JUKEBOX]: { name: "Jukebox", solid: true, tex: [7, 7, 15, 7, 7, 7], type: 'wood' },
             [BLOCKS.LADDER]: { name: "Ladder", solid: false, transparent: true, tex: [65, 65, 65, 65, 65, 65], type: 'wood' },
-            [BLOCKS.SOUL_SAND]: { name: "Soul Sand", solid: true, tex: [9, 9, 9, 9, 9, 9], type: 'dirt' },
+            [BLOCKS.SOUL_SAND]: { name: "Soul Sand", solid: true, tex: [40, 40, 40, 40, 40, 40], type: 'dirt' },
             [BLOCKS.MAGMA]: { name: "Magma Block", solid: true, tex: [12, 12, 12, 12, 12, 12], type: 'stone', light: 3 },
             [BLOCKS.PACKED_ICE]: { name: "Packed Ice", solid: true, tex: [24, 24, 24, 24, 24, 24], type: 'glass' },
             [BLOCKS.SEA_LANTERN]: { name: "Sea Lantern", solid: true, tex: [41, 41, 41, 41, 41, 41], type: 'glass', light: 15 },
@@ -1374,9 +1374,9 @@
             [BLOCKS.NETHER_BRICK]: { name: "Nether Bricks", solid: true, tex: [40, 40, 40, 40, 40, 40], type: 'stone' },
             [BLOCKS.ANCIENT_DEBRIS]: { name: "Ancient Debris", solid: true, tex: [35, 35, 35, 35, 35, 35], type: 'stone', requirePickTier: 4, drops: 180 },
             [BLOCKS.NETHERITE_BLOCK]: { name: "Block of Netherite", solid: true, tex: [35, 35, 35, 35, 35, 35], type: 'metal', requirePickTier: 4 },
-            [BLOCKS.SOUL_SOIL]: { name: "Soul Soil", solid: true, tex: [9, 9, 9, 9, 9, 9], type: 'dirt' },
-            [BLOCKS.CRIMSON_NYLIUM]: { name: "Crimson Nylium", solid: true, tex: [1, 1, 0, 2, 1, 1], type: 'dirt' },
-            [BLOCKS.WARPED_NYLIUM]: { name: "Warped Nylium", solid: true, tex: [1, 1, 0, 2, 1, 1], type: 'dirt' },
+            [BLOCKS.SOUL_SOIL]: { name: "Soul Soil", solid: true, tex: [40, 40, 40, 40, 40, 40], type: 'dirt' },
+            [BLOCKS.CRIMSON_NYLIUM]: { name: "Crimson Nylium", solid: true, tex: [40, 40, 40, 40, 40, 40], type: 'dirt' },
+            [BLOCKS.WARPED_NYLIUM]: { name: "Warped Nylium", solid: true, tex: [40, 40, 40, 40, 40, 40], type: 'dirt' },
             [BLOCKS.NETHER_GOLD_ORE]: { name: "Nether Gold Ore", solid: true, tex: [18, 18, 18, 18, 18, 18], type: 'stone', requirePickTier: 2, drops: 106 },
             [BLOCKS.NETHER_BRICK_FENCE]: { name: "Nether Brick Fence", solid: true, transparent: true, tex: [40, 40, 40, 40, 40, 40], type: 'stone' },
             [BLOCKS.TNT]: { name: "TNT", solid: true, tex: [49, 49, 49, 49, 49, 49], type: 'wood' },
@@ -2682,7 +2682,7 @@
                         const worldZ = cz * size + z;
 
                         if (isNether) {
-                            // Nether: netherrack floor, lava seas, ceiling, biomes, ores
+                            // Nether only: netherrack / lava / magma / glowstone — NEVER grass, sand, dirt, stone
                             let floorN = noise(worldX * 0.03, 0, worldZ * 0.03) * 5;
                             let ceilN = noise(worldX * 0.03, 50, worldZ * 0.03) * 6;
                             let floorY = Math.floor(12 + Math.max(0, floorN));
@@ -2690,26 +2690,26 @@
                             const biome = noise(worldX * 0.02, 7, worldZ * 0.02);
                             for (let y = 0; y < height; y++) {
                                 const index = x + y * size + z * size * height;
-                                if (y === 0 || y >= height - 1) data[index] = 12;
-                                else if (y < 10) data[index] = 11;
+                                if (y === 0 || y >= height - 1) data[index] = 12; // bedrock
+                                else if (y < 10) data[index] = 11; // lava ocean
                                 else if (y < floorY) {
-                                    // surface biome layer
                                     if (y === floorY - 1) {
-                                        if (biome > 0.35) data[index] = 196; // crimson nylium
-                                        else if (biome < -0.35) data[index] = 197; // warped
-                                        else if (hashRand(worldX, y, worldZ) < 0.08) data[index] = 195; // soul soil
-                                        else if (hashRand(worldX, y+1, worldZ) < 0.12) data[index] = 88; // soul sand
-                                        else data[index] = 38;
+                                        // Surface: netherrack + occasional soul variants (NOT overworld sand/grass ids)
+                                        if (biome > 0.4) data[index] = 196; // crimson nylium
+                                        else if (biome < -0.4) data[index] = 197; // warped nylium
+                                        else if (hashRand(worldX, y, worldZ) < 0.06) data[index] = 195; // soul soil
+                                        else if (hashRand(worldX, y + 1, worldZ) < 0.05) data[index] = 88; // soul sand
+                                        else data[index] = 38; // netherrack
                                     } else if (y < 14 && hashRand(worldX, y + 50, worldZ) < 0.015) {
-                                        data[index] = 193; // ancient debris rare deep
+                                        data[index] = 193; // ancient debris
                                     } else if (hashRand(worldX, y + 60, worldZ) < 0.02) {
                                         data[index] = 198; // nether gold ore
                                     } else if (hashRand(worldX, y + 70, worldZ) < 0.025) {
                                         data[index] = 89; // magma
-                                    } else data[index] = 38;
-                                } else if (y > ceilY) data[index] = 38;
-                                else data[index] = 0;
-                                if (y === ceilY && hashRand(worldX, y, worldZ) < 0.05) data[index] = 39;
+                                    } else data[index] = 38; // netherrack
+                                } else if (y > ceilY) data[index] = 38; // netherrack ceiling
+                                else data[index] = 0; // air cavern
+                                if (y === ceilY && hashRand(worldX, y, worldZ) < 0.05) data[index] = 39; // glowstone
                             }
                             continue;
                         }
@@ -7405,20 +7405,24 @@ In-game: /text Hello 5 #55ff55
                 this.speed = 1;
 
                 // Start world from seed + modifications (state replay, not video)
-                // Restore generation options so terrain matches recording seed+settings
-                const seed = String(rec.start.seed != null ? rec.start.seed : '0');
+                // Use the EXACT numeric seed stored at record time (do not re-hash)
+                const seedNum = (rec.start.seed != null && rec.start.seed !== '')
+                    ? (typeof rec.start.seed === 'number' ? rec.start.seed : (parseInt(String(rec.start.seed), 10) || 0))
+                    : 0;
                 const name = 'Replay_' + (rec.name || 'World');
                 g.genOptions = Object.assign({}, rec.start.genOptions || g.genOptions || {});
                 g.genOptions.multiplayer = false;
                 g._joinAsClient = null;
-                await g.startWorld(name, seed);
-                // Critical: clear generated chunks, apply recorded block mods, then reload
-                // so terrain matches the live game (seed + modifications), not a bare regen.
+                g._replaySeedNum = seedNum;
+                await g.startWorld(name, seedNum);
+                // Clear chunks generated during startWorld, apply mods, reload with same seed+dim
                 if (g.world) {
                     try { g.world.clearChunks(); } catch (e) {}
+                    g.world.seed = seedNum;
                     g.world.modifications = this.deepCopyMods(rec.start.modifications);
-                    if (rec.start.dimension && g.world.dimension !== rec.start.dimension) {
-                        // dimension mismatch rare in overworld-only recordings
+                    const dim = rec.start.dimension || 'overworld';
+                    if (g.world.dimension !== dim) {
+                        g.world.dimension = dim;
                     }
                 }
                 if (rec.start.player && g.player) {
@@ -7435,19 +7439,33 @@ In-game: /text Hello 5 #55ff55
                 }
                 // Preload chunks around recorded player so mods apply on worker result
                 if (g.world && g.player) {
-                    for (let i = 0; i < 12; i++) {
+                    const applyModsToLoaded = () => {
+                        const mods = g.world.modifications || {};
+                        for (const key of Object.keys(mods)) {
+                            const chunk = g.world.chunks.get(key);
+                            if (!chunk || !chunk.loaded || !chunk.data) continue;
+                            for (const m of Object.keys(mods[key])) {
+                                const [x, y, z] = m.split(',').map(Number);
+                                const idx = chunk.getIndex(x, y, z);
+                                if (idx >= 0 && idx < chunk.data.length) chunk.data[idx] = mods[key][m];
+                            }
+                            try { chunk.markDirty(); } catch (e) {}
+                        }
+                    };
+                    for (let i = 0; i < 16; i++) {
                         try { g.world.update(g.player.pos); } catch (e) {}
-                        await new Promise(r => setTimeout(r, 80));
+                        applyModsToLoaded();
+                        await new Promise(r => setTimeout(r, 90));
                     }
-                    // Force-request every modified chunk
                     try {
                         const keys = Object.keys(g.world.modifications || {});
                         for (const k of keys) {
                             const [cx, cz] = k.split(',').map(Number);
                             if (!isNaN(cx)) g.world.requestChunk(cx, cz);
                         }
-                        await new Promise(r => setTimeout(r, 200));
+                        await new Promise(r => setTimeout(r, 300));
                         g.world.update(g.player.pos);
+                        applyModsToLoaded();
                     } catch (e) {}
                 }
                 g.time = rec.start.time || 0;
@@ -8957,8 +8975,21 @@ In-game: /text Hello 5 #55ff55
                 audio.init();
                 setGen(15, 'Building world...', 'Seed: ' + seedStr);
 
-                let seedNum = 0; 
-                for(let i=0; i<seedStr.length; i++) seedNum += seedStr.charCodeAt(i) * (i + 1);
+                // Numeric seed: use directly (replays / saved worlds). String seed: hash chars.
+                let seedNum = 0;
+                if (typeof seedStr === 'number' && isFinite(seedStr)) {
+                    seedNum = seedStr | 0;
+                } else if (seedStr && typeof seedStr === 'object' && seedStr.seedNum != null) {
+                    seedNum = seedStr.seedNum | 0;
+                } else {
+                    const s = String(seedStr == null ? '' : seedStr);
+                    // Prefer exact integer string from world.seed serialization
+                    if (/^-?\d+$/.test(s) && s.length <= 12) {
+                        seedNum = parseInt(s, 10) | 0;
+                    } else {
+                        for (let i = 0; i < s.length; i++) seedNum += s.charCodeAt(i) * (i + 1);
+                    }
+                }
                 this.worldName = name;
                 this.genOptions = this.genOptions || { mountains: true, caves: true, villages: true, struct: 'normal' };
                 this.world = new World(this.scene, this.texAtlas, seedNum);
@@ -10116,6 +10147,7 @@ In-game: /text Hello 5 #55ff55
                 if (this.state === 'play' || force === 'pause') {
                     if (this.state === 'dead' || this.state === 'inventory' || this.state === 'crafting') return;
                     this.state = 'pause';
+                    // Singleplayer freezes via animate gate; multiplayer keeps simRunning
                     this._pauseLock = true; // ignore pointerlockchange while pausing
                     try { document.exitPointerLock(); } catch (e) {}
                     const ps = document.getElementById('pause-screen');
@@ -12581,8 +12613,16 @@ In-game: /text Hello 5 #55ff55
                     // Hide normal crosshair interact outline in host freecam is fine
                 }
 
-                if (this.state === 'play' && this.world && this.player) {
-                    if (this.replay) this.replay.updateRecording(dt);
+                // World sim: always in play; in multiplayer also while local menus are open
+                // (pause/inventory must NOT freeze the shared world / mobs)
+                const mpLive = !!(this.mp && this.mp.enabled);
+                const menuStates = ['pause', 'inventory', 'crafting', 'chest', 'furnace', 'trade', 'creative_browser'];
+                const simRunning = this.world && this.player && (
+                    this.state === 'play' ||
+                    (mpLive && menuStates.includes(this.state))
+                );
+                if (simRunning) {
+                    if (this.state === 'play' && this.replay) this.replay.updateRecording(dt);
                     // Host or singleplayer advances time; clients receive host time via MP
                     if (!(this.mp && this.mp.enabled && !this.mp.isHost)) this.time += dt;
                     
@@ -12650,7 +12690,14 @@ In-game: /text Hello 5 #55ff55
                     this.updateGroundItems(dt);
                     this.updateFire(dt);
                     this.updateCompassHud();
-                    this.player.update(dt, this.input);
+                    // Local player control only while actively playing (not while menu open)
+                    if (this.state === 'play') {
+                        this.player.update(dt, this.input);
+                    } else if (mpLive && this.player) {
+                        // Multiplayer menu: still apply gravity/idle physics with empty input
+                        const idle = { keys: {} };
+                        this.player.update(dt, idle);
+                    }
                     this.world.update(this.player.pos);
                     this.particles.update(dt);
                     this.updateTorchLights();
