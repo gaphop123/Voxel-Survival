@@ -2496,13 +2496,14 @@
             }
             _playMcAsset(type) {
                 if (!this._mcBase) {
-                    this._mcBase = 'https://mcasset.cloud/26.2/assets/minecraft/sounds/';
+                    // SFX from InventivetalentDev/minecraft-assets @ 26.2
+                    this._mcBase = 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.2/assets/minecraft/sounds/';
                     this._mcFailed = {};
                     this._mcMap = {
                         break: ['dig/grass1.ogg','dig/grass2.ogg','dig/grass3.ogg','dig/grass4.ogg','dig/stone1.ogg','dig/stone2.ogg'],
                         place: ['dig/stone1.ogg','dig/stone2.ogg','dig/stone3.ogg','dig/wood1.ogg'],
                         step: ['step/grass1.ogg','step/grass2.ogg','step/grass3.ogg','step/stone1.ogg','step/stone2.ogg'],
-                        click: ['ui/button.click.ogg','random/click.ogg'],
+                        click: ['random/click.ogg'],
                         hurt: ['damage/hit1.ogg','damage/hit2.ogg','damage/hit3.ogg'],
                         splash: ['liquid/splash.ogg','liquid/splash2.ogg'],
                         swim: ['liquid/swim1.ogg','liquid/swim2.ogg','liquid/swim3.ogg'],
@@ -2537,7 +2538,7 @@
             preloadMcSounds() {
                 try {
                     if (!this._mcBase) this._playMcAsset('__init__'); // force map init
-                    this._mcBase = this._mcBase || 'https://mcasset.cloud/26.2/assets/minecraft/sounds/';
+                    this._mcBase = this._mcBase || 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.2/assets/minecraft/sounds/';
                     if (!this._mcMap) this._playMcAsset('__init__');
                     for (const k of ['break','place','step','click','hurt']) {
                         const list = (this._mcMap && this._mcMap[k]) || [];
@@ -2560,7 +2561,7 @@
                         return;
                     }
                 } catch (e) {}
-                // Minecraft assets from mcasset.cloud (fallback variants)
+                // Minecraft assets from github.com/InventivetalentDev/minecraft-assets (26.2)
                 try {
                     if (this._playMcAsset && this._playMcAsset(type)) return;
                 } catch (e) {}
@@ -5650,7 +5651,7 @@
         // Spec: a .vxm file is JSON (optionally wrapped). See loadExampleVxm().
         // ========== Voxel Mod System (.vxm JSON v2) ==========
         const ModAPI = {
-            formatVersion: 6, // v6: non-cube shapes (sphere/cylinder/cross/path), dirt path, arrow look, Alt mouse lock
+            formatVersion: 7, // v7: chat read/send, custom commands, AI APIs (Grok/Gemini/OpenAI/Claude)
             nextBlockId: 220,
             nextItemId: 500,
             nextMobKey: 0,
@@ -5666,6 +5667,175 @@
             _uiHandles: [],
             gameRef: null,
             thirdParty: {}, // id -> { url, status }
+            chatListeners: [], // (entry) => {}
+            commandHandlers: {}, // name -> { fn, modId, help, allowClient }
+            aiProviders: ['grok', 'gemini', 'openai', 'chatgpt', 'claude'],
+
+            onChat(fn) {
+                if (typeof fn === 'function') this.chatListeners.push(fn);
+                return () => {
+                    this.chatListeners = this.chatListeners.filter(f => f !== fn);
+                };
+            },
+            emitChat(entry) {
+                for (const fn of this.chatListeners.slice()) {
+                    try { fn(entry); } catch (e) { console.warn('[mod chat]', e); }
+                }
+            },
+            registerCommand(name, handler, opts) {
+                opts = opts || {};
+                const n = String(name || '').toLowerCase().replace(/^\//, '');
+                if (!n || typeof handler !== 'function') throw new Error('registerCommand needs name + function');
+                this.commandHandlers[n] = {
+                    fn: handler,
+                    modId: opts.modId || null,
+                    help: opts.help || ('/' + n),
+                    allowClient: !!opts.allowClient
+                };
+                return n;
+            },
+            unregisterCommand(name) {
+                const n = String(name || '').toLowerCase().replace(/^\//, '');
+                delete this.commandHandlers[n];
+            },
+            listCommands() {
+                return Object.keys(this.commandHandlers).map(n => ({
+                    name: n,
+                    help: this.commandHandlers[n].help,
+                    modId: this.commandHandlers[n].modId
+                }));
+            },
+
+            // ---- AI keys (localStorage) ----
+            _aiKeyStore: 'voxel_ai_keys_v1',
+            getAIKeys() {
+                try { return JSON.parse(localStorage.getItem(this._aiKeyStore) || '{}') || {}; }
+                catch (e) { return {}; }
+            },
+            setAIKey(provider, key) {
+                const p = String(provider || '').toLowerCase();
+                const keys = this.getAIKeys();
+                if (!key) delete keys[p];
+                else keys[p] = String(key).trim();
+                localStorage.setItem(this._aiKeyStore, JSON.stringify(keys));
+                return true;
+            },
+            getAIKey(provider) {
+                const p = String(provider || '').toLowerCase();
+                const keys = this.getAIKeys();
+                return keys[p] || keys[p === 'chatgpt' ? 'openai' : p] || '';
+            },
+
+            /**
+             * Call an AI chat completion.
+             * @param {object} opts { provider: 'grok'|'gemini'|'openai'|'chatgpt'|'claude', messages: [{role,content}], model?, system?, apiKey?, temperature? }
+             * @returns {Promise<{text, raw, provider}>}
+             */
+            async aiChat(opts) {
+                opts = opts || {};
+                let provider = String(opts.provider || 'grok').toLowerCase();
+                if (provider === 'chatgpt') provider = 'openai';
+                const apiKey = opts.apiKey || this.getAIKey(provider) || this.getAIKey(opts.provider);
+                if (!apiKey) throw new Error('No API key for ' + provider + '. Use Make.ai.setKey("' + provider + '", "...") or /aisettings');
+                const messages = (opts.messages || []).map(m => ({
+                    role: m.role || 'user',
+                    content: String(m.content != null ? m.content : m.text || '')
+                }));
+                if (opts.system) messages.unshift({ role: 'system', content: String(opts.system) });
+                const temperature = opts.temperature != null ? opts.temperature : 0.7;
+
+                if (provider === 'grok') {
+                    const model = opts.model || 'grok-3';
+                    const r = await fetch('https://api.x.ai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + apiKey
+                        },
+                        body: JSON.stringify({ model, messages, temperature, stream: false })
+                    });
+                    if (!r.ok) throw new Error('Grok HTTP ' + r.status + ': ' + (await r.text()).slice(0, 200));
+                    const data = await r.json();
+                    const text = data.choices && data.choices[0] && data.choices[0].message
+                        ? data.choices[0].message.content : JSON.stringify(data);
+                    return { text, raw: data, provider };
+                }
+                if (provider === 'openai') {
+                    const model = opts.model || 'gpt-4o-mini';
+                    const r = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + apiKey
+                        },
+                        body: JSON.stringify({ model, messages, temperature })
+                    });
+                    if (!r.ok) throw new Error('OpenAI HTTP ' + r.status + ': ' + (await r.text()).slice(0, 200));
+                    const data = await r.json();
+                    const text = data.choices && data.choices[0] && data.choices[0].message
+                        ? data.choices[0].message.content : JSON.stringify(data);
+                    return { text, raw: data, provider };
+                }
+                if (provider === 'claude') {
+                    const model = opts.model || 'claude-sonnet-4-20250514';
+                    let system = '';
+                    const claudeMsgs = [];
+                    for (const m of messages) {
+                        if (m.role === 'system') system += (system ? '\n' : '') + m.content;
+                        else claudeMsgs.push({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content });
+                    }
+                    const r = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-api-key': apiKey,
+                            'anthropic-version': '2023-06-01'
+                        },
+                        body: JSON.stringify({
+                            model,
+                            max_tokens: opts.maxTokens || 1024,
+                            system: system || undefined,
+                            messages: claudeMsgs
+                        })
+                    });
+                    if (!r.ok) throw new Error('Claude HTTP ' + r.status + ': ' + (await r.text()).slice(0, 200));
+                    const data = await r.json();
+                    const text = (data.content && data.content[0] && data.content[0].text) || JSON.stringify(data);
+                    return { text, raw: data, provider };
+                }
+                if (provider === 'gemini') {
+                    const model = opts.model || 'gemini-2.0-flash';
+                    // Convert roles to Gemini contents
+                    const contents = [];
+                    let systemInstruction = null;
+                    for (const m of messages) {
+                        if (m.role === 'system') {
+                            systemInstruction = { parts: [{ text: m.content }] };
+                            continue;
+                        }
+                        contents.push({
+                            role: m.role === 'assistant' ? 'model' : 'user',
+                            parts: [{ text: m.content }]
+                        });
+                    }
+                    const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(apiKey);
+                    const body = { contents, generationConfig: { temperature } };
+                    if (systemInstruction) body.systemInstruction = systemInstruction;
+                    const r = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+                    if (!r.ok) throw new Error('Gemini HTTP ' + r.status + ': ' + (await r.text()).slice(0, 200));
+                    const data = await r.json();
+                    const text = data.candidates && data.candidates[0] && data.candidates[0].content
+                        && data.candidates[0].content.parts
+                        ? data.candidates[0].content.parts.map(p => p.text || '').join('')
+                        : JSON.stringify(data);
+                    return { text, raw: data, provider };
+                }
+                throw new Error('Unknown AI provider: ' + provider + ' (use grok|gemini|openai|chatgpt|claude)');
+            },
 
             /** Register a named sound from mod asset cache or data URL / remote URL */
             registerSound(name, src) {
@@ -5953,8 +6123,8 @@
                 if (!mod || typeof mod !== 'object') errs.push('Root must be a JSON object');
                 if (mod && mod.voxelMod === false) errs.push('voxelMod cannot be false');
                 if (mod && !mod.name && !mod.id) errs.push('Missing name or id');
-                if (mod && mod.formatVersion != null && mod.formatVersion > 6)
-                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 6)');
+                if (mod && mod.formatVersion != null && mod.formatVersion > 7)
+                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 7)');
                 if (mod && mod.blocks && !Array.isArray(mod.blocks)) errs.push('blocks must be an array');
                 if (mod && mod.items && !Array.isArray(mod.items)) errs.push('items must be an array');
                 if (mod && mod.mobs && !Array.isArray(mod.mobs)) errs.push('mobs must be an array');
@@ -6778,7 +6948,7 @@
         function loadExampleVxm() {
             return {
                 voxelMod: true,
-                formatVersion: 6,
+                formatVersion: 7,
                 name: 'Example Ruby Mod',
                 id: 'example_ruby',
                 version: '3.0.0',
@@ -6799,253 +6969,78 @@
             };
         }
 
-        const VXM_GUIDE = `HOW TO MAKE A .vxm MOD (complete guide)
-========================================
+        const VXM_GUIDE = `HOW TO MAKE A .vxm MOD (formatVersion 7)
+========================================================
 .vxm = ZIP archive (rename mymod.zip to mymod.vxm)
-formatVersion: 6 (max)
 
 FOLDER LAYOUT
 -------------
 mymod.vxm
-|-- mod.json              REQUIRED
-|-- mod.js                OPTIONAL (Make API / displays / third-party)
-|-- textures/
-|   |-- ruby_ore.png      .png .jpg .jpeg .webp .gif .svg
-|   +-- ruby.png
-+-- sounds/
-    |-- stone.ogg         .wav .mp3 .ogg
-    +-- hurt.wav
+|-- mod.json                 REQUIRED
+|-- mod.js                   OPTIONAL (Make API: chat, commands, AI, UI)
+|-- textures/   (png jpg webp gif svg)
+|-- sounds/     (ogg wav mp3)
++-- icon.png                 pack logo
 
-UI DISPLAY TYPES (mod.json ui.elements or ModAPI.makeDisplay)
--------------
-text / textDisplay       - label text
-item / itemDisplay       - item or block icon (item: "DIAMOND")
-modImage / modImageDisplay - image from pack assets
-webImage / webImgDisplay - remote https image (third-party)
-button, textButton, frame, scrollFrame, progress, input, list, spacer
-shape on blocks: cube, path, slab, sphere, cylinder, cross
-
-ModAPI helpers: registerSound, showTitle, notify, makeDisplay, mountUI,
-loadThirdParty(id, url), fetchJSON(url)
-
-Built-in SFX also try Minecraft assets from:
-https://mcasset.cloud/26.2/assets/minecraft/sounds/
-
-========================================
-mod.json
-========================================
+mod.json minimal:
 {
   "voxelMod": true,
-  "formatVersion": 6,
-  "name": "Ruby Pack",
-  "id": "ruby_pack",
+  "formatVersion": 7,
+  "name": "My Mod",
+  "id": "my_mod",
   "version": "1.0.0",
-  "author": "You",
-  "description": "Ruby ore, gem, mobs",
-  "blocks": [
-    {
-      "key": "RUBY_ORE",
-      "name": "Ruby Ore",
-      "Craftable": false,
-      "Texture": "textures/ruby_ore.png",
-      "Sound": "sounds/stone.ogg",
-      "hardness": 3.5,
-      "tool": "pickaxe",
-      "solid": true,
-      "drops": "RUBY",
-      "smeltTo": "RUBY"
-    }
-  ],
-  "items": [
-    {
-      "key": "RUBY",
-      "name": "Ruby",
-      "Craftable": false,
-      "Texture": "textures/ruby.png",
-      "Stack": 64
-    }
-  ],
-  "mobs": [
-    {
-      "key": "RUBY_SLIME",
-      "name": "Ruby Slime",
-      "ai": true,
-      "hostile": false,
-      "health": 12,
-      "speed": 1.2,
-      "size": [0.8, 0.8, 0.8],
-      "color": 15088804,
-      "dropitemsblock": "RUBY",
-      "canSwim": true
-    },
-    {
-      "key": "STATUE_GUARD",
-      "name": "Statue Guard",
-      "ai": false,
-      "dropitemsblock": "",
-      "health": 40,
-      "color": 10066329
-    }
-  ],
-  "recipes": [
-    {
-      "shape": ["RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY"],
-      "out": "RUBY_BLOCK",
-      "count": 1
-    }
-  ]
+  "blocks": [{ "key": "RUBY_BLOCK", "name": "Ruby Block", "tex": [64,64,64,64,64,64], "shape": "cube" }],
+  "items":  [{ "key": "RUBY", "name": "Ruby", "maxStack": 64 }],
+  "recipes": [{ "shape": ["RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY"], "out": "RUBY_BLOCK", "count": 1 }]
 }
+Shapes: cube | path | slab | sphere | cylinder | cross
 
-========================================
-mod.js  (Make API)
-========================================
-Make.block({
-  key: "RUBY_BLOCK",
-  name: "Block of Ruby",
-  Craftable: true,
-  Texture: "textures/ruby_block.png",
-  Sound: "sounds/metal.ogg",
-  hardness: 5,
-  tool: "pickaxe",
-  solid: true
+======== mod.js Make API ========
+
+// SEND CHAT
+Make.chat("Hello");
+Make.sendChat("Hi", "BotName");
+
+// READ CHAT
+Make.getChat(20);                    // recent lines [{name,msg,t}]
+Make.onChat((entry) => {             // live listener
+  console.log(entry.name, entry.msg);
 });
 
-Make.item({
-  key: "RUBY_SWORD",
-  name: "Ruby Sword",
-  Craftable: true,
-  Texture: "textures/ruby_sword.png",
-  maxStack: 1,
-  type: "tool",
-  toolType: "sword",
-  damage: 5
-});
+// CUSTOM COMMANDS  (player types /hello ...)
+Make.command("hello", (args, ctx) => {
+  ctx.reply("Hello " + (args[0] || "friend"));
+}, { help: "Say hello", allowClient: true });
 
-Make.recipe({
-  shape: [null, "RUBY", null, null, "RUBY", null, null, "STICK", null],
-  out: "RUBY_SWORD",
-  count: 1
-});
+// AI (keys stored in browser via Make.ai.setKey or /aikey)
+Make.ai.setKey("grok", "xai-...");       // providers: grok, gemini, openai, chatgpt, claude
+Make.ai.setKey("gemini", "AIza...");
+Make.ai.setKey("openai", "sk-...");
+Make.ai.setKey("claude", "sk-ant-...");
 
-// ----- Make.mob -----
-Make.mob({
-  key: "RUBY_SLIME",
-  name: "Ruby Slime",
-  ai: true,
-  hostile: false,
-  health: 12,
-  speed: 1.2,
-  damage: 0,
-  size: [0.8, 0.8, 0.8],
-  color: 0xe53935,
-  dropitemsblock: "RUBY",
-  Texture: "textures/ruby_slime.png",
-  canSwim: true,
-  canFly: false,
-  nightOnly: false,
-  dayBurn: false,
-  aggroRange: 0,
-  attackRange: 1.5,
-  spawnWeight: 1,
-  spawnBiome: "any",
-  SoundAmbient: "sounds/slime.ogg",
-  SoundHurt: "sounds/hurt.wav",
-  SoundDeath: "sounds/death.ogg"
-});
+Make.command("ask", async (args, ctx) => {
+  const q = args.join(" ");
+  if (!q) return ctx.reply("Usage: /ask <question>");
+  try {
+    const text = await Make.ai.ask(q, "grok", { system: "Short helpful answers." });
+    ctx.reply(String(text).slice(0, 800));
+  } catch (e) { ctx.reply("AI: " + e.message); }
+}, { help: "ask <question>", allowClient: true });
 
-// Hostile mob
-Make.mob({
-  key: "RUBY_HORROR",
-  name: "Ruby Horror",
-  ai: true,
-  hostile: true,
-  health: 24,
-  speed: 2.0,
-  damage: 3,
-  dropitemsblock: [{ "id": "RUBY", "min": 1, "max": 3 }],
-  dayBurn: true,
-  nightOnly: true,
-  aggroRange: 14
-});
+// await Make.ai.chat({ provider, messages:[{role,content}], model?, system? })
 
-// No AI, no drops (decoration statue)
-Make.mob({
-  key: "RUBY_STATUE",
-  name: "Ruby Statue",
-  ai: false,
-  dropitemsblock: "",
-  health: 999,
-  color: 0xaa2244
-});
+// UI / other
+Make.title("Welcome", 3, "#8cf");
+Make.notify("Loaded");
+Make.block({ key: "ORB", name: "Orb", shape: "sphere", tex: [47,47,47,47,47,47] });
+ModAPI.makeDisplay("itemDisplay", { item: "DIAMOND", size: 32 });
+ModAPI.makeDisplay("textDisplay", { text: "Hi" });
+ModAPI.makeDisplay("webImgDisplay", { url: "https://example.com/img.png" });
+ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
 
-Make.sound("ruby_chime", "sounds/chime.ogg");
-Make.texture("ruby_icon", "textures/ruby.png");
-Make.log("Ruby pack loaded");
-
-========================================
-PROPERTY CHEATSHEET
-========================================
-BLOCKS / ITEMS
-  Craftable = true | false
-  Texture   = path in zip (.png .jpg .jpeg .webp)
-  Sound     = path in zip (.wav .mp3 .ogg)
-  Name Key hardness tool solid transparent lightLevel
-  Stack maxStack type toolType damage heal drops smeltTo fuel
-
-MOBS (Make.mob or mobs[] in mod.json)
-  ai              true | false     false = frozen (no AI)
-  dropitemsblock  "" | "ITEM_KEY" | [ { id, min, max } ]
-                  blank "" = drop nothing on death
-  hostile         true | false
-  health speed damage size color Texture
-  canSwim canFly nightOnly dayBurn
-  aggroRange attackRange spawnWeight spawnBiome
-  SoundAmbient SoundHurt SoundDeath
-
-RECIPES
-  shape = 9 slots (3x3), keys like "RUBY", "STICK", or null
-  in    = shapeless list
-  out   = item/block key
-  count = number crafted
-
-TIPS
-1) Put files in a folder, zip it, rename .zip to .vxm
-2) Open MODS menu and drop the .vxm file
-3) Press COPY GUIDE to copy this text
-4) Prefer string keys over numbers in recipes
-5) Block ids 200-400, item ids 500+ if set manually
-6) Plain .json still works without binary assets
-
-========================================
-SCOPE: worldmods vs mainmods
-========================================
-"scope": "world"   (default) — blocks/items/mobs for worlds
-"scope": "main"    — mainmods: menu title, CSS, Make.addMenuButton
-"scope": "both"    — menu + world
-
-========================================
-Make.makeUI / Make.ui (Minecraft UI)
-========================================
-const f = Make.ui.frame({ x: 40, y: 80, width: 280, height: 160 });
-Make.ui.text({ parent: f, text: "Hello Mod", x: 12, y: 12 });
-Make.ui.button({ parent: f, text: "Day", x: 12, y: 48, onClick: () => Make.setDay() });
-Make.ui.textButton({ parent: f, text: "Night", x: 100, y: 48, onClick: () => Make.setNight() });
-Make.ui.image({ parent: f, src: "textures/icon.png", x: 12, y: 90, width: 32, height: 32 });
-Make.ui.textImage({ parent: f, text: "Ruby", src: "textures/ruby.png", x: 52, y: 90 });
-Make.ui.scrollingFrame({ x: 40, y: 260, width: 280, height: 120 });
-// Or: Make.makeUI("frame", { ... })
-
-Make.setTime("day"|"night"|number)  Make.setDay()  Make.setNight()
-Make.chat("Hello")  Make.clearChat()  Make.notify("Hi")
-Make.title("Boss!", 4, "#ff5555")
-Make.setMenuTitle("MY GAME")  Make.addMenuButton("Extra", () => {})
-Make.injectCSS(".menu-btn{color:red}")
-
-mod.json ui:
-"ui": { "menuTitle": "Custom", "css": "...", "elements": [{ "type": "text", "text": "Hi", "x": 20, "y": 20 }] }
-
-In-game: /text Hello 5 #55ff55
-
+// Vanilla commands still work: /help /give /tp /text /gamemode ...
+// AI chat commands: /aikey <provider> <key>  |  /aisettings  |  /ai [provider] <prompt>
+// Never ship API keys inside the .vxm zip — players set keys in-game.
 `;
 
 
@@ -8836,13 +8831,13 @@ In-game: /text Hello 5 #55ff55
                 this.skyMesh = new THREE.Mesh(skyGeo, skyMat);
                 this.scene.add(this.skyMesh);
 
-                // Sun
-                const sunGeo = new THREE.SphereGeometry(8, 12, 12);
+                // Sun (square / Minecraft-style)
+                const sunGeo = new THREE.BoxGeometry(16, 16, 2);
                 this.sunMesh = new THREE.Mesh(sunGeo, new THREE.MeshBasicMaterial({ color: 0xfff5c0, fog: false }));
                 this.scene.add(this.sunMesh);
 
-                // Moon
-                const moonGeo = new THREE.SphereGeometry(6, 10, 10);
+                // Moon (square)
+                const moonGeo = new THREE.BoxGeometry(12, 12, 2);
                 this.moonMesh = new THREE.Mesh(moonGeo, new THREE.MeshBasicMaterial({ color: 0xe8e8ff, fog: false }));
                 this.scene.add(this.moonMesh);
 
@@ -8864,20 +8859,35 @@ In-game: /text Hello 5 #55ff55
                 }));
                 this.scene.add(this.stars);
 
-                // Clouds
+                // Clouds — thick voxel-style slabs (not flat planes)
                 this.cloudGroup = new THREE.Group();
                 const cloudMat = new THREE.MeshBasicMaterial({
-                    color: 0xffffff, transparent: true, opacity: 0.55,
+                    color: 0xffffff, transparent: true, opacity: 0.82,
                     depthWrite: false, fog: false, side: THREE.DoubleSide
                 });
-                for (let i = 0; i < 30; i++) {
-                    const cw = 8 + Math.random() * 20;
-                    const cd = 4 + Math.random() * 12;
-                    const cloud = new THREE.Mesh(new THREE.PlaneGeometry(cw, cd), cloudMat.clone());
-                    cloud.rotation.x = -Math.PI / 2;
-                    cloud.position.set((Math.random() - 0.5) * 220, 50 + Math.random() * 12, (Math.random() - 0.5) * 220);
-                    cloud.userData.speed = 0.6 + Math.random() * 1.4;
-                    this.cloudGroup.add(cloud);
+                for (let i = 0; i < 28; i++) {
+                    const puff = new THREE.Group();
+                    const baseY = 48 + Math.random() * 14;
+                    const baseX = (Math.random() - 0.5) * 220;
+                    const baseZ = (Math.random() - 0.5) * 220;
+                    // Several stacked boxes → thicker, chunkier clouds
+                    const pieces = 3 + Math.floor(Math.random() * 5);
+                    for (let p = 0; p < pieces; p++) {
+                        const cw = 10 + Math.random() * 22;
+                        const ch = 3 + Math.random() * 5;   // thickness
+                        const cd = 8 + Math.random() * 16;
+                        const mesh = new THREE.Mesh(new THREE.BoxGeometry(cw, ch, cd), cloudMat.clone());
+                        mesh.position.set(
+                            (Math.random() - 0.5) * 14,
+                            (Math.random() - 0.5) * 4,
+                            (Math.random() - 0.5) * 12
+                        );
+                        mesh.material.opacity = 0.7 + Math.random() * 0.25;
+                        puff.add(mesh);
+                    }
+                    puff.position.set(baseX, baseY, baseZ);
+                    puff.userData.speed = 0.5 + Math.random() * 1.2;
+                    this.cloudGroup.add(puff);
                 }
                 this.scene.add(this.cloudGroup);
             }
@@ -8890,6 +8900,11 @@ In-game: /text Hello 5 #55ff55
                 const sunZ = 40;
                 this.sunMesh.position.set(sunX, Math.max(-40, sunY), sunZ);
                 this.moonMesh.position.set(-sunX, Math.max(-40, -sunY), -sunZ);
+                // Keep square faces readable (billboard toward world center)
+                try {
+                    this.sunMesh.lookAt(0, 0, 0);
+                    this.moonMesh.lookAt(0, 0, 0);
+                } catch (e) {}
                 this.dirLight.position.copy(this.sunMesh.position).normalize().multiplyScalar(120);
 
                 // Follow player so sky stays around
@@ -8915,8 +8930,14 @@ In-game: /text Hello 5 #55ff55
                 this.stars.material.opacity = Math.max(0, 1 - day * 2.2);
                 if (this.cloudGroup) {
                     this.cloudGroup.visible = day > 0.25;
+                    const op = 0.55 + day * 0.35;
                     for (const cloud of this.cloudGroup.children) {
-                        cloud.material.opacity = 0.35 + day * 0.35;
+                        if (cloud.material) cloud.material.opacity = op;
+                        else if (cloud.children) {
+                            for (const m of cloud.children) {
+                                if (m.material) m.material.opacity = Math.min(0.95, op + 0.05);
+                            }
+                        }
                     }
                 }
 
@@ -11319,18 +11340,41 @@ In-game: /text Hello 5 #55ff55
             }
 
             runCommand(raw) {
+                const parts0 = raw.slice(1).trim().split(/\s+/);
+                const c0 = (parts0[0] || '').toLowerCase();
+                const modCmd = (typeof ModAPI !== 'undefined' && ModAPI.commandHandlers) ? ModAPI.commandHandlers[c0] : null;
                 if (this.mp && this.mp.enabled && !this.mp.isHost && this.mpRules && this.mpRules.hostCommandsOnly !== false) {
-                    // clients can still use /help and /rules
-                    const c0 = (raw.slice(1).trim().split(/\s+/)[0] || '').toLowerCase();
-                    if (c0 !== 'help' && c0 !== 'rules' && c0 !== 'mprules' && c0 !== 'text') {
+                    // clients can still use /help, /rules, /text, and mod commands marked allowClient
+                    const clientOk = { help:1, rules:1, mprules:1, text:1, aisettings:1, aikey:1, ai:1 };
+                    if (!clientOk[c0] && !(modCmd && modCmd.allowClient)) {
                         this.notify('Only the host can use commands');
                         this.addChatMessage('System', 'Host-only command. Try /help');
                         return;
                     }
                 }
-                const parts = raw.slice(1).trim().split(/\s+/);
-                const cmd = (parts[0] || '').toLowerCase();
+                const parts = parts0;
+                const cmd = c0;
                 const args = parts.slice(1);
+
+                // Custom .vxm mod commands (Make.command)
+                if (modCmd && typeof modCmd.fn === 'function') {
+                    try {
+                        const result = modCmd.fn(args, {
+                            raw, cmd, game: this, player: this.player,
+                            reply: (m) => this.addChatMessage(modCmd.modId || 'Mod', String(m)),
+                            notify: (m) => this.notify(String(m))
+                        });
+                        if (result && typeof result.then === 'function') {
+                            result.catch(err => {
+                                this.addChatMessage('System', 'Command error: ' + (err && err.message ? err.message : err));
+                            });
+                        }
+                    } catch (err) {
+                        this.addChatMessage('System', 'Command error: ' + (err && err.message ? err.message : err));
+                    }
+                    return;
+                }
+
                 if (cmd === 'help') {
                     this.addChatMessage('System', 'Commands:');
                     this.addChatMessage('System', '/help  /rules  /mprules');
@@ -11341,6 +11385,15 @@ In-game: /text Hello 5 #55ff55
                     this.addChatMessage('System', '/mprule <rule> <true|false>  (host)');
                     this.addChatMessage('System', '/text <message> [seconds] [hexColor]');
                     this.addChatMessage('System', '/kill  /clear');
+                    this.addChatMessage('System', '/aikey <grok|gemini|openai|claude> <key>');
+                    this.addChatMessage('System', '/aisettings  /ai <provider> <prompt...>');
+                    try {
+                        const mods = ModAPI.listCommands();
+                        if (mods.length) {
+                            this.addChatMessage('System', 'Mod commands:');
+                            for (const c of mods) this.addChatMessage('System', '/' + c.name + (c.help ? (' — ' + c.help) : '') + (c.modId ? (' [' + c.modId + ']') : ''));
+                        }
+                    } catch (e) {}
                 } else if (cmd === 'rules' || cmd === 'gamerules') {
                     const r = this.worldRules || {};
                     this.addChatMessage('System', 'World rules: ' + JSON.stringify(r));
@@ -11441,6 +11494,46 @@ In-game: /text Hello 5 #55ff55
                     this.player.inventory = new Array(36).fill(null);
                     this.updateHUD();
                     this.notify('Inventory cleared');
+                } else if (cmd === 'aikey') {
+                    // /aikey <provider> <key>
+                    const prov = (args[0] || '').toLowerCase();
+                    const key = args.slice(1).join(' ').trim();
+                    if (!prov || !key) {
+                        this.addChatMessage('System', 'Usage: /aikey <grok|gemini|openai|chatgpt|claude> <apiKey>');
+                        return;
+                    }
+                    ModAPI.setAIKey(prov, key);
+                    this.addChatMessage('System', 'Saved API key for ' + prov + ' (stored in this browser only)');
+                    this.notify('AI key saved: ' + prov);
+                } else if (cmd === 'aisettings') {
+                    const keys = ModAPI.getAIKeys();
+                    const set = Object.keys(keys).filter(k => keys[k]);
+                    this.addChatMessage('System', 'AI providers: grok, gemini, openai/chatgpt, claude');
+                    this.addChatMessage('System', set.length ? ('Keys set: ' + set.join(', ')) : 'No keys set. Use /aikey <provider> <key>');
+                    this.addChatMessage('System', 'Then: /ai <provider> <your prompt>');
+                } else if (cmd === 'ai') {
+                    const prov = (args[0] || 'grok').toLowerCase();
+                    let prompt = args.slice(1).join(' ').trim();
+                    // allow /ai just prompt with default provider
+                    if (!['grok','gemini','openai','chatgpt','claude'].includes(prov)) {
+                        prompt = [args[0], ...args.slice(1)].join(' ').trim();
+                        var provider = 'grok';
+                    } else {
+                        var provider = prov;
+                    }
+                    if (!prompt) {
+                        this.addChatMessage('System', 'Usage: /ai [provider] <prompt>');
+                        return;
+                    }
+                    this.addChatMessage('System', 'AI (' + provider + ') thinking…');
+                    ModAPI.aiChat({ provider, messages: [{ role: 'user', content: prompt }] })
+                        .then(res => {
+                            const text = (res.text || '').slice(0, 1500);
+                            this.addChatMessage('AI:' + provider, text);
+                        })
+                        .catch(err => {
+                            this.addChatMessage('System', 'AI error: ' + (err && err.message ? err.message : err));
+                        });
                 } else {
                     this.notify('Unknown command: /' + cmd + ' (try /help)');
                 }
