@@ -814,7 +814,7 @@
     <div id="main-menu">
         <div id="menu-main" class="menu-panel" style="display: flex;">
             <div class="menu-title">VOXEL SURVIVAL</div>
-            <div class="menu-subtitle">Survival · Multiplayer · Mods · BETA</div>
+            <div class="menu-subtitle">Survival · Multiplayer · Mods · Paths · BETA<br><span style="font-size:10px;opacity:0.85">Arrows look · Alt mouse lock · WASD move</span></div>
             <button class="menu-btn" id="btn-new-world">CREATE NEW WORLD</button>
             <button class="menu-btn" id="btn-load-world">LOAD WORLD</button>
             <button class="menu-btn" id="btn-join-mp">JOIN MULTIPLAYER</button>
@@ -911,7 +911,7 @@
             <div class="menu-title">VOXEL MODS</div>
             <div class="menu-subtitle" style="max-width:520px;text-align:left;font-size:12px;line-height:1.45;color:#bbb;">
                 <b>.vxm</b> = ZIP pack: <code>mod.json</code> + optional <code>mod.js</code>, textures (.png/.jpg/.webp/.gif/.svg/.bmp), sounds (.wav/.mp3/.ogg). Include an <code>icon.png</code> (or logo/pack, any supported format) at the pack root to show a real logo instead of a letter.<br>
-                Also accepts plain <code>.json</code> (legacy). Drop files or multi-select.
+                Also accepts plain <code>.json</code> (legacy). <b>v6 shapes:</b> <code>sphere</code>, <code>cylinder</code>, <code>cross</code>, <code>path</code> in block defs. Drop files or multi-select.
             </div>
             <div id="mod-dropzone" style="width:100%;max-width:480px;border:2px dashed #5a7a9a;border-radius:10px;padding:18px;margin:10px 0;text-align:center;color:#9ab;background:rgba(30,50,70,0.4);cursor:pointer;">
                 Drop .vxm ZIP / .json here<br><span style="font-size:11px;opacity:0.8;">or click to browse (multi-select)</span>
@@ -1242,6 +1242,7 @@
             COAL_BLOCK: 76, REDSTONE_BLOCK: 77, HAY_BLOCK: 78,
             MYCELIUM: 79, PODZOL: 80, ANDESITE: 81, DIORITE: 82, GRANITE: 83,
             GRASS_PATH: 200,
+            DIRT_PATH: 201,
             QUARTZ_BLOCK: 84, NOTE_BLOCK: 85, JUKEBOX: 86, LADDER: 87,
             SOUL_SAND: 88, MAGMA: 89, PACKED_ICE: 90, SEA_LANTERN: 91,
             PRISMARINE: 92, DARK_PRISMARINE: 93, TERRACOTTA: 94, SLIME_BLOCK: 95,
@@ -1277,7 +1278,7 @@
             [BLOCKS.GOLD_ORE]: { name: "Gold Ore", solid: true, tex: [18, 18, 18, 18, 18, 18], type: 'stone', requirePickTier: 3, drops: 106 },
             [BLOCKS.DIAMOND_ORE]: { name: "Diamond Ore", solid: true, tex: [19, 19, 19, 19, 19, 19], type: 'stone', requirePickTier: 3, drops: 108 },
             [BLOCKS.BRICK]: { name: "Bricks", solid: true, tex: [20, 20, 20, 20, 20, 20], type: 'stone' },
-            [BLOCKS.FLOWER]: { name: "Flower", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant' },
+            [BLOCKS.FLOWER]: { name: "Flower", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross' },
             [BLOCKS.GRAVEL]: { name: "Gravel", solid: true, tex: [22, 22, 22, 22, 22, 22], type: 'dirt' },
             [BLOCKS.SNOW]: { name: "Snow", solid: true, tex: [23, 23, 23, 23, 23, 23], type: 'dirt' },
             [BLOCKS.ICE]: { name: "Ice", solid: true, transparent: true, tex: [24, 24, 24, 24, 24, 24], type: 'glass' },
@@ -1298,8 +1299,8 @@
             [BLOCKS.PUMPKIN]: { name: "Pumpkin", solid: true, tex: [38, 38, 39, 39, 38, 38], type: 'plant' },
             [BLOCKS.NETHERRACK]: { name: "Netherrack", solid: true, tex: [40, 40, 40, 40, 40, 40], type: 'stone' },
             [BLOCKS.GLOWSTONE]: { name: "Glowstone", solid: true, tex: [41, 41, 41, 41, 41, 41], type: 'glass' },
-            [BLOCKS.RED_MUSHROOM]: { name: "Red Mushroom", solid: false, transparent: true, tex: [42, 42, 42, 42, 42, 42], type: 'plant' },
-            [BLOCKS.BROWN_MUSHROOM]: { name: "Brown Mushroom", solid: false, transparent: true, tex: [43, 43, 43, 43, 43, 43], type: 'plant' },
+            [BLOCKS.RED_MUSHROOM]: { name: "Red Mushroom", solid: false, transparent: true, tex: [42, 42, 42, 42, 42, 42], type: 'plant', shape: 'cross' },
+            [BLOCKS.BROWN_MUSHROOM]: { name: "Brown Mushroom", solid: false, transparent: true, tex: [43, 43, 43, 43, 43, 43], type: 'plant', shape: 'cross' },
             [BLOCKS.BED]: { name: "Bed", solid: true, transparent: true, tex: [44, 44, 45, 7, 44, 44], type: 'wood', bed: true },
             [BLOCKS.LAPIS_ORE]: { name: "Lapis Lazuli Ore", solid: true, tex: [46, 46, 46, 46, 46, 46], type: 'stone', drops: 141 },
             [BLOCKS.LAPIS_BLOCK]: { name: "Lapis Lazuli Block", solid: true, tex: [47, 47, 47, 47, 47, 47], type: 'stone' },
@@ -1336,7 +1337,8 @@
             [BLOCKS.REDSTONE_BLOCK]: { name: "Block of Redstone", solid: true, tex: [48, 48, 48, 48, 48, 48], type: 'metal' },
             [BLOCKS.HAY_BLOCK]: { name: "Hay Bale", solid: true, tex: [61, 61, 61, 61, 61, 61], type: 'dirt' },
             [BLOCKS.MYCELIUM]: { name: "Mycelium", solid: true, tex: [1, 1, 0, 2, 1, 1], type: 'dirt' },
-            [BLOCKS.GRASS_PATH]: { name: "Grass Path", solid: true, tex: [2, 2, 1, 2, 2, 2], type: 'dirt' },
+            [BLOCKS.GRASS_PATH]: { name: "Grass Path", solid: true, tex: [2, 2, 1, 2, 2, 2], type: 'dirt', shape: 'path', pathHeight: 0.9375 },
+            [BLOCKS.DIRT_PATH]: { name: "Dirt Path", solid: true, tex: [2, 2, 2, 2, 2, 2], type: 'dirt', shape: 'path', pathHeight: 0.9375 },
             [BLOCKS.PODZOL]: { name: "Podzol", solid: true, tex: [2, 2, 2, 2, 2, 2], type: 'dirt' },
             [BLOCKS.ANDESITE]: { name: "Andesite", solid: true, tex: [3, 3, 3, 3, 3, 3], type: 'stone' },
             [BLOCKS.DIORITE]: { name: "Diorite", solid: true, tex: [4, 4, 4, 4, 4, 4], type: 'stone' },
@@ -1414,7 +1416,7 @@
 
         // Mining hardness (seconds with bare hand roughly); tools speed it up
         const BLOCK_HARDNESS = {
-            [BLOCKS.GRASS]: 0.6, [BLOCKS.DIRT]: 0.5, [BLOCKS.SAND]: 0.5, [BLOCKS.GRAVEL]: 0.6, [BLOCKS.GRASS_PATH]: 0.5,
+            [BLOCKS.GRASS]: 0.6, [BLOCKS.DIRT]: 0.5, [BLOCKS.SAND]: 0.5, [BLOCKS.GRAVEL]: 0.6, [BLOCKS.GRASS_PATH]: 0.5, [BLOCKS.DIRT_PATH]: 0.5,
             [BLOCKS.WOOD]: 2.0, [BLOCKS.PLANKS]: 2.0, [BLOCKS.LEAVES]: 0.25,
             [BLOCKS.STONE]: 1.5, [BLOCKS.COBBLESTONE]: 2.0, [BLOCKS.STONE_BRICKS]: 1.5,
             [BLOCKS.COAL_ORE]: 3.0, [BLOCKS.IRON_ORE]: 3.0, [BLOCKS.GOLD_ORE]: 3.0,
@@ -1451,7 +1453,7 @@
             [BLOCKS.DIAMOND_ORE]: 'pickaxe', [BLOCKS.REDSTONE_ORE]: 'pickaxe', [BLOCKS.LAPIS_ORE]: 'pickaxe',
             [BLOCKS.OBSIDIAN]: 'pickaxe', [BLOCKS.NETHERRACK]: 'pickaxe', [BLOCKS.BRICK]: 'pickaxe',
             [BLOCKS.IRON_BLOCK]: 'pickaxe', [BLOCKS.GOLD_BLOCK]: 'pickaxe', [BLOCKS.DIAMOND_BLOCK]: 'pickaxe', [BLOCKS.EMERALD_ORE]: 'pickaxe', [BLOCKS.EMERALD_BLOCK]: 'pickaxe',
-            [BLOCKS.DIRT]: 'shovel', [BLOCKS.GRASS]: 'shovel', [BLOCKS.SAND]: 'shovel', [BLOCKS.GRAVEL]: 'shovel', [BLOCKS.SNOW]: 'shovel',
+            [BLOCKS.DIRT]: 'shovel', [BLOCKS.GRASS]: 'shovel', [BLOCKS.SAND]: 'shovel', [BLOCKS.GRAVEL]: 'shovel', [BLOCKS.SNOW]: 'shovel', [BLOCKS.GRASS_PATH]: 'shovel', [BLOCKS.DIRT_PATH]: 'shovel',
             [BLOCKS.WOOD]: 'axe', [BLOCKS.PLANKS]: 'axe', [BLOCKS.CRAFTING_TABLE]: 'axe', [BLOCKS.FENCE]: 'axe', [BLOCKS.DOOR_CLOSED]: 'axe',
             [BLOCKS.BIRCH_LOG]: 'axe', [BLOCKS.BIRCH_PLANKS]: 'axe', [BLOCKS.SPRUCE_LOG]: 'axe', [BLOCKS.SPRUCE_PLANKS]: 'axe',
             [BLOCKS.NOTE_BLOCK]: 'axe', [BLOCKS.JUKEBOX]: 'axe', [BLOCKS.LADDER]: 'axe',
@@ -3312,58 +3314,170 @@
                 const wPositions = [], wNormals = [], wUvs = [], wIndices = [];
                 let vCount = 0, wVCount = 0;
 
-                const addFace = (x, y, z, dir, id, isWater) => {
+                const pushQuad = (p, n, uv, i, verts, norm, u0, v0, u1, v1, isWater) => {
+                    const vc = isWater ? wVCount : vCount;
+                    for (let j = 0; j < 4; j++) {
+                        p.push(verts[j][0], verts[j][1], verts[j][2]);
+                        n.push(norm[0], norm[1], norm[2]);
+                    }
+                    uv.push(u0, v0, u1, v0, u1, v1, u0, v1);
+                    i.push(vc, vc + 1, vc + 2, vc, vc + 2, vc + 3);
+                    if (isWater) wVCount += 4; else vCount += 4;
+                };
+
+                const texUV = (texIndex) => {
+                    const eps = 0.0001;
+                    const tu = (texIndex % 16) / 16, tv = 1.0 - Math.floor(texIndex / 16) / 16;
+                    return [tu + eps, tv - 1/16 + eps, tu + 1/16 - eps, tv - eps];
+                };
+
+                const addFace = (x, y, z, dir, id, isWater, yTop = 1) => {
                     const block = BlockRegistry[id];
                     if (!block || !block.tex) return;
                     const texIndex = block.tex[dir] != null ? block.tex[dir] : 3;
-                    const eps = 0.0001; // Tiny UV inset to prevent boundary bleeding
-                    const tu = (texIndex % 16) / 16, tv = 1.0 - Math.floor(texIndex / 16) / 16;
-                    const u0 = tu + eps, v0 = tv - 1/16 + eps, u1 = tu + 1/16 - eps, v1 = tv - eps;
-
+                    const [u0, v0, u1, v1] = texUV(texIndex);
                     const p = isWater ? wPositions : positions;
                     const n = isWater ? wNormals : normals;
                     const uv = isWater ? wUvs : uvs;
                     const i = isWater ? wIndices : indices;
-                    const vc = isWater ? wVCount : vCount;
-
-                    let v = [];
-                    if(dir===0) v=[[1,0,1],[1,0,0],[1,1,0],[1,1,1]]; // Right (+X)
-                    if(dir===1) v=[[0,0,0],[0,0,1],[0,1,1],[0,1,0]]; // Left (-X)
-                    if(dir===2) v=[[0,1,1],[1,1,1],[1,1,0],[0,1,0]]; // Top (+Y)
-                    if(dir===3) v=[[0,0,0],[1,0,0],[1,0,1],[0,0,1]]; // Bottom (-Y)
-                    if(dir===4) v=[[0,0,1],[1,0,1],[1,1,1],[0,1,1]]; // Front (+Z) - Fixed CCW Winding
-                    if(dir===5) v=[[1,0,0],[0,0,0],[0,1,0],[1,1,0]]; // Back (-Z) - Fixed CCW Winding
-
-                    if (isWater && dir === 2) { v[0][1] = v[1][1] = v[2][1] = v[3][1] = 0.8; }
-
-                    for(let j=0; j<4; j++) {
-                        p.push(x+v[j][0], y+v[j][1], z+v[j][2]);
-                        let norm = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]][dir];
-                        n.push(...norm);
+                    let verts = [];
+                    if (dir === 0) verts = [[1,0,1],[1,0,0],[1,yTop,0],[1,yTop,1]];
+                    if (dir === 1) verts = [[0,0,0],[0,0,1],[0,yTop,1],[0,yTop,0]];
+                    if (dir === 2) verts = [[0,yTop,1],[1,yTop,1],[1,yTop,0],[0,yTop,0]];
+                    if (dir === 3) verts = [[0,0,0],[1,0,0],[1,0,1],[0,0,1]];
+                    if (dir === 4) verts = [[0,0,1],[1,0,1],[1,yTop,1],[0,yTop,1]];
+                    if (dir === 5) verts = [[1,0,0],[0,0,0],[0,yTop,0],[1,yTop,0]];
+                    if (isWater && dir === 2) {
+                        const wh = 0.8;
+                        verts = [[0,wh,1],[1,wh,1],[1,wh,0],[0,wh,0]];
                     }
-                    uv.push(u0,v0, u1,v0, u1,v1, u0,v1);
-                    i.push(vc, vc+1, vc+2, vc, vc+2, vc+3);
-                    
-                    if(isWater) wVCount += 4; else vCount += 4;
+                    for (let j = 0; j < 4; j++) {
+                        verts[j] = [x + verts[j][0], y + verts[j][1], z + verts[j][2]];
+                    }
+                    const norm = [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]][dir];
+                    pushQuad(p, n, uv, i, verts, norm, u0, v0, u1, v1, isWater);
                 };
 
-                for(let y=0; y<CHUNK_HEIGHT; y++) {
-                    for(let x=0; x<CHUNK_SIZE; x++) {
-                        for(let z=0; z<CHUNK_SIZE; z++) {
-                            let id = this.data[this.getIndex(x,y,z)];
-                            if(id === 0) continue;
-                            const b = BlockRegistry[id];
-                            if (!b || !b.tex) continue; // unknown block id — skip (prevents render crash)
+                // Non-cube: approximate sphere (icosphere-ish via lat/lon quads) centered in block
+                const addSphere = (x, y, z, id, radius = 0.45, seg = 8) => {
+                    const block = BlockRegistry[id];
+                    if (!block || !block.tex) return;
+                    const texIndex = block.tex[0] != null ? block.tex[0] : 3;
+                    const [u0, v0, u1, v1] = texUV(texIndex);
+                    const cx = x + 0.5, cy = y + 0.5, cz = z + 0.5;
+                    const p = positions, n = normals, uv = uvs, i = indices;
+                    for (let lat = 0; lat < seg; lat++) {
+                        const a0 = Math.PI * (-0.5 + lat / seg);
+                        const a1 = Math.PI * (-0.5 + (lat + 1) / seg);
+                        const y0 = Math.sin(a0), y1 = Math.sin(a1);
+                        const r0 = Math.cos(a0), r1 = Math.cos(a1);
+                        for (let lon = 0; lon < seg; lon++) {
+                            const b0 = 2 * Math.PI * (lon / seg);
+                            const b1 = 2 * Math.PI * ((lon + 1) / seg);
+                            const pts = [
+                                [cx + radius * r0 * Math.cos(b0), cy + radius * y0, cz + radius * r0 * Math.sin(b0)],
+                                [cx + radius * r0 * Math.cos(b1), cy + radius * y0, cz + radius * r0 * Math.sin(b1)],
+                                [cx + radius * r1 * Math.cos(b1), cy + radius * y1, cz + radius * r1 * Math.sin(b1)],
+                                [cx + radius * r1 * Math.cos(b0), cy + radius * y1, cz + radius * r1 * Math.sin(b0)]
+                            ];
+                            const nx = (pts[0][0] + pts[2][0]) / 2 - cx;
+                            const ny = (pts[0][1] + pts[2][1]) / 2 - cy;
+                            const nz = (pts[0][2] + pts[2][2]) / 2 - cz;
+                            const nl = Math.hypot(nx, ny, nz) || 1;
+                            pushQuad(p, n, uv, i, pts, [nx/nl, ny/nl, nz/nl], u0, v0, u1, v1, false);
+                        }
+                    }
+                };
+
+                // Cylinder / "3D circle" column
+                const addCylinder = (x, y, z, id, radius = 0.4, seg = 12, y0 = 0.05, y1 = 0.95) => {
+                    const block = BlockRegistry[id];
+                    if (!block || !block.tex) return;
+                    const texSide = block.tex[0] != null ? block.tex[0] : 3;
+                    const texTop = block.tex[2] != null ? block.tex[2] : texSide;
+                    const [su0, sv0, su1, sv1] = texUV(texSide);
+                    const [tu0, tv0, tu1, tv1] = texUV(texTop);
+                    const cx = x + 0.5, cz = z + 0.5;
+                    const p = positions, n = normals, uv = uvs, i = indices;
+                    for (let s = 0; s < seg; s++) {
+                        const a0 = 2 * Math.PI * (s / seg);
+                        const a1 = 2 * Math.PI * ((s + 1) / seg);
+                        const x0 = cx + radius * Math.cos(a0), z0 = cz + radius * Math.sin(a0);
+                        const x1 = cx + radius * Math.cos(a1), z1 = cz + radius * Math.sin(a1);
+                        const side = [[x0, y+y0, z0],[x1, y+y0, z1],[x1, y+y1, z1],[x0, y+y1, z0]];
+                        const mx = Math.cos((a0+a1)/2), mz = Math.sin((a0+a1)/2);
+                        pushQuad(p, n, uv, i, side, [mx, 0, mz], su0, sv0, su1, sv1, false);
+                    }
+                    // top disk as triangle fan approximated by quads to center
+                    for (let s = 0; s < seg; s++) {
+                        const a0 = 2 * Math.PI * (s / seg);
+                        const a1 = 2 * Math.PI * ((s + 1) / seg);
+                        const x0 = cx + radius * Math.cos(a0), z0 = cz + radius * Math.sin(a0);
+                        const x1 = cx + radius * Math.cos(a1), z1 = cz + radius * Math.sin(a1);
+                        const top = [[cx, y+y1, cz],[x0, y+y1, z0],[x1, y+y1, z1],[cx, y+y1, cz]];
+                        pushQuad(p, n, uv, i, top, [0,1,0], tu0, tv0, tu1, tv1, false);
+                        const bot = [[cx, y+y0, cz],[x1, y+y0, z1],[x0, y+y0, z0],[cx, y+y0, cz]];
+                        pushQuad(p, n, uv, i, bot, [0,-1,0], tu0, tv0, tu1, tv1, false);
+                    }
+                };
+
+                // Cross (X) plant style
+                const addCross = (x, y, z, id) => {
+                    const block = BlockRegistry[id];
+                    if (!block || !block.tex) return;
+                    const texIndex = block.tex[0] != null ? block.tex[0] : 3;
+                    const [u0, v0, u1, v1] = texUV(texIndex);
+                    const p = positions, n = normals, uv = uvs, i = indices;
+                    const a = [[x+0.1,y,z+0.1],[x+0.9,y,z+0.9],[x+0.9,y+1,z+0.9],[x+0.1,y+1,z+0.1]];
+                    const b = [[x+0.9,y,z+0.1],[x+0.1,y,z+0.9],[x+0.1,y+1,z+0.9],[x+0.9,y+1,z+0.1]];
+                    pushQuad(p, n, uv, i, a, [0.7,0,0.7], u0, v0, u1, v1, false);
+                    pushQuad(p, n, uv, i, a.slice().reverse(), [-0.7,0,-0.7], u0, v0, u1, v1, false);
+                    pushQuad(p, n, uv, i, b, [-0.7,0,0.7], u0, v0, u1, v1, false);
+                    pushQuad(p, n, uv, i, b.slice().reverse(), [0.7,0,-0.7], u0, v0, u1, v1, false);
+                };
+
+                for (let y = 0; y < CHUNK_HEIGHT; y++) {
+                    for (let z = 0; z < CHUNK_SIZE; z++) {
+                        for (let x = 0; x < CHUNK_SIZE; x++) {
+                            const id = this.getBlock(x, y, z);
+                            if (!id) continue;
+                            const b = BlockRegistry[id] || {};
+                            if (id === 0) continue;
                             const isWater = !!b.fluid;
-                            
+                            const shape = b.shape || 'cube';
+
+                            if (shape === 'sphere' || shape === 'ball' || shape === 'circle3d') {
+                                addSphere(x, y, z, id, b.radius != null ? b.radius : 0.45, b.segments || 8);
+                                continue;
+                            }
+                            if (shape === 'cylinder' || shape === 'circle' || shape === 'disk') {
+                                addCylinder(x, y, z, id, b.radius != null ? b.radius : 0.4, b.segments || 12,
+                                    b.y0 != null ? b.y0 : 0.02, b.y1 != null ? b.y1 : 0.98);
+                                continue;
+                            }
+                            if (shape === 'cross' || shape === 'plant' || shape === 'x') {
+                                addCross(x, y, z, id);
+                                continue;
+                            }
+
+                            const yTop = (shape === 'path' || shape === 'slab')
+                                ? (b.pathHeight != null ? b.pathHeight : (shape === 'slab' ? 0.5 : 0.9375))
+                                : 1;
+
                             const dirs = [[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]];
-                            for(let d=0; d<6; d++) {
-                                let nx = x+dirs[d][0], ny = y+dirs[d][1], nz = z+dirs[d][2];
-                                let nid = this.getBlock(nx,ny,nz);
+                            for (let d = 0; d < 6; d++) {
+                                let nx = x + dirs[d][0], ny = y + dirs[d][1], nz = z + dirs[d][2];
+                                let nid = this.getBlock(nx, ny, nz);
                                 let nb = BlockRegistry[nid] || BlockRegistry[0];
-                                
-                                if(nid === 0 || (nb && nb.transparent && !(isWater && nid === id))) {
-                                    addFace(x,y,z, d, id, isWater);
+                                // Always draw top of path/slab if shorter than full block above
+                                let force = false;
+                                if (d === 2 && yTop < 1) force = true;
+                                if (nid === 0 || (nb && nb.transparent && !(isWater && nid === id)) || force) {
+                                    // skip occluded side faces against solid full cubes
+                                    if (!force && nid && nb && !nb.transparent && !nb.fluid && !(nb.shape && nb.shape !== 'cube')) {
+                                        // still might need sides if neighbor is path shorter — always show if yTop < 1 on sides
+                                    }
+                                    addFace(x, y, z, d, id, isWater, yTop);
                                 }
                             }
                         }
@@ -3373,7 +3487,7 @@
                 if (this.mesh) { this.world.scene.remove(this.mesh); this.mesh.geometry.dispose(); }
                 if (this.waterMesh) { this.world.scene.remove(this.waterMesh); this.waterMesh.geometry.dispose(); }
 
-                const makeGeom = (p,n,u,i) => {
+                const makeGeom = (p, n, u, i) => {
                     const geo = new THREE.BufferGeometry();
                     geo.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
                     geo.setAttribute('normal', new THREE.Float32BufferAttribute(n, 3));
@@ -3397,6 +3511,7 @@
                 console.warn('Chunk buildMesh failed', this.cx, this.cz, err);
                 this.dirty = false;
               }
+            }
             }
         }
 
@@ -4045,11 +4160,11 @@
 
                 let move = new THREE.Vector3();
                 // Arrow keys: move (WASD) unless Alt held (then look — handled in Game)
-                const arrowMove = !(input.keys['AltLeft'] || input.keys['AltRight']);
-                const goFwd = input.keys['KeyW'] || (arrowMove && input.keys['ArrowUp']);
-                const goBack = input.keys['KeyS'] || (arrowMove && input.keys['ArrowDown']);
-                const goRight = input.keys['KeyD'] || (arrowMove && input.keys['ArrowRight']);
-                const goLeft = input.keys['KeyA'] || (arrowMove && input.keys['ArrowLeft']);
+                // Arrow keys are look-only (WASD move). See animate() arrow look.
+                const goFwd = !!input.keys['KeyW'];
+                const goBack = !!input.keys['KeyS'];
+                const goRight = !!input.keys['KeyD'];
+                const goLeft = !!input.keys['KeyA'];
 
                 if (this.flying || isSpectator) {
                     // Full 3D flight using look direction
@@ -5476,7 +5591,7 @@
         // Spec: a .vxm file is JSON (optionally wrapped). See loadExampleVxm().
         // ========== Voxel Mod System (.vxm JSON v2) ==========
         const ModAPI = {
-            formatVersion: 5, // v5: makeUI, mainmods/worldmods, day/night, chat API
+            formatVersion: 6, // v6: non-cube shapes (sphere/cylinder/cross/path), dirt path, arrow look, Alt mouse lock
             nextBlockId: 200,
             nextItemId: 500,
             nextMobKey: 0,
@@ -5542,7 +5657,14 @@
                     door: !!def.door,
                     bed: !!def.bed,
                     light: def.lightLevel || def.light || 0,
-                    mod: modId || null
+                    mod: modId || null,
+                    // Non-cube shapes: 'cube' | 'path' | 'slab' | 'sphere' | 'ball' | 'circle3d' | 'cylinder' | 'circle' | 'cross' | 'plant'
+                    shape: def.shape || 'cube',
+                    radius: def.radius,
+                    segments: def.segments,
+                    pathHeight: def.pathHeight,
+                    y0: def.y0,
+                    y1: def.y1
                 };
                 if (def.hardness != null) BLOCK_HARDNESS[id] = def.hardness;
                 if (def.tool) BLOCK_TOOL[id] = def.tool;
@@ -8630,6 +8752,19 @@ In-game: /text Hello 5 #55ff55
                             e.preventDefault();
                             this.openChat();
                         }
+                        // Alt = toggle mouse lock / free cursor (does not pause)
+                        if ((e.code === 'AltLeft' || e.code === 'AltRight') && this.state === 'play' && !this.chatOpen) {
+                            e.preventDefault();
+                            if (document.pointerLockElement) {
+                                this._freeCursor = true;
+                                try { document.exitPointerLock(); } catch (err) {}
+                                this.notify('Mouse unlocked (Alt). Arrow keys look · click to relock');
+                            } else {
+                                this._freeCursor = false;
+                                try { document.body.requestPointerLock(); } catch (err) {}
+                                this.notify('Mouse locked');
+                            }
+                        }
 
                         if(e.code === 'F4') {
                             e.preventDefault();
@@ -8695,6 +8830,7 @@ In-game: /text Hello 5 #55ff55
                 window.addEventListener('mousedown', e => {
                     if(this.state !== 'play') return;
                     if(document.pointerLockElement !== document.body) {
+                        this._freeCursor = false; // click re-locks after Alt unlock
                         if (!this.isMobile) document.body.requestPointerLock();
                         audio.init();
                         return;
@@ -8717,12 +8853,14 @@ In-game: /text Hello 5 #55ff55
                     if (this._pauseLock) return; // intentional lock/unlock from pause menu
                     if (document.pointerLockElement === document.body) {
                         // Acquired lock — ensure playing
+                        this._freeCursor = false;
                         if (this.state === 'pause') {
                             document.getElementById('pause-screen')?.classList.remove('show');
                             this.state = 'play';
                         }
                     } else {
-                        // Lost lock (Alt-Tab / Esc) while playing → pause
+                        // Lost lock: Alt free-cursor stays in play; Esc/Alt-Tab pauses
+                        if (this._freeCursor) return;
                         if ((this.state === 'play' || this.state === 'replay') && !this.isMobile && !this.chatOpen) {
                             this.togglePause('pause');
                         }
@@ -12034,6 +12172,28 @@ In-game: /text Hello 5 #55ff55
                         return;
                     }
 
+                    // Shovel: convert grass/dirt into path
+                    if (target && ItemRegistry[item.id]?.toolType === 'shovel') {
+                        const hx = target.hit.x, hy = target.hit.y, hz = target.hit.z;
+                        const hid = this.world.getBlock(hx, hy, hz);
+                        if (hid === BLOCKS.GRASS || hid === BLOCKS.GRASS_PATH) {
+                            this.world.setBlock(hx, hy, hz, BLOCKS.GRASS_PATH);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(hx, hy, hz, BLOCKS.GRASS_PATH);
+                            audio.playSound('place');
+                            this.notify('Path');
+                            this.updateHUD();
+                            return;
+                        }
+                        if (hid === BLOCKS.DIRT || hid === BLOCKS.PODZOL || hid === BLOCKS.MYCELIUM || hid === BLOCKS.DIRT_PATH) {
+                            this.world.setBlock(hx, hy, hz, BLOCKS.DIRT_PATH);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(hx, hy, hz, BLOCKS.DIRT_PATH);
+                            audio.playSound('place');
+                            this.notify('Dirt path');
+                            this.updateHUD();
+                            return;
+                        }
+                    }
+
                     // Handle Food Consumption
                     if (ItemRegistry[item.id]?.type === 'food') {
                         if (this.player.health < 10 || this.player.hunger < 10) {
@@ -13022,18 +13182,15 @@ In-game: /text Hello 5 #55ff55
                     }
 
                     if (this.isMobile) this.applyMobileInput(dt);
-                    // Arrow keys look when Alt held (otherwise arrows move)
+                    // Arrow keys always look (WASD move). Useful without mouse / unlocked cursor.
                     if (this.input && this.input.keys && !this.chatOpen) {
-                        const lookMode = this.input.keys['AltLeft'] || this.input.keys['AltRight'] || this.input.keys['ShiftRight'];
-                        if (lookMode) {
-                            const sens = 1.8 * ((this.settings && this.settings.mouseSens) || 1);
-                            this.camera.rotation.order = 'YXZ';
-                            if (this.input.keys['ArrowLeft']) this.camera.rotation.y += sens * dt;
-                            if (this.input.keys['ArrowRight']) this.camera.rotation.y -= sens * dt;
-                            if (this.input.keys['ArrowUp']) this.camera.rotation.x += sens * dt;
-                            if (this.input.keys['ArrowDown']) this.camera.rotation.x -= sens * dt;
-                            this.camera.rotation.x = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, this.camera.rotation.x));
-                        }
+                        const sens = 1.8 * ((this.settings && this.settings.mouseSens) || 1);
+                        this.camera.rotation.order = 'YXZ';
+                        if (this.input.keys['ArrowLeft']) this.camera.rotation.y += sens * dt;
+                        if (this.input.keys['ArrowRight']) this.camera.rotation.y -= sens * dt;
+                        if (this.input.keys['ArrowUp']) this.camera.rotation.x += sens * dt;
+                        if (this.input.keys['ArrowDown']) this.camera.rotation.x -= sens * dt;
+                        this.camera.rotation.x = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, this.camera.rotation.x));
                     }
                     // Hold-to-mine (PC left mouse or mobile break hold)
                     if (this._mouseBreaking && this.state === 'play' && this.gameMode !== 'creative') {
