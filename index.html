@@ -947,7 +947,7 @@
             </div>
             <div class="mc-footer">
                 <span class="mc-ver">Voxel Survival 1.8</span>
-                <span class="mc-copy">Not affiliated with Mojang / Microsoft</span>
+                <span class="mc-copy"></span>
             </div>
         </div>
         <div id="menu-changelog" class="menu-panel" style="display:none;max-width:560px;max-height:80vh;overflow:auto;">
@@ -1124,6 +1124,15 @@
         <button class="menu-btn" id="btn-settings-close">BACK</button>
     </div>
 
+    <div id="mp-loading" style="display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.85);flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+        <div class="menu-title" style="color:#fff;">Joining World…</div>
+        <div id="mp-loading-status" style="color:#ccc;font-size:14px;text-align:center;max-width:80%;">Connecting to host…</div>
+        <div class="mp-loading-bar" style="width:min(280px,80vw);height:14px;background:#333;border:2px solid #555;overflow:hidden;">
+            <div id="mp-loading-fill" style="height:100%;width:20%;background:#5a5;animation:mpLoadSlide 1.2s ease-in-out infinite;"></div>
+        </div>
+        <button class="menu-btn" id="btn-mp-loading-cancel" style="max-width:200px;">Cancel</button>
+    </div>
+    <style>@keyframes mpLoadSlide{0%{width:15%;margin-left:0}50%{width:40%;margin-left:30%}100%{width:15%;margin-left:70%}}</style>
     <div id="death-screen">
         <div class="death-title">You Died!</div>
         <div class="death-msg" id="death-msg">You were slain</div>
@@ -7798,6 +7807,18 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                             // Resolve on open; world_info arrives async via _onData
                             ok();
                         });
+                        this.conn.on('close', () => {
+                            if (!settled) fail(new Error('Disconnected from host'));
+                            else if (this.game && this.game.notify) {
+                                this.game.notify('Fail to join this world — disconnected');
+                            }
+                        });
+                        this.conn.on('error', (err) => {
+                            if (!settled) fail(err || new Error('Connection error'));
+                            else if (this.game && this.game.notify) {
+                                this.game.notify('Fail to join this world');
+                            }
+                        });
                         this.conn.on('data', (d) => {
                             if (d && d.type === 'auth_required') {
                                 const pw = this._joinPassword || '';
@@ -9467,12 +9488,32 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                     this.sunMesh.position.add(p);
                     this.moonMesh.position.add(p);
                     if (this.cloudGroup) {
-                        this.cloudGroup.position.x = p.x;
-                        this.cloudGroup.position.z = p.z;
+                        // Follow player on XZ so clouds stay around the player
+                        this.cloudGroup.position.set(p.x, 0, p.z);
+                        let insideAny = false;
+                        const cloudsOn = !(this.settings && this.settings.clouds === false);
                         for (const cloud of this.cloudGroup.children) {
+                            cloud.userData.speed = cloud.userData.speed || (0.5 + Math.random() * 1.2);
                             cloud.position.x += cloud.userData.speed * 0.016;
-                            if (cloud.position.x > 120) cloud.position.x = -120;
+                            if (cloud.position.x > 140) cloud.position.x = -140;
+                            if (cloud.position.x < -140) cloud.position.x = 140;
+                            // World-space bounds of this cloud puff
+                            const wx = p.x + cloud.position.x;
+                            const wy = cloud.position.y;
+                            const wz = p.z + cloud.position.z;
+                            // Approximate size of stacked boxes
+                            const half = 14;
+                            const inXZ = Math.abs(p.x - wx) < half && Math.abs(p.z - wz) < half;
+                            const inY = p.y > (wy - 4) && p.y < (wy + 8);
+                            if (inXZ && inY) {
+                                insideAny = true;
+                                cloud.visible = false; // hide the cloud the player is inside
+                            } else {
+                                cloud.visible = cloudsOn;
+                            }
                         }
+                        // If fully inside cloud layer, soft-hide whole group edge
+                        this.cloudGroup.visible = cloudsOn;
                     }
                 }
 
@@ -9485,11 +9526,13 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                     this.cloudGroup.visible = cloudsOn && day > 0.25;
                     const op = 0.55 + day * 0.35;
                     for (const cloud of this.cloudGroup.children) {
-                        if (cloud.material) cloud.material.opacity = op;
-                        else if (cloud.children) {
+                        // keep per-cloud visible flag (hidden when player inside)
+                        if (cloud.children) {
                             for (const m of cloud.children) {
                                 if (m.material) m.material.opacity = Math.min(0.95, op + 0.05);
                             }
+                        } else if (cloud.material) {
+                            cloud.material.opacity = op;
                         }
                     }
                 }
@@ -12591,7 +12634,8 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                     return;
                 }
                 if (input) input.value = hostId;
-                if (st) st.textContent = 'Connecting to ' + hostId + ' (vs' + hostId + ')...';
+                if (st) st.textContent = 'Connecting to ' + hostId + '…';
+                this.showMpLoading('Connecting to world ' + hostId + '…');
                 try {
                     if (this.mp) { try { this.mp.destroy(); } catch (e) {} this.mp = null; }
                     const seed = 'join_' + hostId;
@@ -12599,31 +12643,87 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                     this.genOptions = this.genOptions || {};
                     this.genOptions.multiplayer = true;
                     this.genOptions.allowVC = true;
+                    this.setMpLoadingStatus('Preparing world…');
                     await this.startWorld('MP_' + name, seed);
+                    this.setMpLoadingStatus('Connecting to host…');
                     this.mp = new Multiplayer(this);
                     this.mp.allowVC = true;
                     await this.mp.join(hostId, name, password);
+                    this.setMpLoadingStatus('Connected! Syncing…');
                     if (st) st.textContent = 'Connected!';
                     if (pwWrap) pwWrap.style.display = 'none';
+                    this.hideMpLoading();
                     this.notify('Joined world ' + hostId);
                 } catch (e) {
                     const msg = (e && (e.type || e.message)) || String(e);
-                    if (msg === 'PASSWORD_REQUIRED' || /password/i.test(msg) && /required/i.test(msg)) {
+                    this.hideMpLoading();
+                    // Tear down partial world so user can retry from menu
+                    try {
+                        if (this.mp) { this.mp.destroy(); this.mp = null; }
+                    } catch (err) {}
+                    if (msg === 'PASSWORD_REQUIRED' || (/password/i.test(msg) && /required/i.test(msg))) {
                         if (pwWrap) pwWrap.style.display = 'block';
                         if (st) st.textContent = 'This world requires a password — enter it and Join again';
                         this.notify('Password required');
+                        this.showJoinMenuAgain();
                         return;
                     }
                     if (/Wrong password/i.test(msg)) {
                         if (pwWrap) pwWrap.style.display = 'block';
                         if (st) st.textContent = 'Wrong password';
                         this.notify('Wrong password');
+                        this.showJoinMenuAgain();
                         return;
                     }
-                    if (st) st.textContent = 'Failed: ' + msg + ' — check host is online & code matches';
+                    const failMsg = 'Fail to join this world';
+                    if (st) st.textContent = failMsg + (msg ? (' — ' + msg) : '');
                     console.error('[Join]', e);
-                    this.notify('Join failed: ' + msg);
+                    this.notify(failMsg);
+                    this.showJoinMenuAgain();
                 }
+            }
+
+            showMpLoading(status) {
+                const el = document.getElementById('mp-loading');
+                if (el) {
+                    el.style.display = 'flex';
+                    this.setMpLoadingStatus(status || 'Connecting…');
+                }
+                try {
+                    const cancel = document.getElementById('btn-mp-loading-cancel');
+                    if (cancel) {
+                        cancel.onclick = () => {
+                            try { if (this.mp) this.mp.destroy(); } catch (e) {}
+                            this.mp = null;
+                            this.hideMpLoading();
+                            this.showJoinMenuAgain();
+                            const st = document.getElementById('join-status');
+                            if (st) st.textContent = 'Cancelled';
+                        };
+                    }
+                } catch (e) {}
+            }
+
+            setMpLoadingStatus(text) {
+                const s = document.getElementById('mp-loading-status');
+                if (s) s.textContent = text || '';
+            }
+
+            hideMpLoading() {
+                const el = document.getElementById('mp-loading');
+                if (el) el.style.display = 'none';
+            }
+
+            showJoinMenuAgain() {
+                try {
+                    document.getElementById('menu-main').style.display = 'none';
+                    const j = document.getElementById('menu-join');
+                    if (j) j.style.display = 'flex';
+                    // Leave play state if join failed mid-start
+                    if (this.state === 'play' && this._joinAsClient) {
+                        this.state = 'menu';
+                    }
+                } catch (e) {}
             }
 
             refreshNearbyList(notifyEmpty = false) {
