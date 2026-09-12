@@ -2495,19 +2495,77 @@
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
             }
-            playSound(type) {
+            _playMcAsset(type) {
+                if (!this._mcBase) {
+                    this._mcBase = 'https://mcasset.cloud/26.2/assets/minecraft/sounds/';
+                    this._mcFailed = {};
+                    this._mcMap = {
+                        break: ['dig/grass1.ogg','dig/grass2.ogg','dig/grass3.ogg','dig/grass4.ogg','dig/stone1.ogg','dig/stone2.ogg'],
+                        place: ['dig/stone1.ogg','dig/stone2.ogg','dig/stone3.ogg','dig/wood1.ogg'],
+                        step: ['step/grass1.ogg','step/grass2.ogg','step/grass3.ogg','step/stone1.ogg','step/stone2.ogg'],
+                        click: ['ui/button.click.ogg','random/click.ogg'],
+                        hurt: ['damage/hit1.ogg','damage/hit2.ogg','damage/hit3.ogg'],
+                        splash: ['liquid/splash.ogg','liquid/splash2.ogg'],
+                        swim: ['liquid/swim1.ogg','liquid/swim2.ogg','liquid/swim3.ogg'],
+                        explode: ['random/explode1.ogg','random/explode2.ogg','random/explode3.ogg','random/explode4.ogg'],
+                        eat: ['random/eat1.ogg','random/eat2.ogg','random/eat3.ogg'],
+                        door: ['block/wooden_door/open1.ogg','block/wooden_door/open2.ogg','block/wooden_door/close1.ogg','random/door_open.ogg'],
+                        fizz: ['random/fizz.ogg'],
+                        pop: ['random/pop.ogg'],
+                        levelup: ['random/levelup.ogg'],
+                        bow: ['random/bow.ogg'],
+                        death: ['damage/fallbig.ogg','damage/hit1.ogg']
+                    };
+                }
+                const list = this._mcMap[type];
+                if (!list || !list.length) return false;
+                const opts = list.filter(p => !this._mcFailed[p]);
+                if (!opts.length) return false;
+                const path = opts[Math.floor(Math.random() * opts.length)];
+                const url = this._mcBase + path;
+                try {
+                    const a = new Audio(url);
+                    a.volume = Math.min(1, 0.55 * (this.volumes && this.volumes.sfx != null ? this.volumes.sfx : 1));
+                    const p = a.play();
+                    if (p && p.catch) p.catch(() => { this._mcFailed[path] = true; });
+                    a.addEventListener('error', () => { this._mcFailed[path] = true; });
+                    return true;
+                } catch (e) {
+                    this._mcFailed[path] = true;
+                    return false;
+                }
+            }
+            preloadMcSounds() {
+                try {
+                    if (!this._mcBase) this._playMcAsset('__init__'); // force map init
+                    this._mcBase = this._mcBase || 'https://mcasset.cloud/26.2/assets/minecraft/sounds/';
+                    if (!this._mcMap) this._playMcAsset('__init__');
+                    for (const k of ['break','place','step','click','hurt']) {
+                        const list = (this._mcMap && this._mcMap[k]) || [];
+                        if (!list[0]) continue;
+                        const a = new Audio(this._mcBase + list[0]);
+                        a.preload = 'auto';
+                        a.volume = 0;
+                    }
+                } catch (e) {}
+            }
+                        playSound(type) {
                 if (!this.ready) return;
                 if (this.ctx.state === 'suspended') this.ctx.resume();
                 // Mod pack sounds (.wav/.mp3/.ogg data URLs)
                 try {
                     if (typeof ModAPI !== 'undefined' && ModAPI.sounds && ModAPI.sounds[type]) {
                         const a = new Audio(ModAPI.sounds[type]);
-                        a.volume = 0.7;
+                        a.volume = Math.min(1, 0.85 * (this.volumes.sfx || 1));
                         a.play().catch(() => {});
                         return;
                     }
                 } catch (e) {}
-                // Minecraft-inspired procedural SFX (not copyrighted samples)
+                // Minecraft assets from mcasset.cloud (fallback variants)
+                try {
+                    if (this._playMcAsset && this._playMcAsset(type)) return;
+                } catch (e) {}
+                // Procedural SFX fallback
                 switch (type) {
                     case 'break':
                         this._noise(0.12, 800, 'bandpass', 0.9);
@@ -3314,13 +3372,15 @@
                 const wPositions = [], wNormals = [], wUvs = [], wIndices = [];
                 let vCount = 0, wVCount = 0;
 
-                const pushQuad = (p, n, uv, i, verts, norm, u0, v0, u1, v1, isWater) => {
+                const pushQuad = (p, n, uv, i, verts, norm, u0, v0, u1, v1, isWater, flipV) => {
                     const vc = isWater ? wVCount : vCount;
                     for (let j = 0; j < 4; j++) {
                         p.push(verts[j][0], verts[j][1], verts[j][2]);
                         n.push(norm[0], norm[1], norm[2]);
                     }
-                    uv.push(u0, v0, u1, v0, u1, v1, u0, v1);
+                    // flipV: plant/cross textures were upside-down with default atlas mapping
+                    if (flipV) uv.push(u0, v1, u1, v1, u1, v0, u0, v0);
+                    else uv.push(u0, v0, u1, v0, u1, v1, u0, v1);
                     i.push(vc, vc + 1, vc + 2, vc, vc + 2, vc + 3);
                     if (isWater) wVCount += 4; else vCount += 4;
                 };
@@ -3428,12 +3488,13 @@
                     const texIndex = block.tex[0] != null ? block.tex[0] : 3;
                     const [u0, v0, u1, v1] = texUV(texIndex);
                     const p = positions, n = normals, uv = uvs, i = indices;
+                    // bottom → top vertex order; flipV so flower tops point up
                     const a = [[x+0.1,y,z+0.1],[x+0.9,y,z+0.9],[x+0.9,y+1,z+0.9],[x+0.1,y+1,z+0.1]];
                     const b = [[x+0.9,y,z+0.1],[x+0.1,y,z+0.9],[x+0.1,y+1,z+0.9],[x+0.9,y+1,z+0.1]];
-                    pushQuad(p, n, uv, i, a, [0.7,0,0.7], u0, v0, u1, v1, false);
-                    pushQuad(p, n, uv, i, a.slice().reverse(), [-0.7,0,-0.7], u0, v0, u1, v1, false);
-                    pushQuad(p, n, uv, i, b, [-0.7,0,0.7], u0, v0, u1, v1, false);
-                    pushQuad(p, n, uv, i, b.slice().reverse(), [0.7,0,-0.7], u0, v0, u1, v1, false);
+                    pushQuad(p, n, uv, i, a, [0.7,0,0.7], u0, v0, u1, v1, false, true);
+                    pushQuad(p, n, uv, i, [a[0], a[3], a[2], a[1]], [-0.7,0,-0.7], u0, v0, u1, v1, false, true);
+                    pushQuad(p, n, uv, i, b, [-0.7,0,0.7], u0, v0, u1, v1, false, true);
+                    pushQuad(p, n, uv, i, [b[0], b[3], b[2], b[1]], [0.7,0,-0.7], u0, v0, u1, v1, false, true);
                 };
 
                 for (let y = 0; y < CHUNK_HEIGHT; y++) {
@@ -5591,7 +5652,7 @@
         // ========== Voxel Mod System (.vxm JSON v2) ==========
         const ModAPI = {
             formatVersion: 6, // v6: non-cube shapes (sphere/cylinder/cross/path), dirt path, arrow look, Alt mouse lock
-            nextBlockId: 200,
+            nextBlockId: 220,
             nextItemId: 500,
             nextMobKey: 0,
             loaded: [],
@@ -5605,6 +5666,83 @@
             _pendingIcons: [],
             _uiHandles: [],
             gameRef: null,
+            thirdParty: {}, // id -> { url, status }
+
+            /** Register a named sound from mod asset cache or data URL / remote URL */
+            registerSound(name, src) {
+                if (!name) return;
+                let url = src;
+                if (url && this.assetCache[url]) url = this.assetCache[url];
+                if (url && this.assetCache[String(src)]) url = this.assetCache[String(src)];
+                this.sounds[String(name)] = url;
+                return name;
+            },
+
+            /** Show a title overlay (seconds, optional CSS color) */
+            showTitle(text, seconds, color) {
+                if (this.gameRef && this.gameRef.showTitleText) this.gameRef.showTitleText(text, seconds, color);
+            },
+
+            notify(msg) {
+                if (this.gameRef && this.gameRef.notify) this.gameRef.notify(String(msg));
+            },
+
+            /** Create UI element: textDisplay, itemDisplay, modImageDisplay, webImgDisplay, ... */
+            makeDisplay(type, props) {
+                return ModUI.create(type, props || {}, this.gameRef);
+            },
+
+            /** Mount elements under #mod-ui-root */
+            mountUI(elements) {
+                const root = document.getElementById('mod-ui-root');
+                if (!root) return null;
+                return ModUI.buildTree(elements, root, this.gameRef);
+            },
+
+            /**
+             * Load third-party script (CDN). Allowed for mods that need extra libs.
+             * Returns a Promise that resolves when script loads.
+             */
+            loadThirdParty(id, url, opts) {
+                opts = opts || {};
+                if (!id || !url) return Promise.reject(new Error('id and url required'));
+                if (this.thirdParty[id] && this.thirdParty[id].status === 'loaded') {
+                    return Promise.resolve(this.thirdParty[id]);
+                }
+                if (!/^https?:\/\//i.test(String(url))) {
+                    return Promise.reject(new Error('third-party url must be http(s)'));
+                }
+                return new Promise((resolve, reject) => {
+                    const existing = document.querySelector('script[data-vxm-tp="' + id + '"]');
+                    if (existing) {
+                        this.thirdParty[id] = { url, status: 'loaded' };
+                        resolve(this.thirdParty[id]);
+                        return;
+                    }
+                    const s = document.createElement('script');
+                    s.src = url;
+                    s.async = opts.async !== false;
+                    s.dataset.vxmTp = id;
+                    if (opts.type) s.type = opts.type;
+                    s.onload = () => {
+                        this.thirdParty[id] = { url, status: 'loaded' };
+                        resolve(this.thirdParty[id]);
+                    };
+                    s.onerror = () => {
+                        this.thirdParty[id] = { url, status: 'error' };
+                        reject(new Error('Failed to load third-party: ' + id));
+                    };
+                    document.head.appendChild(s);
+                    this.thirdParty[id] = { url, status: 'loading' };
+                });
+            },
+
+            /** Fetch JSON from third-party API (CORS-dependent) */
+            async fetchJSON(url) {
+                const r = await fetch(url);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            },
 
             resolveId(ref) {
                 if (ref == null) return null;
@@ -5816,8 +5954,8 @@
                 if (!mod || typeof mod !== 'object') errs.push('Root must be a JSON object');
                 if (mod && mod.voxelMod === false) errs.push('voxelMod cannot be false');
                 if (mod && !mod.name && !mod.id) errs.push('Missing name or id');
-                if (mod && mod.formatVersion != null && mod.formatVersion > 5)
-                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 5)');
+                if (mod && mod.formatVersion != null && mod.formatVersion > 6)
+                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 6)');
                 if (mod && mod.blocks && !Array.isArray(mod.blocks)) errs.push('blocks must be an array');
                 if (mod && mod.items && !Array.isArray(mod.items)) errs.push('items must be an array');
                 if (mod && mod.mobs && !Array.isArray(mod.mobs)) errs.push('mobs must be an array');
@@ -5891,18 +6029,34 @@
         const ModUI = {
             create(type, props, game) {
                 props = props || {};
-                const t = String(type || 'frame').toLowerCase().replace(/[^a-z]/g, '');
+                // Normalize type aliases (textDisplay, itemDisplay, modImageDisplay, webImgDisplay, ...)
+                let t = String(type || 'frame').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const aliases = {
+                    textdisplay: 'text', textlabel: 'text', label: 'text',
+                    itemdisplay: 'item', itemicon: 'item', slotdisplay: 'item',
+                    modimagedisplay: 'modimage', modimage: 'modimage', packimage: 'modimage',
+                    webimgdisplay: 'webimage', webimage: 'webimage', urlimage: 'webimage', remoteimage: 'webimage',
+                    textimage: 'textimage', image: 'image', img: 'image',
+                    button: 'button', textbutton: 'textbutton',
+                    frame: 'frame', panel: 'frame', scrollingframe: 'scrollframe', scrollframe: 'scrollframe',
+                    progressbar: 'progress', bar: 'progress',
+                    input: 'input', textbox: 'input',
+                    list: 'list', spacer: 'spacer'
+                };
+                t = aliases[t] || t;
                 let el;
                 if (t === 'frame') {
                     el = document.createElement('div');
                     el.className = 'mc-ui-frame';
-                } else if (t === 'scrollingframe' || t === 'scrollframe') {
+                } else if (t === 'scrollframe') {
                     el = document.createElement('div');
                     el.className = 'mc-ui-scroll';
                 } else if (t === 'text') {
                     el = document.createElement('div');
                     el.className = 'mc-ui-text';
-                    el.textContent = props.text || props.Text || '';
+                    el.textContent = props.text || props.Text || props.value || '';
+                    if (props.color || props.Color) el.style.color = props.color || props.Color;
+                    if (props.fontSize || props.size) el.style.fontSize = (props.fontSize || props.size) + (typeof (props.fontSize||props.size) === 'number' ? 'px' : '');
                 } else if (t === 'button') {
                     el = document.createElement('button');
                     el.type = 'button';
@@ -5918,6 +6072,62 @@
                     el.className = 'mc-ui-image';
                     el.src = this.resolveSrc(props.src || props.Src || props.image || props.Image || '', game);
                     el.alt = props.alt || '';
+                } else if (t === 'modimage') {
+                    // Image from mod pack asset cache (path relative to .vxm)
+                    el = document.createElement('img');
+                    el.className = 'mc-ui-image';
+                    const path = props.src || props.Src || props.path || props.Path || props.image || '';
+                    el.src = this.resolveSrc(path, game);
+                    el.alt = props.alt || path;
+                    el.style.imageRendering = 'pixelated';
+                } else if (t === 'webimage') {
+                    // Third-party / remote URL image
+                    el = document.createElement('img');
+                    el.className = 'mc-ui-image';
+                    let url = props.url || props.Url || props.src || props.Src || props.href || '';
+                    if (url && !/^(https?:|data:|blob:)/i.test(url) && props.allowRelative !== false) {
+                        // still try resolve
+                        url = this.resolveSrc(url, game);
+                    }
+                    el.src = url;
+                    el.alt = props.alt || 'web';
+                    el.referrerPolicy = 'no-referrer';
+                    el.crossOrigin = 'anonymous';
+                    if (props.width) el.width = props.width;
+                    if (props.height) el.height = props.height;
+                } else if (t === 'item') {
+                    // Item/block icon from game.itemIcons or registry id
+                    el = document.createElement('div');
+                    el.className = 'mc-ui-itemdisplay';
+                    el.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;position:relative;image-rendering:pixelated;';
+                    const size = props.size || props.Size || 32;
+                    el.style.width = size + 'px';
+                    el.style.height = size + 'px';
+                    const idRef = props.item || props.Item || props.id || props.Id || props.block || props.Block;
+                    let nid = (typeof ModAPI !== 'undefined') ? ModAPI.resolveId(idRef) : idRef;
+                    if (nid == null && typeof idRef === 'number') nid = idRef;
+                    const img = document.createElement('img');
+                    img.className = 'mc-ui-image';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.imageRendering = 'pixelated';
+                    let src = '';
+                    if (game && game.itemIcons && nid != null && game.itemIcons[nid]) src = game.itemIcons[nid];
+                    if (!src && typeof ModAPI !== 'undefined' && ModAPI.assetCache) {
+                        const key = String(idRef || '');
+                        src = ModAPI.assetCache[key] || '';
+                    }
+                    img.src = src || '';
+                    img.alt = String(idRef || 'item');
+                    el.appendChild(img);
+                    const count = props.count || props.Count;
+                    if (count && count > 1) {
+                        const c = document.createElement('span');
+                        c.className = 'mc-ui-itemcount';
+                        c.textContent = String(count);
+                        c.style.cssText = 'position:absolute;right:1px;bottom:1px;font-size:10px;color:#fff;text-shadow:1px 1px #000;pointer-events:none;';
+                        el.appendChild(c);
+                    }
                 } else if (t === 'textimage') {
                     el = document.createElement('div');
                     el.className = 'mc-ui-textimage';
@@ -5929,6 +6139,37 @@
                     span.textContent = props.text || props.Text || '';
                     el.appendChild(img);
                     el.appendChild(span);
+                } else if (t === 'progress') {
+                    el = document.createElement('div');
+                    el.className = 'mc-ui-progress';
+                    el.style.cssText = 'background:#555;border:2px solid #333;height:12px;position:relative;overflow:hidden;';
+                    const bar = document.createElement('div');
+                    const pct = Math.max(0, Math.min(100, Number(props.value != null ? props.value : (props.progress || 0)) * (Number(props.value) > 1 ? 1 : 100)));
+                    const pct2 = Number(props.value) > 1 ? Math.min(100, Number(props.value)) : Math.max(0, Math.min(100, Number(props.value || props.progress || 0) * 100));
+                    bar.style.cssText = 'height:100%;width:' + pct2 + '%;background:#4caf50;';
+                    el.appendChild(bar);
+                    el._setProgress = (v) => { bar.style.width = (Math.max(0, Math.min(1, Number(v))) * 100) + '%'; };
+                } else if (t === 'input') {
+                    el = document.createElement('input');
+                    el.type = props.inputType || 'text';
+                    el.className = 'mc-ui-input';
+                    el.placeholder = props.placeholder || props.Placeholder || '';
+                    el.value = props.value || props.Value || props.text || '';
+                    el.style.cssText = 'font-family:inherit;padding:6px;background:#000;color:#fff;border:2px solid #555;';
+                } else if (t === 'spacer') {
+                    el = document.createElement('div');
+                    el.style.height = (props.height || 8) + 'px';
+                    el.style.width = (props.width || '100%');
+                } else if (t === 'list') {
+                    el = document.createElement('div');
+                    el.className = 'mc-ui-scroll';
+                    const items = props.items || props.Items || [];
+                    for (const it of items) {
+                        const row = document.createElement('div');
+                        row.textContent = typeof it === 'string' ? it : (it.text || it.name || JSON.stringify(it));
+                        row.style.cssText = 'padding:4px 6px;border-bottom:1px solid #999;cursor:pointer;';
+                        el.appendChild(row);
+                    }
                 } else {
                     el = document.createElement('div');
                     el.className = 'mc-ui-frame';
@@ -6538,7 +6779,7 @@
         function loadExampleVxm() {
             return {
                 voxelMod: true,
-                formatVersion: 3,
+                formatVersion: 6,
                 name: 'Example Ruby Mod',
                 id: 'example_ruby',
                 version: '3.0.0',
@@ -6562,25 +6803,41 @@
         const VXM_GUIDE = `HOW TO MAKE A .vxm MOD (complete guide)
 ========================================
 .vxm = ZIP archive (rename mymod.zip to mymod.vxm)
+formatVersion: 6 (max)
 
 FOLDER LAYOUT
 -------------
 mymod.vxm
 |-- mod.json              REQUIRED
-|-- mod.js                OPTIONAL (Make API script)
+|-- mod.js                OPTIONAL (Make API / displays / third-party)
 |-- textures/
-|   |-- ruby_ore.png      .png .jpg .jpeg .webp
+|   |-- ruby_ore.png      .png .jpg .jpeg .webp .gif .svg
 |   +-- ruby.png
 +-- sounds/
     |-- stone.ogg         .wav .mp3 .ogg
     +-- hurt.wav
+
+UI DISPLAY TYPES (mod.json ui.elements or ModAPI.makeDisplay)
+-------------
+text / textDisplay       - label text
+item / itemDisplay       - item or block icon (item: "DIAMOND")
+modImage / modImageDisplay - image from pack assets
+webImage / webImgDisplay - remote https image (third-party)
+button, textButton, frame, scrollFrame, progress, input, list, spacer
+shape on blocks: cube, path, slab, sphere, cylinder, cross
+
+ModAPI helpers: registerSound, showTitle, notify, makeDisplay, mountUI,
+loadThirdParty(id, url), fetchJSON(url)
+
+Built-in SFX also try Minecraft assets from:
+https://mcasset.cloud/26.2/assets/minecraft/sounds/
 
 ========================================
 mod.json
 ========================================
 {
   "voxelMod": true,
-  "formatVersion": 3,
+  "formatVersion": 6,
   "name": "Ruby Pack",
   "id": "ruby_pack",
   "version": "1.0.0",
@@ -8832,9 +9089,11 @@ In-game: /text Hello 5 #55ff55
                         this._freeCursor = false; // click re-locks after Alt unlock
                         if (!this.isMobile) document.body.requestPointerLock();
                         audio.init();
+                        try { audio.preloadMcSounds && audio.preloadMcSounds(); } catch (e) {}
                         return;
                     }
                     audio.init();
+                    try { audio.preloadMcSounds && audio.preloadMcSounds(); } catch (e) {}
                     if(e.button === 0) {
                         this._mouseBreaking = true;
                         this.handleInteract('break');
