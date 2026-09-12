@@ -2496,20 +2496,20 @@
             }
             _playMcAsset(type) {
                 if (!this._mcBase) {
-                    // SFX from InventivetalentDev/minecraft-assets @ 26.2
-                    this._mcBase = 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.2/assets/minecraft/sounds/';
+                    // InventivetalentDev/minecraft-assets @26.2 via jsDelivr (CORS-friendly)
+                    this._mcBase = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/sounds/';
                     this._mcFailed = {};
                     this._mcMap = {
-                        break: ['dig/grass1.ogg','dig/grass2.ogg','dig/grass3.ogg','dig/grass4.ogg','dig/stone1.ogg','dig/stone2.ogg'],
-                        place: ['dig/stone1.ogg','dig/stone2.ogg','dig/stone3.ogg','dig/wood1.ogg'],
-                        step: ['step/grass1.ogg','step/grass2.ogg','step/grass3.ogg','step/stone1.ogg','step/stone2.ogg'],
+                        break: ['dig/grass1.ogg','dig/grass2.ogg','dig/stone1.ogg','dig/stone2.ogg','dig/wood1.ogg','dig/gravel1.ogg'],
+                        place: ['dig/stone1.ogg','dig/stone2.ogg','dig/wood1.ogg','dig/wood2.ogg'],
+                        step: ['step/grass1.ogg','step/grass2.ogg','step/stone1.ogg','step/stone2.ogg','step/wood1.ogg'],
                         click: ['random/click.ogg'],
                         hurt: ['damage/hit1.ogg','damage/hit2.ogg','damage/hit3.ogg'],
                         splash: ['liquid/splash.ogg','liquid/splash2.ogg'],
                         swim: ['liquid/swim1.ogg','liquid/swim2.ogg','liquid/swim3.ogg'],
                         explode: ['random/explode1.ogg','random/explode2.ogg','random/explode3.ogg','random/explode4.ogg'],
                         eat: ['random/eat1.ogg','random/eat2.ogg','random/eat3.ogg'],
-                        door: ['block/wooden_door/open1.ogg','block/wooden_door/open2.ogg','block/wooden_door/close1.ogg','random/door_open.ogg'],
+                        door: ['block/wooden_door/open1.ogg','block/wooden_door/open2.ogg','block/wooden_door/close1.ogg'],
                         fizz: ['random/fizz.ogg'],
                         pop: ['random/pop.ogg'],
                         levelup: ['random/levelup.ogg'],
@@ -2524,11 +2524,20 @@
                 const path = opts[Math.floor(Math.random() * opts.length)];
                 const url = this._mcBase + path;
                 try {
-                    const a = new Audio(url);
+                    const a = new Audio();
+                    a.preload = 'auto';
                     a.volume = Math.min(1, 0.55 * (this.volumes && this.volumes.sfx != null ? this.volumes.sfx : 1));
+                    let settled = false;
+                    a.addEventListener('error', () => {
+                        this._mcFailed[path] = true;
+                        if (!settled) { settled = true; }
+                    });
+                    a.src = url;
                     const p = a.play();
-                    if (p && p.catch) p.catch(() => { this._mcFailed[path] = true; });
-                    a.addEventListener('error', () => { this._mcFailed[path] = true; });
+                    if (p && p.catch) {
+                        p.catch(() => { this._mcFailed[path] = true; });
+                    }
+                    // Optimistic play — if it errors, procedural will run next times
                     return true;
                 } catch (e) {
                     this._mcFailed[path] = true;
@@ -2538,7 +2547,7 @@
             preloadMcSounds() {
                 try {
                     if (!this._mcBase) this._playMcAsset('__init__'); // force map init
-                    this._mcBase = this._mcBase || 'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.2/assets/minecraft/sounds/';
+                    this._mcBase = this._mcBase || 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/sounds/';
                     if (!this._mcMap) this._playMcAsset('__init__');
                     for (const k of ['break','place','step','click','hurt']) {
                         const list = (this._mcMap && this._mcMap[k]) || [];
@@ -2562,9 +2571,12 @@
                     }
                 } catch (e) {}
                 // Minecraft assets from github.com/InventivetalentDev/minecraft-assets (26.2)
+                // Try MC asset; on failure fall through to procedural
+                let mcOk = false;
                 try {
-                    if (this._playMcAsset && this._playMcAsset(type)) return;
-                } catch (e) {}
+                    mcOk = !!(this._playMcAsset && this._playMcAsset(type));
+                } catch (e) { mcOk = false; }
+                if (mcOk) return;
                 // Procedural SFX fallback
                 switch (type) {
                     case 'break':
@@ -3722,25 +3734,29 @@
                                         this.setBlock(x, y - 1, z, id);
                                     }
                                 }
-                                // Flowing water / lava
+                                // Finite water / lava: never duplicate sources
                                 if (id === BLOCKS.WATER || id === BLOCKS.LAVA) {
                                     const below = this.getBlock(x, y - 1, z);
-                                    // Always fall down into air
+                                    // Fall: MOVE fluid down (remove source) — no infinite cascade from clone
                                     if (below === BLOCKS.AIR) {
-                                        flows.push([x, y - 1, z, id]);
+                                        flows.push([x, y - 1, z, id, x, y, z]); // dest + optional clear src
                                     } else {
-                                        // Horizontal spread
+                                        // Horizontal: only classic 2-source spring (two adjacent same fluid → fill air between-side)
+                                        // Single block / player-placed fluid does NOT spread sideways (finite)
                                         let fluidN = 0;
                                         for (const [ox, oz] of [[1,0],[-1,0],[0,1],[0,-1]]) {
                                             if (this.getBlock(x+ox, y, z+oz) === id) fluidN++;
                                         }
-                                        // Skip bulk ocean (sea-level water with 3+ fluid neighbors)
+                                        // Natural ocean/lake mass (many neighbors) stays still — no extra spawn
                                         const isOceanMass = (id === BLOCKS.WATER && y <= 28 && fluidN >= 3);
-                                        if (!isOceanMass) {
+                                        // Infinite spring only when 2+ orthogonal fluid neighbors (MC infinite source rule)
+                                        // User asked no infinity: disable spring duplication — only allow flow if fluidN >= 99 (never)
+                                        // So no horizontal spread at all for finite liquids.
+                                        if (false && !isOceanMass && fluidN >= 2) {
                                             for (const [ox, oz] of [[1,0],[-1,0],[0,1],[0,-1]]) {
                                                 const nx = x + ox, nz = z + oz;
                                                 if (this.getBlock(nx, y, nz) === BLOCKS.AIR) {
-                                                    flows.push([nx, y, nz, id]);
+                                                    flows.push([nx, y, nz, id, null, null, null]);
                                                 }
                                             }
                                         }
@@ -3765,13 +3781,17 @@
                             }
                         }
                     }
-                    // Apply flows (prefer downward, up to 12/tick)
+                    // Apply flows (prefer downward, up to 12/tick). Move = clear source.
                     flows.sort((a,b) => a[1] - b[1]);
                     let applied = 0;
                     for (let i = 0; i < flows.length && applied < 12; i++) {
-                        const [fx, fy, fz, fid] = flows[i];
+                        const [fx, fy, fz, fid, sx, sy, sz] = flows[i];
                         if (this.getBlock(fx, fy, fz) === BLOCKS.AIR) {
                             this.setBlock(fx, fy, fz, fid);
+                            // Clear source when moving (finite liquid)
+                            if (sx != null && sy != null && sz != null) {
+                                if (this.getBlock(sx, sy, sz) === fid) this.setBlock(sx, sy, sz, BLOCKS.AIR);
+                            }
                             applied++;
                         }
                     }
@@ -4507,13 +4527,15 @@
         };
 
         // Entity textures from mc-assets (assets/minecraft/textures/entity/...)
-        const ENTITY_TEX_URL = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist/other-textures/latest/entity/';
+        // Entity skins from InventivetalentDev/minecraft-assets @1.21.4
+        const ENTITY_TEX_URL = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/';
         const ENTITY_TEX_PATHS = {
             COW: 'cow/cow.png', PIG: 'pig/pig.png', ZOMBIE: 'zombie/zombie.png',
             CREEPER: 'creeper/creeper.png', SHEEP: 'sheep/sheep.png', SPIDER: 'spider/spider.png',
             SKELETON: 'skeleton/skeleton.png', ENDERMAN: 'enderman/enderman.png',
             IRON_GOLEM: 'iron_golem/iron_golem.png', VILLAGER: 'villager/villager.png',
-            CAVE_SPIDER: 'spider/spider.png'
+            CAVE_SPIDER: 'spider/spider.png', BLAZE: 'blaze/blaze.png', SLIME: 'slime/slime.png',
+            WOLF: 'wolf/wolf.png'
         };
         const entityTextureCache = {}; // type -> THREE.Texture
         const entityImageCache = {};   // type -> HTMLImageElement
@@ -4522,12 +4544,22 @@
             const path = ENTITY_TEX_PATHS[type];
             if (!path) return Promise.resolve(null);
             if (entityImageCache[type]) return entityImageCache[type];
+            const bases = [
+                ENTITY_TEX_URL,
+                'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.20.4/assets/minecraft/textures/entity/',
+                'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.4/assets/minecraft/textures/entity/'
+            ];
             entityImageCache[type] = new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                img.onload = () => resolve(img);
-                img.onerror = () => resolve(null);
-                img.src = ENTITY_TEX_URL + path;
+                let i = 0;
+                const tryNext = () => {
+                    if (i >= bases.length) { resolve(null); return; }
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img);
+                    img.onerror = () => { i++; tryNext(); };
+                    img.src = bases[i] + path;
+                };
+                tryNext();
             });
             return entityImageCache[type];
         }
@@ -4642,8 +4674,9 @@
                 // Rebuild with cropped front-face skins once image loads
                 loadEntityImage(type).then((img) => {
                     if (!img || this.dead) return;
-                    this.buildModelSkinned(img);
-                });
+                    try { this.buildModelSkinned(img); }
+                    catch (e) { console.warn('mob skin', type, e); }
+                }).catch(() => {});
             }
 
             buildModelSkinned(img) {
@@ -13652,23 +13685,25 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                         const hostile = this.mobs.filter(m => !m.dead && m.data.hostile).length;
                         document.getElementById('debug').innerHTML = `
 <span class="dbg-title">Voxel Survival Debug (F3)</span>
-FPS: ${Math.round(1/dt)}  |  dt: ${(dt*1000).toFixed(1)}ms
-XYZ: ${p.pos.x.toFixed(2)} / ${p.pos.y.toFixed(2)} / ${p.pos.z.toFixed(2)}
-Block: ${bi}  Standing on: ${blockName}
-Chunk: ${Math.floor(p.pos.x/16)} / ${Math.floor(p.pos.z/16)}
-Facing: ${face} (${deg}°)
+FPS: ${Math.round(1/dt)}  |  dt: ${(dt*1000).toFixed(1)}ms  |  calls: ${(this.renderer && this.renderer.info && this.renderer.info.render) ? this.renderer.info.render.calls : '?'}
+XYZ: ${p.pos.x.toFixed(3)} / ${p.pos.y.toFixed(3)} / ${p.pos.z.toFixed(3)}
+Block: ${bi}  Standing on: ${blockName} (${blockId})
+Chunk: ${Math.floor(p.pos.x/16)} / ${Math.floor(p.pos.z/16)}  Local: ${((Math.floor(p.pos.x)%16)+16)%16}, ${((Math.floor(p.pos.z)%16)+16)%16}
+Facing: ${face} (${deg}°)  yaw: ${(this.camera.rotation.y).toFixed(2)} pitch: ${(this.camera.rotation.x).toFixed(2)}
 Looking: ${lookStr}
 <span class="dbg-dim">─── Player ───</span>
 HP: ${p.health}/10  Hunger: ${p.hunger}/10  O2: ${p.oxygen}/${p.maxOxygen}
-Vel: ${p.vel.x.toFixed(1)}, ${p.vel.y.toFixed(1)}, ${p.vel.z.toFixed(1)}
-OnGround: ${p.onGround}  Sprint: ${p.isSprinting}
+Vel: ${p.vel.x.toFixed(2)}, ${p.vel.y.toFixed(2)}, ${p.vel.z.toFixed(2)}  speed: ${Math.hypot(p.vel.x,p.vel.z).toFixed(2)}
+OnGround: ${p.onGround}  Sprint: ${!!p.isSprinting}  Fly: ${!!p.flying}
+InWater: ${!!p.headInWater}  Dim: ${(this.world && this.world.dimension) || 'overworld'}
+Hotbar: ${p.hotbarSelect}  Held: ${(() => { const it=p.inventory[p.hotbarSelect]; if(!it)return '—'; const r=ItemRegistry[it.id]||BlockRegistry[it.id]; return (r&&r.name||it.id)+' x'+it.count; })()}
 <span class="dbg-dim">─── World ───</span>
-Time: ${this.isNight ? 'Night' : 'Day'}  Light: ${lightI}
+Time: ${this.isNight ? 'Night' : 'Day'}  t=${(this.time||0).toFixed(1)}  Light: ${lightI}
 Chunks: ${this.world.chunks.size}  Seed: ${this.world.seed}
-Mobs: ${this.mobs.length} (P:${passive} H:${hostile})
-State: ${this.state}
-Mode: ${this.gameMode}${this.player.flying ? ' (flying)' : ''}
-GPU: ${this.rendererBackend}
+Mobs: ${this.mobs.length} (P:${passive} H:${hostile})  GroundItems: ${(this.groundItems&&this.groundItems.length)||0}
+MP: ${this.mp && this.mp.enabled ? ((this.mp.isHost?'HOST':'CLIENT')+' '+(this.mp.playerName||'')) : 'off'}
+State: ${this.state}  Mode: ${this.gameMode}${p.flying ? ' (flying)' : ''}
+GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.memory.usedJSHeapSize/1048576).toFixed(1)+'MB' : 'n/a'}
                         `.trim().replace(/\n/g, '<br>');
                     }
                 }
