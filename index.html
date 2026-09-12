@@ -819,6 +819,7 @@
             <button class="menu-btn" id="btn-join-mp">JOIN MULTIPLAYER</button>
             <button class="menu-btn" id="btn-mods">MODS (.vxm)</button>
             <button class="menu-btn" id="btn-replays">REPLAYS</button>
+            <button class="menu-btn" id="btn-changelog">CHANGELOG</button>
             <div style="margin-top:12px;color:#ccc;font-size:13px;">
                 Language / Ngôn ngữ:
                 <select id="menu-lang" aria-label="Language" title="Language" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
@@ -826,6 +827,11 @@
                     <option value="vi">Tiếng Việt</option>
                 </select>
             </div>
+        </div>
+        <div id="menu-changelog" class="menu-panel" style="display:none;max-width:560px;max-height:80vh;overflow:auto;">
+            <div class="menu-title">CHANGELOG</div>
+            <div id="changelog-body" style="text-align:left;font-size:12px;line-height:1.45;color:#222;max-height:55vh;overflow:auto;padding:8px 4px;"></div>
+            <button class="menu-btn" id="btn-changelog-back">BACK</button>
         </div>
         <div id="menu-join" class="menu-panel">
             <div class="menu-title">JOIN MULTIPLAYER</div>
@@ -3813,6 +3819,117 @@
             return new THREE.Mesh(geo, mat);
         }
 
+        // Classic Steve 64x64 skin UV crops [u,v,w,h]
+        const STEVE_SKIN_PARTS = {
+            head:  [8, 8, 8, 8],   // face
+            headR: [0, 8, 8, 8],
+            headL: [16, 8, 8, 8],
+            headB: [24, 8, 8, 8],
+            headT: [8, 0, 8, 8],
+            headBo:[16, 0, 8, 8],
+            body:  [20, 20, 8, 12],
+            arm:   [44, 20, 4, 12],
+            leg:   [4, 20, 4, 12]
+        };
+        const PLAYER_SKIN_URLS = [
+            'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/player/wide/steve.png',
+            'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.20.4/assets/minecraft/textures/entity/player/wide/steve.png',
+            'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/steve.png',
+            'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.20.4/assets/minecraft/textures/entity/player/slim/steve.png'
+        ];
+        let _playerSkinImg = null;
+        let _playerSkinPromise = null;
+        function loadPlayerSkinImage() {
+            if (_playerSkinImg) return Promise.resolve(_playerSkinImg);
+            if (_playerSkinPromise) return _playerSkinPromise;
+            _playerSkinPromise = new Promise((resolve) => {
+                let i = 0;
+                const tryNext = () => {
+                    if (i >= PLAYER_SKIN_URLS.length) { resolve(null); return; }
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => { _playerSkinImg = img; resolve(img); };
+                    img.onerror = () => { i++; tryNext(); };
+                    img.src = PLAYER_SKIN_URLS[i];
+                };
+                tryNext();
+            });
+            return _playerSkinPromise;
+        }
+        function cropSkinMap(img, u, v, w, h) {
+            if (!img) return null;
+            try {
+                if (!img._rgbaCanvas) {
+                    const full = document.createElement('canvas');
+                    full.width = img.width; full.height = img.height;
+                    const fctx = full.getContext('2d');
+                    fctx.imageSmoothingEnabled = false;
+                    fctx.drawImage(img, 0, 0);
+                    img._rgbaCanvas = full;
+                }
+                const c = document.createElement('canvas');
+                c.width = Math.max(1, w); c.height = Math.max(1, h);
+                const ctx = c.getContext('2d');
+                ctx.imageSmoothingEnabled = false;
+                ctx.drawImage(img._rgbaCanvas, u, v, w, h, 0, 0, w, h);
+                const tex = new THREE.CanvasTexture(c);
+                tex.magFilter = THREE.NearestFilter;
+                tex.minFilter = THREE.NearestFilter;
+                tex.colorSpace = THREE.SRGBColorSpace;
+                tex.needsUpdate = true;
+                return tex;
+            } catch (e) { return null; }
+        }
+        function makeSkinnedLimb(w, h, d, map, fallbackColor, x=0, y=0, z=0) {
+            const geo = new THREE.BoxGeometry(w, h, d);
+            const mat = map
+                ? new THREE.MeshLambertMaterial({ map, color: 0xffffff })
+                : new THREE.MeshLambertMaterial({ color: fallbackColor });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.position.set(x, y, z);
+            return mesh;
+        }
+        /** Apply Steve face (and optional body maps) onto an existing avatar root */
+        function applySteveSkinToAvatar(root, img) {
+            if (!root || !img || !root.userData) return;
+            const u = root.userData;
+            try {
+                const face = cropSkinMap(img, 8, 8, 8, 8);
+                if (face && u.head) {
+                    // Replace head material with face on all sides (readable)
+                    if (u.head.material) {
+                        if (u.head.material.map) u.head.material.map.dispose();
+                        u.head.material.map = face;
+                        u.head.material.color.setHex(0xffffff);
+                        u.head.material.needsUpdate = true;
+                    }
+                }
+                // body / limbs soft tint from skin if maps exist
+                const bodyMap = cropSkinMap(img, 20, 20, 8, 12);
+                const armMap = cropSkinMap(img, 44, 20, 4, 12);
+                const legMap = cropSkinMap(img, 4, 20, 4, 12);
+                if (bodyMap && u.body && u.body.material) {
+                    u.body.material.map = bodyMap; u.body.material.color.setHex(0xffffff); u.body.material.needsUpdate = true;
+                }
+                if (armMap) {
+                    for (const a of [u.armL, u.armR]) {
+                        if (a && a.material) { a.material.map = armMap.clone(); a.material.color.setHex(0xffffff); a.material.needsUpdate = true; }
+                    }
+                }
+                if (legMap) {
+                    for (const a of [u.legL, u.legR]) {
+                        if (a && a.material) { a.material.map = legMap.clone(); a.material.color.setHex(0xffffff); a.material.needsUpdate = true; }
+                    }
+                }
+                // hide procedural hair cap if skinned
+                if (u.head) {
+                    for (const c of u.head.children.slice()) {
+                        if (c.userData && c.userData.hairCap) c.visible = false;
+                    }
+                }
+            } catch (e) { console.warn('applySteveSkin', e); }
+        }
+
         const BLOCK_DROP_COLORS = {
             1: 0x5d9c3d, 2: 0x8b6914, 3: 0x888888, 4: 0x777777, 5: 0x6d4c41, 6: 0xa1887f,
             7: 0x2e7d32, 8: 0xe6d59a, 9: 0xaaddff, 10: 0x3366cc, 11: 0xff6600, 12: 0x333333,
@@ -3909,29 +4026,49 @@
                 this.fpRoot = new THREE.Group();
                 this.camera.add(this.fpRoot);
 
-                // Right arm
-                this.armR = makePlayerLimb(0.22, 0.55, 0.22, 0xffcc80);
-                this.armR.position.set(0.35, -0.45, -0.45);
-                this.armR.rotation.x = 0.4;
+                // Right arm (first person)
+                this.armR = makePlayerLimb(0.24, 0.58, 0.24, 0xffcc80);
+                this.armR.position.set(0.42, -0.55, -0.55);
+                this.armR.rotation.x = 0.55;
+                this.armR.rotation.z = -0.2;
                 this.fpRoot.add(this.armR);
 
-                // Left arm (slightly visible)
-                this.armL = makePlayerLimb(0.2, 0.5, 0.2, 0xffcc80);
-                this.armL.position.set(-0.32, -0.5, -0.4);
-                this.armL.rotation.x = 0.35;
+                // Left arm
+                this.armL = makePlayerLimb(0.22, 0.52, 0.22, 0xffcc80);
+                this.armL.position.set(-0.38, -0.58, -0.5);
+                this.armL.rotation.x = 0.4;
+                this.armL.rotation.z = 0.15;
                 this.fpRoot.add(this.armL);
 
                 // Sleeve tops
-                const sleeveR = makePlayerLimb(0.24, 0.18, 0.24, 0x3f51b5);
-                sleeveR.position.y = 0.2;
+                const sleeveR = makePlayerLimb(0.26, 0.2, 0.26, 0x3f51b5);
+                sleeveR.position.y = 0.22;
                 this.armR.add(sleeveR);
-                const sleeveL = makePlayerLimb(0.22, 0.16, 0.22, 0x3f51b5);
-                sleeveL.position.y = 0.18;
+                const sleeveL = makePlayerLimb(0.24, 0.18, 0.24, 0x3f51b5);
+                sleeveL.position.y = 0.2;
                 this.armL.add(sleeveL);
 
+                // Held item sits in the right hand (true inventory item)
                 this.heldRoot = new THREE.Group();
-                this.heldRoot.position.set(0.05, -0.25, -0.15);
+                this.heldRoot.position.set(0.02, -0.32, -0.22);
+                this.heldRoot.rotation.x = 0.35;
+                this.heldRoot.scale.setScalar(1.15);
                 this.armR.add(this.heldRoot);
+
+                // Apply player skin to FP arms when available
+                loadPlayerSkinImage().then((img) => {
+                    if (!img) return;
+                    const armMap = cropSkinMap(img, 44, 20, 4, 12);
+                    if (armMap) {
+                        for (const a of [this.armR, this.armL]) {
+                            if (a.material) {
+                                a.material.map = armMap.clone();
+                                a.material.color.setHex(0xffffff);
+                                a.material.needsUpdate = true;
+                            }
+                        }
+                    }
+                });
             }
 
             setHeldItem(itemId) {
@@ -3941,10 +4078,16 @@
                     const c = this.heldRoot.children[0];
                     this.heldRoot.remove(c);
                     if (c.geometry) c.geometry.dispose();
+                    if (c.material) {
+                        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose && m.dispose());
+                        else if (c.material.dispose) c.material.dispose();
+                    }
                 }
                 if (itemId != null && itemId !== 0) {
                     const icons = (this.game && this.game.itemIcons) || (window._gameItemIcons) || null;
                     const item = createHeldItemMesh(itemId, this.texAtlas, icons);
+                    // Slightly larger for first-person readability
+                    item.scale.setScalar(1.25);
                     this.heldRoot.add(item);
                     this.heldRoot.visible = true;
                 } else {
@@ -3995,9 +4138,10 @@
             body.position.y = 1.05;
             const head = makePlayerLimb(0.5, 0.5, 0.5, skin);
             head.position.y = 1.66;
-            // hair cap
+            // hair cap (hidden when Steve skin loads)
             const hair = makePlayerLimb(0.52, 0.12, 0.52, 0x4e342e);
             hair.position.y = 0.28;
+            hair.userData.hairCap = true;
             head.add(hair);
             const armL = makePlayerLimb(0.2, 0.72, 0.2, skin);
             armL.position.set(-0.36, 1.35, 0);
@@ -7002,7 +7146,39 @@
             };
         }
 
-        const VXM_GUIDE = `HOW TO MAKE A .vxm MOD (formatVersion 7)
+        const GAME_CHANGELOG = `
+Voxel Survival — Changelog
+=========================
+v1.7 (latest)
+• F5 camera fixed — third-person shows your full body
+• First-person hand holds the real hotbar item (blocks & items)
+• Player Steve skin + face on local & multiplayer avatars
+• Finite water & lava (no infinite spread)
+• SFX from InventivetalentDev/minecraft-assets (jsDelivr)
+• Mob skins from MC entity textures (1.21.4)
+• Square sun/moon, thicker voxel clouds
+• .vxm formatVersion 7: chat read/send, custom commands, AI APIs
+• Dirt path, arrow-key look, Alt mouse lock/unlock
+• F3 debug upgraded (coords, held, MP, memory, …)
+
+v1.6
+• Mod displays: text/item/modImage/webImage
+• Third-party script loading for mods
+• Flower UV orientation fix
+
+v1.5
+• Multiplayer (PeerJS), voice chat hooks
+• Crafting, furnace, inventory drag-drop
+• Mobs: cow, pig, sheep, creeper, zombie, skeleton, …
+• Chunked world + worker terrain
+
+Controls
+• WASD move · Space jump · Shift sneak · Ctrl sprint
+• Arrows look · Alt unlock/lock mouse · F5 camera · F3 debug · F4 gamemode
+• E inventory · T chat · 1-9 hotbar
+`;
+
+const VXM_GUIDE = `HOW TO MAKE A .vxm MOD (formatVersion 7)
 ========================================================
 .vxm = ZIP archive (rename mymod.zip to mymod.vxm)
 
@@ -7466,6 +7642,7 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 let rp = this.remotePlayers[id];
                 if (!rp) {
                     const g = createRemotePlayerAvatar(this.game.texAtlas);
+                    loadPlayerSkinImage().then(img => { if (img) applySteveSkinToAvatar(g, img); });
                     // Name tag sprite
                     const canvas = document.createElement('canvas');
                     canvas.width = 256; canvas.height = 64;
@@ -8096,6 +8273,7 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 }
                 // Full Steve-like avatar with limb animation (same as multiplayer remotes)
                 const root = createRemotePlayerAvatar(g.texAtlas);
+                    loadPlayerSkinImage().then(img => { if (img) applySteveSkinToAvatar(root, img); });
                 const recName = (this.current && this.current.start && this.current.start.player && this.current.start.player.name)
                     || (g.mp && g.mp.playerName) || 'Player';
                 const nt = this.makeNameTag(recName);
@@ -8171,6 +8349,7 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                     return gr;
                 }
                 const root = createRemotePlayerAvatar(g.texAtlas);
+                    loadPlayerSkinImage().then(img => { if (img) applySteveSkinToAvatar(root, img); });
                 const nt = this.makeNameTag(name || 'Player');
                 root.add(nt.spr);
                 g.scene.add(root);
@@ -9240,6 +9419,20 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                     this.refreshModList();
                     requestAnimationFrame(() => this.fitMenuPanelsScale());
                 });
+                document.getElementById('btn-changelog')?.addEventListener('click', () => {
+                    document.getElementById('menu-main').style.display = 'none';
+                    const p = document.getElementById('menu-changelog');
+                    if (p) p.style.display = 'flex';
+                    const body = document.getElementById('changelog-body');
+                    if (body) body.textContent = (typeof GAME_CHANGELOG !== 'undefined' ? GAME_CHANGELOG : 'Changelog unavailable').trim();
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
+                });
+                document.getElementById('btn-changelog-back')?.addEventListener('click', () => {
+                    const p = document.getElementById('menu-changelog');
+                    if (p) p.style.display = 'none';
+                    document.getElementById('menu-main').style.display = 'flex';
+                    requestAnimationFrame(() => this.fitMenuPanelsScale());
+                });
                 document.getElementById('btn-back-mods')?.addEventListener('click', () => {
                     document.getElementById('menu-mods').style.display = 'none';
                     document.getElementById('menu-main').style.display = 'flex';
@@ -9789,6 +9982,8 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                     this.camera.remove(this.playerView.fpRoot);
                 }
                 this.playerView = new PlayerViewModel(this.camera, this.texAtlas, this);
+                this.localBody = null; // created on first F5
+                loadPlayerSkinImage(); // prefetch Steve skin
                 window._gameItemIcons = this.itemIcons;
                 // Survival: empty inventory — punch trees, craft tools from scratch
                 this.player.inventory = new Array(36).fill(null);
@@ -10412,6 +10607,8 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                     try { this.camera.remove(this.playerView.fpRoot); } catch(e) {}
                 }
                 this.playerView = new PlayerViewModel(this.camera, this.texAtlas, this);
+                this.localBody = null; // created on first F5
+                loadPlayerSkinImage(); // prefetch Steve skin
                 window._gameItemIcons = this.itemIcons;
                 if(data.pos) this.player.pos.set(data.pos.x, data.pos.y, data.pos.z);
                 if(data.inv) this.player.inventory = data.inv;
@@ -10657,34 +10854,73 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 if (!this.player || !this.camera) return;
                 const mode = this.cameraMode || 0;
                 if (mode === 0) {
-                    // first person — camera follows player eye in player.update
-                    if (this._tpPivot) {
-                        this.scene.remove(this._tpPivot);
-                        this._tpPivot = null;
-                    }
+                    // First person: show arms, hide full body
                     if (this.playerView) this.playerView.setVisible(this.gameMode !== 'spectator');
+                    if (this.localBody) this.localBody.visible = false;
                 } else {
+                    // Third person: hide FP arms, show full body avatar
                     if (this.playerView) this.playerView.setVisible(false);
+                    if (this.localBody) this.localBody.visible = this.gameMode !== 'spectator';
+                    this.ensureLocalBody();
                 }
+            }
+
+            ensureLocalBody() {
+                if (this.localBody || !this.scene) return;
+                try {
+                    this.localBody = createRemotePlayerAvatar(this.texAtlas);
+                    this.localBody.visible = (this.cameraMode || 0) !== 0 && this.gameMode !== 'spectator';
+                    this.scene.add(this.localBody);
+                    loadPlayerSkinImage().then((img) => {
+                        if (img && this.localBody) applySteveSkinToAvatar(this.localBody, img);
+                    });
+                } catch (e) { console.warn('localBody', e); }
+            }
+
+            updateLocalBody(dt) {
+                if (!this.localBody || !this.player) return;
+                const mode = this.cameraMode || 0;
+                this.localBody.visible = mode !== 0 && this.gameMode !== 'spectator';
+                if (!this.localBody.visible) return;
+                const p = this.player.pos;
+                this.localBody.position.set(p.x, p.y, p.z);
+                // Face camera yaw (player look)
+                const yaw = this.camera.rotation.y;
+                this.localBody.rotation.y = yaw + Math.PI;
+                const moving = Math.hypot(this.player.vel.x, this.player.vel.z) > 0.3;
+                const held = this.player.inventory[this.player.hotbarSelect];
+                const hid = (held && held.count > 0) ? held.id : null;
+                updateRemoteAvatar(this.localBody, dt, moving, hid, this.texAtlas, this.itemIcons || window._gameItemIcons);
             }
 
             updateThirdPersonCamera() {
                 if (!this.player || !this.camera) return;
                 const mode = this.cameraMode || 0;
                 if (mode === 0) return;
-                const eye = this.player.pos.clone();
-                eye.y += 1.62;
-                const yaw = this.camera.rotation.y;
-                const pitch = this.camera.rotation.x;
-                const dist = 4.0;
-                const sign = mode === 1 ? 1 : -1;
-                const off = new THREE.Vector3(
-                    -Math.sin(yaw) * Math.cos(pitch) * dist * sign,
-                    -Math.sin(pitch) * dist * sign * 0.6 + 0.4,
-                    -Math.cos(yaw) * Math.cos(pitch) * dist * sign
-                );
-                this.camera.position.copy(eye).add(off);
-                this.camera.lookAt(eye);
+                try {
+                    const eye = this.player.pos.clone();
+                    eye.y += 1.62;
+                    const yaw = this.camera.rotation.y;
+                    const pitch = this.camera.rotation.x;
+                    const dist = 4.0;
+                    const sign = mode === 1 ? 1 : -1;
+                    // Clamp pitch influence so camera never flips wildly
+                    const cp = Math.max(-0.95, Math.min(0.95, Math.cos(pitch)));
+                    const off = new THREE.Vector3(
+                        -Math.sin(yaw) * cp * dist * sign,
+                        (-Math.sin(pitch) * dist * sign * 0.55) + 0.5,
+                        -Math.cos(yaw) * cp * dist * sign
+                    );
+                    this.camera.position.copy(eye).add(off);
+                    // Look at head without fighting pointer-lock euler permanently
+                    const target = eye.clone();
+                    target.y -= 0.1;
+                    this.camera.lookAt(target);
+                    // Keep euler order usable for next pointer move
+                    this.camera.rotation.order = 'YXZ';
+                } catch (e) {
+                    console.warn('F5 camera', e);
+                }
             }
 
             cycleGameMode() {
@@ -13614,8 +13850,11 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                         this.playerView.setHeldItem((held && held.count > 0) ? held.id : null);
                         const moving = Math.abs(this.player.vel.x) + Math.abs(this.player.vel.z) > 0.4;
                         this.playerView.update(dt, moving, this.player.onGround);
-                        this.playerView.setVisible(this.gameMode !== 'spectator');
+                        // FP arms only in first person
+                        this.playerView.setVisible((this.cameraMode || 0) === 0 && this.gameMode !== 'spectator');
                     }
+                    try { this.updateLocalBody(dt); } catch (e) {}
+                    
                     this.checkPortal();
                     if (this._pendingNetherSpawn) this.tryNetherSafeSpawn();
                     if (this._pendingPlayerSpawn) this.tryPlayerSafeSpawn();
