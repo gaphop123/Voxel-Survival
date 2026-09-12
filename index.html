@@ -20,7 +20,7 @@
             font-family: 'Press Start 2P', 'Courier New', monospace;
             font-size: 11px;
             letter-spacing: 0.5px;
-            color: var(--text-color); user-select: none;
+            color: var(--text-color); -webkit-user-select: none; user-select: none;
         }
         canvas { display: block; }
         
@@ -33,7 +33,7 @@
             background: linear-gradient(180deg, #1a3a5c 0%, #2d5a3d 40%, #1a2a1a 70%, #0a0a12 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: safe center;
             pointer-events: auto; z-index: 100; overflow-x: hidden; overflow-y: auto;
-            -webkit-overflow-scrolling: touch; padding: 12px 0; box-sizing: border-box;
+            /* overflow scrolling */ padding: 12px 0; box-sizing: border-box;
         }
         #main-menu::before {
             content: ''; position: absolute; inset: 0;
@@ -78,14 +78,14 @@
             border-radius: 16px;
             padding: 28px 32px 24px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.06);
-            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             min-width: min(360px, 92vw);
             max-width: min(96vw, 520px);
             max-height: min(92vh, 100%);
             overflow-x: hidden;
             overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            /* overflow scrolling */
             box-sizing: border-box;
             --menu-scale: 1;
             transform: scale(var(--menu-scale));
@@ -384,8 +384,7 @@
             background: rgba(0,0,0,0.55); border: 3px solid rgba(255,255,255,0.45);
             color: #fff; font-size: clamp(13px, 3.2vmin, 18px);
             pointer-events: auto; touch-action: none;
-            display: flex; align-items: center; justify-content: center; user-select: none;
-            -webkit-user-select: none; z-index: 160;
+            display: flex; align-items: center; justify-content: center; -webkit-user-select: none; user-select: none; z-index: 160;
         }
         .mob-btn svg { width: 55%; height: 55%; }
         .mob-btn:active { background: rgba(76,175,80,0.55); }
@@ -626,7 +625,7 @@
             border-left-color: #fff !important;
             border-radius: 0 !important;
             box-shadow: inset 1px 1px 0 #fff, 3px 3px 0 rgba(0,0,0,0.35) !important;
-            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
             color: #222 !important;
         }
         .menu-panel .menu-title, #pause-screen .menu-title, #settings-screen .menu-title {
@@ -774,11 +773,11 @@
             color: #222; font-size: 10px; margin-bottom: 8px; letter-spacing: 0.04em;
         }
         #replay-timeline {
-            width: 100%; height: 14px; appearance: none; -webkit-appearance: none;
+            width: 100%; height: 14px; -webkit-appearance: none; appearance: none;
             background: #8b8b8b; border: 2px solid #373737; border-radius: 0; outline: none;
         }
         #replay-timeline::-webkit-slider-thumb {
-            -webkit-appearance: none; width: 14px; height: 22px; background: #8b8b8b;
+            -webkit-appearance: none; appearance: none; width: 14px; height: 22px; background: #8b8b8b;
             border: 2px solid #373737; border-right-color: #fff; border-bottom-color: #fff; cursor: pointer;
         }
         #replay-controls {
@@ -822,7 +821,7 @@
             <button class="menu-btn" id="btn-replays">REPLAYS</button>
             <div style="margin-top:12px;color:#ccc;font-size:13px;">
                 Language / Ngôn ngữ:
-                <select id="menu-lang" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
+                <select id="menu-lang" aria-label="Language" title="Language" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
                     <option value="en">English</option>
                     <option value="vi">Tiếng Việt</option>
                 </select>
@@ -879,7 +878,7 @@
                 </div>
                 <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
                     Gamemode:
-                    <select id="gen-gamemode" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 6px;font-family:'Press Start 2P',monospace;font-size:10px;">
+                    <select id="gen-gamemode" aria-label="Gamemode" title="Gamemode" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 6px;font-family:'Press Start 2P',monospace;font-size:10px;">
                         <option value="survival" selected>Survival</option>
                         <option value="creative">Creative</option>
                         <option value="spectator">Spectator</option>
@@ -889,7 +888,7 @@
                 <div style="font-size:11px;color:#888;margin-left:4px;">P2P via PeerJS — press O for 5-letter Join code</div>
                 <label style="display:flex;align-items:center;gap:8px;margin:6px 0;">
                     Structures size:
-                    <select id="gen-struct" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:2px 6px;">
+                    <select id="gen-struct" aria-label="Structures size" title="Structures size" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:2px 6px;">
                         <option value="small">Small</option>
                         <option value="normal" selected>Normal</option>
                         <option value="large">Large</option>
@@ -963,7 +962,7 @@
         <div class="settings-row"><span>Sound</span><input type="checkbox" id="set-sound" checked></div>
         <div class="settings-row"><span>Show FPS (F3)</span><input type="checkbox" id="set-debug"></div>
         <div class="settings-row"><span>Language</span>
-            <select id="set-lang" style="background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
+            <select id="set-lang" aria-label="Language" title="Language" style="background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
                 <option value="en">English</option>
                 <option value="vi">Tiếng Việt</option>
             </select>
