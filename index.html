@@ -617,6 +617,118 @@
         .mod-actions .btn-delete { background: #8b0000; border-color: #c62828; }
 
 
+
+        /* ===== Minecraft-classic main menu ===== */
+        #main-menu {
+            background:
+                linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.55)),
+                repeating-linear-gradient(0deg, #5b8c3e 0 8px, #4a7a32 8px 16px),
+                #3d6b2a !important;
+            image-rendering: pixelated;
+        }
+        #main-menu::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse at 30% 20%, rgba(255,255,200,0.15), transparent 50%),
+                url("data:image/svg+xml,%3Csvg width='64' height='64' xmlns='http://www.w3.org/2000/svg'%3E%3Crect fill='%235d4037' width='64' height='64'/%3E%3Crect fill='%236d4c41' x='0' y='0' width='32' height='32'/%3E%3Crect fill='%234e342e' x='32' y='32' width='32' height='32'/%3E%3C/svg%3E");
+            background-size: auto, 64px 64px;
+            opacity: 0.55;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .mc-main-menu {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 24px 16px 16px !important;
+            max-width: 420px;
+            width: 90%;
+        }
+        .mc-title {
+            font-family: 'Press Start 2P', monospace !important;
+            font-size: clamp(22px, 5vw, 36px) !important;
+            color: #fff !important;
+            text-shadow: 3px 3px 0 #3f3f3f !important;
+            letter-spacing: 1px;
+            margin-bottom: 6px !important;
+            -webkit-text-fill-color: #fff !important;
+            background: none !important;
+        }
+        .mc-splash {
+            color: #ffff55;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 11px;
+            transform: rotate(-12deg);
+            text-shadow: 2px 2px 0 #3f3f00;
+            margin: -4px 0 14px 40px;
+            animation: mcSplashPulse 0.9s ease-in-out infinite alternate;
+            max-width: 220px;
+            text-align: center;
+        }
+        @keyframes mcSplashPulse {
+            from { transform: rotate(-12deg) scale(1); }
+            to { transform: rotate(-12deg) scale(1.08); }
+        }
+        .mc-subtitle {
+            color: #c6c6c6 !important;
+            font-size: 11px !important;
+            text-shadow: 1px 1px 0 #000 !important;
+            margin-bottom: 18px !important;
+        }
+        .mc-btn {
+            width: 100% !important;
+            max-width: 400px !important;
+            min-height: 40px !important;
+            margin: 4px 0 !important;
+            font-family: 'Press Start 2P', monospace !important;
+            font-size: 12px !important;
+            background: #8b8b8b !important;
+            color: #fff !important;
+            text-shadow: 2px 2px 0 #3f3f3f !important;
+            border: 3px solid #000 !important;
+            border-top-color: #ffffff !important;
+            border-left-color: #ffffff !important;
+            border-bottom-color: #555555 !important;
+            border-right-color: #555555 !important;
+            border-radius: 0 !important;
+            box-shadow: inset -2px -2px 0 #6f6f6f, inset 2px 2px 0 #b5b5b5 !important;
+            cursor: pointer;
+            image-rendering: pixelated;
+        }
+        .mc-btn:hover {
+            background: #9c9c9c !important;
+            color: #ffffa0 !important;
+        }
+        .mc-btn:active {
+            border-top-color: #555 !important;
+            border-left-color: #555 !important;
+            border-bottom-color: #fff !important;
+            border-right-color: #fff !important;
+        }
+        .mc-btn-row {
+            display: flex; gap: 8px; width: 100%; max-width: 400px; margin: 4px 0;
+        }
+        .mc-btn-half { flex: 1; max-width: none !important; }
+        .mc-lang-row {
+            margin-top: 14px; color: #ddd; font-size: 11px;
+            font-family: 'Press Start 2P', monospace;
+        }
+        .mc-lang-row select {
+            margin-left: 8px; background: #000; color: #fff;
+            border: 2px solid #555; padding: 4px 6px;
+            font-family: inherit; font-size: 10px;
+        }
+        .mc-footer {
+            position: fixed; left: 8px; right: 8px; bottom: 8px;
+            display: flex; justify-content: space-between;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 9px; color: #fff; text-shadow: 1px 1px 0 #000;
+            pointer-events: none; z-index: 120;
+        }
+        .mc-ver { opacity: 0.95; }
+        .mc-copy { opacity: 0.85; text-align: right; max-width: 55%; }
+
         /* ===== Global Minecraft-style UI (100%) ===== */
         .mc-panel, .inv-container, .cb-panel, .menu-panel {
             background: #c6c6c6 !important;
@@ -811,21 +923,31 @@
 
     <!-- Main Menu -->
     <div id="main-menu">
-        <div id="menu-main" class="menu-panel" style="display: flex;">
-            <div class="menu-title">VOXEL SURVIVAL</div>
-            <div class="menu-subtitle">Survival · Multiplayer · Mods · Paths · BETA<br><span style="font-size:10px;opacity:0.85">Arrows look · Alt mouse lock · WASD move</span></div>
-            <button class="menu-btn" id="btn-new-world">CREATE NEW WORLD</button>
-            <button class="menu-btn" id="btn-load-world">LOAD WORLD</button>
-            <button class="menu-btn" id="btn-join-mp">JOIN MULTIPLAYER</button>
-            <button class="menu-btn" id="btn-mods">MODS (.vxm)</button>
-            <button class="menu-btn" id="btn-replays">REPLAYS</button>
-            <button class="menu-btn" id="btn-changelog">CHANGELOG</button>
-            <div style="margin-top:12px;color:#ccc;font-size:13px;">
-                Language / Ngôn ngữ:
-                <select id="menu-lang" aria-label="Language" title="Language" style="margin-left:8px;background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
+        <div id="menu-main" class="menu-panel mc-main-menu" style="display: flex;">
+            <div class="menu-title mc-title">VOXEL SURVIVAL</div>
+            <div class="mc-splash" id="mc-splash">Also try Minecraft!</div>
+            <div class="menu-subtitle mc-subtitle">A blocky survival sandbox</div>
+            <button class="menu-btn mc-btn" id="btn-new-world">Singleplayer</button>
+            <button class="menu-btn mc-btn" id="btn-join-mp">Multiplayer</button>
+            <button class="menu-btn mc-btn" id="btn-load-world">Load World</button>
+            <div class="mc-btn-row">
+                <button class="menu-btn mc-btn mc-btn-half" id="btn-mods">Mods</button>
+                <button class="menu-btn mc-btn mc-btn-half" id="btn-options-main">Options</button>
+            </div>
+            <div class="mc-btn-row">
+                <button class="menu-btn mc-btn mc-btn-half" id="btn-replays">Replays</button>
+                <button class="menu-btn mc-btn mc-btn-half" id="btn-changelog">Changelog</button>
+            </div>
+            <div class="mc-lang-row">
+                Language:
+                <select id="menu-lang" aria-label="Language" title="Language">
                     <option value="en">English</option>
                     <option value="vi">Tiếng Việt</option>
                 </select>
+            </div>
+            <div class="mc-footer">
+                <span class="mc-ver">Voxel Survival 1.8</span>
+                <span class="mc-copy">Not affiliated with Mojang / Microsoft</span>
             </div>
         </div>
         <div id="menu-changelog" class="menu-panel" style="display:none;max-width:560px;max-height:80vh;overflow:auto;">
@@ -962,11 +1084,33 @@
     </div>
     <div id="settings-screen">
         <div class="menu-title">SETTINGS</div>
-        <div class="settings-row"><span>Mouse sensitivity</span><input type="range" id="set-mouse-sens" min="0.5" max="3" step="0.1" value="1"></div>
-        <div class="settings-row"><span>Touch look sensitivity</span><input type="range" id="set-touch-sens" min="0.5" max="3" step="0.1" value="1"></div>
-        <div class="settings-row"><span>Render distance</span><input type="range" id="set-render-dist" min="3" max="10" step="1" value="6"></div>
-        <div class="settings-row"><span>Sound</span><input type="checkbox" id="set-sound" checked></div>
+        <div class="settings-section">CONTROLS</div>
+        <div class="settings-row"><span>Mouse sensitivity</span><input type="range" id="set-mouse-sens" min="0.3" max="4" step="0.1" value="1"></div>
+        <div class="settings-row"><span>Touch look sensitivity</span><input type="range" id="set-touch-sens" min="0.3" max="4" step="0.1" value="1"></div>
+        <div class="settings-row"><span>Invert Y look</span><input type="checkbox" id="set-invert-y"></div>
+        <div class="settings-row"><span>Auto jump</span><input type="checkbox" id="set-autojump"></div>
+        <div class="settings-section">VIDEO</div>
+        <div class="settings-row"><span>Render distance</span><input type="range" id="set-render-dist" min="3" max="12" step="1" value="6"></div>
+        <div class="settings-row"><span>FOV</span><input type="range" id="set-fov" min="50" max="110" step="1" value="75"></div>
+        <div class="settings-row"><span>Clouds</span><input type="checkbox" id="set-clouds" checked></div>
+        <div class="settings-row"><span>Particles</span><input type="checkbox" id="set-particles" checked></div>
+        <div class="settings-row"><span>Bobbing</span><input type="checkbox" id="set-bobbing" checked></div>
         <div class="settings-row"><span>Show FPS (F3)</span><input type="checkbox" id="set-debug"></div>
+        <div class="settings-section">AUDIO</div>
+        <div class="settings-row"><span>Master sound</span><input type="checkbox" id="set-sound" checked></div>
+        <div class="settings-row"><span>SFX volume</span><input type="range" id="set-sfx-vol" min="0" max="1" step="0.05" value="0.7"></div>
+        <div class="settings-row"><span>Music volume</span><input type="range" id="set-music-vol" min="0" max="1" step="0.05" value="0.4"></div>
+        <div class="settings-section">GAME</div>
+        <div class="settings-row"><span>Difficulty</span>
+            <select id="set-difficulty" style="background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
+                <option value="peaceful">Peaceful</option>
+                <option value="easy">Easy</option>
+                <option value="normal" selected>Normal</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+        <div class="settings-row"><span>Show coordinates</span><input type="checkbox" id="set-coords" checked></div>
+        <div class="settings-row"><span>Chat opacity</span><input type="range" id="set-chat-opacity" min="0.2" max="1" step="0.05" value="1"></div>
         <div class="settings-row"><span>Language</span>
             <select id="set-lang" aria-label="Language" title="Language" style="background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
                 <option value="en">English</option>
@@ -2681,6 +2825,9 @@
                 this.geo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
             }
             spawn(x, y, z, color, count = 8, speed = 2, life = 0.6) {
+                try {
+                    if (window.game && window.game.settings && window.game.settings.particles === false) return;
+                } catch (e) {}
                 for (let i = 0; i < count; i++) {
                     const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 1 });
                     const mesh = new THREE.Mesh(this.geo, mat);
@@ -3542,20 +3689,30 @@
                             const yTop = (shape === 'path' || shape === 'slab')
                                 ? (b.pathHeight != null ? b.pathHeight : (shape === 'slab' ? 0.5 : 0.9375))
                                 : 1;
+                            const isShortBlock = (blk) => !!(blk && (
+                                blk.shape === 'path' || blk.shape === 'slab' ||
+                                (blk.pathHeight != null && blk.pathHeight < 1)
+                            ));
 
                             const dirs = [[1,0,0], [-1,0,0], [0,1,0], [0,-1,0], [0,0,1], [0,0,-1]];
                             for (let d = 0; d < 6; d++) {
                                 let nx = x + dirs[d][0], ny = y + dirs[d][1], nz = z + dirs[d][2];
                                 let nid = this.getBlock(nx, ny, nz);
                                 let nb = BlockRegistry[nid] || BlockRegistry[0];
-                                // Always draw top of path/slab if shorter than full block above
+                                // Short blocks (path/slab): always expose top + sides so they are not hollow
                                 let force = false;
-                                if (d === 2 && yTop < 1) force = true;
-                                if (nid === 0 || (nb && nb.transparent && !(isWater && nid === id)) || force) {
-                                    // skip occluded side faces against solid full cubes
-                                    if (!force && nid && nb && !nb.transparent && !nb.fluid && !(nb.shape && nb.shape !== 'cube')) {
-                                        // still might need sides if neighbor is path shorter — always show if yTop < 1 on sides
-                                    }
+                                if (yTop < 1) {
+                                    if (d === 2) force = true; // top always
+                                    if (d === 0 || d === 1 || d === 4 || d === 5) force = true; // sides always
+                                }
+                                // Neighbor only occludes if it is a full solid cube (not path/slab/plant/fluid/air)
+                                const nbFullSolid = !!(nid && nb && !nb.transparent && !nb.fluid
+                                    && !isShortBlock(nb)
+                                    && (!nb.shape || nb.shape === 'cube'));
+                                // Same-fluid faces skip
+                                const sameFluid = isWater && nid === id;
+                                if (force || nid === 0 || !nbFullSolid || (nb && nb.transparent && !sameFluid)) {
+                                    if (sameFluid && !force) continue;
                                     addFace(x, y, z, d, id, isWater, yTop);
                                 }
                             }
@@ -3603,6 +3760,7 @@
                 this.requestedChunks = new Set();
                 this.genId = 1;
                 this.fluidTimer = 0;
+                this.fluidLevel = new Map(); // "x,y,z" -> 1..8 (8 = source)
                 this.villages = []; // {x,y,z} centers for villager/golem spawns
                 this.onVillage = null; // callback set by Game
                 
@@ -3655,7 +3813,7 @@
                 return chunk.data[chunk.getIndex(x - cx*CHUNK_SIZE, y, z - cz*CHUNK_SIZE)];
             }
 
-            setBlock(x, y, z, id) {
+            setBlock(x, y, z, id, fluidLv) {
                 if (y < 0 || y >= CHUNK_HEIGHT) return;
                 const cx = Math.floor(x / CHUNK_SIZE), cz = Math.floor(z / CHUNK_SIZE);
                 const lx = x - cx * CHUNK_SIZE, lz = z - cz * CHUNK_SIZE;
@@ -3675,6 +3833,28 @@
                     // Ensure chunk will load with this mod applied
                     this.requestChunk(cx, cz);
                 }
+                // Finite fluid metadata (8 = source, 1..7 = flowing distance left)
+                const fk = x + ',' + y + ',' + z;
+                if (id === BLOCKS.WATER || id === BLOCKS.LAVA) {
+                    const lv = (fluidLv != null) ? fluidLv : 8;
+                    this.fluidLevel.set(fk, lv);
+                } else {
+                    this.fluidLevel.delete(fk);
+                }
+            }
+
+            getFluidLevel(x, y, z) {
+                const fk = x + ',' + y + ',' + z;
+                if (this.fluidLevel.has(fk)) return this.fluidLevel.get(fk);
+                const id = this.getBlock(x, y, z);
+                if (id === BLOCKS.WATER || id === BLOCKS.LAVA) return 8; // legacy/ocean = source
+                return 0;
+            }
+
+            setFluidLevel(x, y, z, lv) {
+                const fk = x + ',' + y + ',' + z;
+                if (lv <= 0) this.fluidLevel.delete(fk);
+                else this.fluidLevel.set(fk, lv);
             }
 
             clearChunks() {
@@ -3740,37 +3920,55 @@
                                         this.setBlock(x, y - 1, z, id);
                                     }
                                 }
-                                // Finite water / lava: never duplicate sources
+                                // Finite flowing water / lava with LEVEL limits (not infinite)
+                                // Level 8 = source (stays). Levels 1-7 = flowing range remaining.
+                                // Water spreads up to 7 blocks horizontally; lava up to 3.
                                 if (id === BLOCKS.WATER || id === BLOCKS.LAVA) {
+                                    const maxH = (id === BLOCKS.LAVA) ? 3 : 7;
+                                    let level = this.getFluidLevel(x, y, z);
+                                    if (level <= 0) level = 8;
                                     const below = this.getBlock(x, y - 1, z);
-                                    // Fall: MOVE fluid down (remove source) — no infinite cascade from clone
+                                    // Prefer falling into air (move flowing fluid; sources stay if... actually move all down)
                                     if (below === BLOCKS.AIR) {
-                                        flows.push([x, y - 1, z, id, x, y, z]); // dest + optional clear src
+                                        // Sources (8) spawn flowing fluid below and STAY; flowing fluid MOVES down
+                                        if (level >= 8) {
+                                            flows.push([x, y - 1, z, id, null, null, null, 7, false]);
+                                        } else {
+                                            flows.push([x, y - 1, z, id, x, y, z, level, true]);
+                                        }
                                     } else {
-                                        // Horizontal: only classic 2-source spring (two adjacent same fluid → fill air between-side)
-                                        // Single block / player-placed fluid does NOT spread sideways (finite)
+                                        // Horizontal spread with decreasing level
                                         let fluidN = 0;
                                         for (const [ox, oz] of [[1,0],[-1,0],[0,1],[0,-1]]) {
                                             if (this.getBlock(x+ox, y, z+oz) === id) fluidN++;
                                         }
-                                        // Natural ocean/lake mass (many neighbors) stays still — no extra spawn
-                                        const isOceanMass = (id === BLOCKS.WATER && y <= 28 && fluidN >= 3);
-                                        // Infinite spring only when 2+ orthogonal fluid neighbors (MC infinite source rule)
-                                        // User asked no infinity: disable spring duplication — only allow flow if fluidN >= 99 (never)
-                                        // So no horizontal spread at all for finite liquids.
-                                        if (false && !isOceanMass && fluidN >= 2) {
-                                            for (const [ox, oz] of [[1,0],[-1,0],[0,1],[0,-1]]) {
-                                                const nx = x + ox, nz = z + oz;
-                                                if (this.getBlock(nx, y, nz) === BLOCKS.AIR) {
-                                                    flows.push([nx, y, nz, id, null, null, null]);
+                                        // Oceans / lakes: don't keep expanding inland forever
+                                        const isOceanMass = (id === BLOCKS.WATER && y <= 28 && fluidN >= 3 && level >= 8);
+                                        if (!isOceanMass && level > 1) {
+                                            const nextLv = level - 1;
+                                            if (nextLv >= 1 && (8 - nextLv) <= maxH) {
+                                                for (const [ox, oz] of [[1,0],[-1,0],[0,1],[0,-1]]) {
+                                                    const nx = x + ox, nz = z + oz;
+                                                    if (this.getBlock(nx, y, nz) === BLOCKS.AIR) {
+                                                        // only spread if neighbor below is solid or fluid (won't just fall forever spam)
+                                                        const under = this.getBlock(nx, y - 1, nz);
+                                                        // allow spread into air even if under is air — water will then fall
+                                                        flows.push([nx, y, nz, id, null, null, null, nextLv, false]);
+                                                    } else if (this.getBlock(nx, y, nz) === id) {
+                                                        // refresh weaker flowing fluid from stronger
+                                                        const ol = this.getFluidLevel(nx, y, nz);
+                                                        if (ol > 0 && ol < nextLv) {
+                                                            this.setFluidLevel(nx, y, nz, nextLv);
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
+                                    // Water + lava interactions
                                     if (id === BLOCKS.WATER) {
                                         for (const [ox, oy, oz] of [[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]]) {
                                             if (this.getBlock(x+ox, y+oy, z+oz) === BLOCKS.LAVA) {
-                                                // Source-like: flowing water over lava = stone; side contact = cobble; lava below water = obsidian
                                                 this.setBlock(x+ox, y+oy, z+oz, oy < 0 ? BLOCKS.OBSIDIAN : (oy === 0 ? BLOCKS.COBBLESTONE : BLOCKS.STONE));
                                             }
                                         }
@@ -3787,23 +3985,28 @@
                             }
                         }
                     }
-                    // Apply flows (prefer downward, up to 12/tick). Move = clear source.
+                    // Apply flows (prefer downward, limited per tick)
                     flows.sort((a,b) => a[1] - b[1]);
                     let applied = 0;
-                    for (let i = 0; i < flows.length && applied < 12; i++) {
-                        const [fx, fy, fz, fid, sx, sy, sz] = flows[i];
-                        if (this.getBlock(fx, fy, fz) === BLOCKS.AIR) {
-                            this.setBlock(fx, fy, fz, fid);
-                            // Clear source when moving (finite liquid)
-                            if (sx != null && sy != null && sz != null) {
-                                if (this.getBlock(sx, sy, sz) === fid) this.setBlock(sx, sy, sz, BLOCKS.AIR);
+                    const maxApply = 18;
+                    for (let i = 0; i < flows.length && applied < maxApply; i++) {
+                        const [fx, fy, fz, fid, sx, sy, sz, flv, move] = flows[i];
+                        if (this.getBlock(fx, fy, fz) !== BLOCKS.AIR) continue;
+                        const placeLv = (flv != null) ? flv : 7;
+                        this.setBlock(fx, fy, fz, fid, placeLv);
+                        if (move && sx != null) {
+                            // Moving down: remove source cell unless it is a true source that should stay?
+                            // Finite: always remove when falling so liquid doesn't clone
+                            if (this.getBlock(sx, sy, sz) === fid) {
+                                this.setBlock(sx, sy, sz, BLOCKS.AIR);
                             }
-                            applied++;
                         }
+                        applied++;
                     }
                 }
 
-                for (let chunk of this.chunks.values()) {
+                
+for (let chunk of this.chunks.values()) {
                     if (chunk.loaded && chunk.dirty) {
                         chunk.buildMesh();
                     }
@@ -4100,10 +4303,11 @@
             }
 
             update(dt, moving, onGround) {
-                if (moving && onGround) this.walkPhase += dt * 11;
+                const bobOn = !(this.game && this.game.settings && this.game.settings.bobbing === false);
+                if (moving && onGround && bobOn) this.walkPhase += dt * 11;
                 else this.walkPhase *= 0.88;
 
-                const bob = Math.sin(this.walkPhase) * 0.1;
+                const bob = bobOn ? Math.sin(this.walkPhase) * 0.1 : 0;
                 const swingX = this.swing > 0 ? -Math.sin(this.swing * Math.PI) * 1.4 : 0;
                 const swingZ = this.swing > 0 ? Math.sin(this.swing * Math.PI) * 0.5 : 0;
 
@@ -5828,7 +6032,7 @@
         // Spec: a .vxm file is JSON (optionally wrapped). See loadExampleVxm().
         // ========== Voxel Mod System (.vxm JSON v2) ==========
         const ModAPI = {
-            formatVersion: 7, // v7: chat read/send, custom commands, AI APIs (Grok/Gemini/OpenAI/Claude)
+            formatVersion: 8, // v8 ultimate: expanded Make API, events, particles, timers, better guide
             nextBlockId: 220,
             nextItemId: 500,
             nextMobKey: 0,
@@ -6300,8 +6504,8 @@
                 if (!mod || typeof mod !== 'object') errs.push('Root must be a JSON object');
                 if (mod && mod.voxelMod === false) errs.push('voxelMod cannot be false');
                 if (mod && !mod.name && !mod.id) errs.push('Missing name or id');
-                if (mod && mod.formatVersion != null && mod.formatVersion > 7)
-                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 7)');
+                if (mod && mod.formatVersion != null && mod.formatVersion > 8)
+                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 8)');
                 if (mod && mod.blocks && !Array.isArray(mod.blocks)) errs.push('blocks must be an array');
                 if (mod && mod.items && !Array.isArray(mod.items)) errs.push('items must be an array');
                 if (mod && mod.mobs && !Array.isArray(mod.mobs)) errs.push('mobs must be an array');
@@ -6805,7 +7009,112 @@
                     if (!st) { st = document.createElement('style'); st.id = 'mod-ui-css'; document.head.appendChild(st); }
                     st.textContent = (st.textContent || '') + '\n' + String(css);
                 },
-                getGame() { return ctx.game || ModAPI.gameRef; }
+                getGame() { return ctx.game || ModAPI.gameRef; },
+
+                // ===== Ultimate helpers (formatVersion 8) =====
+                player() {
+                    const g = ctx.game || ModAPI.gameRef;
+                    return g && g.player ? g.player : null;
+                },
+                world() {
+                    const g = ctx.game || ModAPI.gameRef;
+                    return g && g.world ? g.world : null;
+                },
+                pos() {
+                    const p = this.player();
+                    return p ? { x: p.pos.x, y: p.pos.y, z: p.pos.z } : null;
+                },
+                getBlock(x, y, z) {
+                    const w = this.world();
+                    return w ? w.getBlock(Math.floor(x), Math.floor(y), Math.floor(z)) : 0;
+                },
+                setBlock(x, y, z, id) {
+                    const w = this.world();
+                    if (w) w.setBlock(Math.floor(x), Math.floor(y), Math.floor(z), id|0);
+                },
+                give(itemId, count) {
+                    const p = this.player();
+                    if (p && p.addItem) p.addItem(itemId|0, count|0 || 1);
+                },
+                hurt(amount, reason) {
+                    const p = this.player();
+                    if (p && p.takeDamage) p.takeDamage(amount || 1, reason || 'Mod');
+                },
+                heal(amount) {
+                    const p = this.player();
+                    if (p) p.health = Math.min(10, (p.health || 0) + (amount || 1));
+                },
+                setGamemode(mode) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g) return;
+                    g.gameMode = String(mode || 'survival');
+                    if (g.player) g.player.flying = g.gameMode === 'spectator';
+                },
+                time(set) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g) return 0;
+                    if (set === 'day') g.time = 0;
+                    else if (set === 'night') g.time = Math.PI;
+                    else if (typeof set === 'number') g.time = set;
+                    return g.time;
+                },
+                every(seconds, fn) {
+                    const id = setInterval(() => {
+                        try { fn(); } catch (e) { console.warn('[mod timer]', e); }
+                    }, Math.max(0.05, seconds) * 1000);
+                    return () => clearInterval(id);
+                },
+                after(seconds, fn) {
+                    const id = setTimeout(() => {
+                        try { fn(); } catch (e) { console.warn('[mod timeout]', e); }
+                    }, Math.max(0, seconds) * 1000);
+                    return () => clearTimeout(id);
+                },
+                onTick(fn) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g) return () => {};
+                    if (!g._modTickHooks) g._modTickHooks = [];
+                    g._modTickHooks.push(fn);
+                    return () => {
+                        g._modTickHooks = (g._modTickHooks || []).filter(f => f !== fn);
+                    };
+                },
+                particle(x, y, z, color, count) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.particles && g.particles.burst) {
+                        g.particles.burst(x, y, z, color || 0xffffff, count || 8);
+                    }
+                },
+                sound(name) {
+                    try {
+                        if (typeof audio !== 'undefined' && audio.playSound) audio.playSound(String(name));
+                    } catch (e) {}
+                },
+                raycast() {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.player && g.player.raycast) return g.player.raycast();
+                    return null;
+                },
+                held() {
+                    const p = this.player();
+                    if (!p) return null;
+                    const it = p.inventory[p.hotbarSelect];
+                    return it && it.count > 0 ? { id: it.id, count: it.count } : null;
+                },
+                storage: {
+                    get(key, def) {
+                        try {
+                            const raw = localStorage.getItem('vxm_' + (ctx.modId || 'mod') + '_' + key);
+                            return raw == null ? def : JSON.parse(raw);
+                        } catch (e) { return def; }
+                    },
+                    set(key, val) {
+                        try {
+                            localStorage.setItem('vxm_' + (ctx.modId || 'mod') + '_' + key, JSON.stringify(val));
+                        } catch (e) {}
+                    }
+                },
+                log(...args) { console.log('[vxm:' + (ctx.modId || 'mod') + ']', ...args); }
             };
             return Make;
         }
@@ -7149,107 +7458,137 @@
         const GAME_CHANGELOG = `
 Voxel Survival — Changelog
 =========================
-v1.7 (latest)
-• F5 camera fixed — third-person shows your full body
-• First-person hand holds the real hotbar item (blocks & items)
-• Player Steve skin + face on local & multiplayer avatars
-• Finite water & lava (no infinite spread)
-• SFX from InventivetalentDev/minecraft-assets (jsDelivr)
-• Mob skins from MC entity textures (1.21.4)
-• Square sun/moon, thicker voxel clouds
-• .vxm formatVersion 7: chat read/send, custom commands, AI APIs
-• Dirt path, arrow-key look, Alt mouse lock/unlock
-• F3 debug upgraded (coords, held, MP, memory, …)
+v1.8 (latest)
+• Minecraft-classic main menu (splash, buttons, footer)
+• Finite flowing water & lava (level 1–8, limited range)
+• .vxm ULTIMATE formatVersion 8 — expanded Make API
+• Better mod guide (chat, commands, AI, timers, world API)
+• F5 body + Steve skin + FP held item
+• Path face culling fix
+• SFX + mob textures from MC assets
+
+v1.7
+• Chat/commands/AI for mods, square sun/moon, thick clouds
 
 v1.6
-• Mod displays: text/item/modImage/webImage
-• Third-party script loading for mods
-• Flower UV orientation fix
-
-v1.5
-• Multiplayer (PeerJS), voice chat hooks
-• Crafting, furnace, inventory drag-drop
-• Mobs: cow, pig, sheep, creeper, zombie, skeleton, …
-• Chunked world + worker terrain
+• Mod displays, third-party scripts, flower UV
 
 Controls
-• WASD move · Space jump · Shift sneak · Ctrl sprint
-• Arrows look · Alt unlock/lock mouse · F5 camera · F3 debug · F4 gamemode
-• E inventory · T chat · 1-9 hotbar
+WASD · Space · Shift · Ctrl · Arrows look · Alt mouse
+F5 camera · F3 debug · F4 gamemode · E inv · T chat
 `;
 
-const VXM_GUIDE = `HOW TO MAKE A .vxm MOD (formatVersion 7)
-========================================================
-.vxm = ZIP archive (rename mymod.zip to mymod.vxm)
+const VXM_GUIDE = `HOW TO MAKE A .vxm MOD — ULTIMATE GUIDE (formatVersion 8)
+================================================================
+.vxm = ZIP renamed to .vxm
 
-FOLDER LAYOUT
--------------
+LAYOUT
+------
 mymod.vxm
-|-- mod.json                 REQUIRED
-|-- mod.js                   OPTIONAL (Make API: chat, commands, AI, UI)
-|-- textures/   (png jpg webp gif svg)
-|-- sounds/     (ogg wav mp3)
-+-- icon.png                 pack logo
+|-- mod.json          REQUIRED
+|-- mod.js            RECOMMENDED (Make API)
+|-- textures/         png jpg webp gif
+|-- sounds/           ogg wav mp3
++-- icon.png
 
-mod.json minimal:
+mod.json
+--------
 {
   "voxelMod": true,
-  "formatVersion": 7,
-  "name": "My Mod",
-  "id": "my_mod",
+  "formatVersion": 8,
+  "name": "Ultimate Demo",
+  "id": "ultimate_demo",
   "version": "1.0.0",
-  "blocks": [{ "key": "RUBY_BLOCK", "name": "Ruby Block", "tex": [64,64,64,64,64,64], "shape": "cube" }],
-  "items":  [{ "key": "RUBY", "name": "Ruby", "maxStack": 64 }],
-  "recipes": [{ "shape": ["RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY"], "out": "RUBY_BLOCK", "count": 1 }]
+  "author": "You",
+  "description": "Shows Make API power",
+  "blocks": [
+    { "key": "RUBY_BLOCK", "name": "Ruby Block", "tex": [64,64,64,64,64,64], "shape": "cube" }
+  ],
+  "items": [
+    { "key": "RUBY", "name": "Ruby", "maxStack": 64 }
+  ],
+  "recipes": [
+    { "shape": ["RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY"], "out": "RUBY_BLOCK", "count": 1 }
+  ]
 }
 Shapes: cube | path | slab | sphere | cylinder | cross
 
-======== mod.js Make API ========
+================================================================
+mod.js — Make API (ULTIMATE)
+================================================================
 
-// SEND CHAT
+// CHAT
 Make.chat("Hello");
-Make.sendChat("Hi", "BotName");
+Make.sendChat("Hi", "Bot");
+Make.getChat(30);
+Make.onChat(e => Make.log(e.name, e.msg));
 
-// READ CHAT
-Make.getChat(20);                    // recent lines [{name,msg,t}]
-Make.onChat((entry) => {             // live listener
-  console.log(entry.name, entry.msg);
-});
-
-// CUSTOM COMMANDS  (player types /hello ...)
+// COMMANDS  /hello
 Make.command("hello", (args, ctx) => {
   ctx.reply("Hello " + (args[0] || "friend"));
 }, { help: "Say hello", allowClient: true });
 
-// AI (keys stored in browser via Make.ai.setKey or /aikey)
-Make.ai.setKey("grok", "xai-...");       // providers: grok, gemini, openai, chatgpt, claude
-Make.ai.setKey("gemini", "AIza...");
-Make.ai.setKey("openai", "sk-...");
-Make.ai.setKey("claude", "sk-ant-...");
+// WORLD / PLAYER
+Make.pos();                          // {x,y,z}
+Make.getBlock(x,y,z);
+Make.setBlock(x,y,z, id);
+Make.give(103, 5);                   // apples
+Make.heal(2);
+Make.hurt(1, "cactus");
+Make.setGamemode("creative");
+Make.time("day");  Make.time("night");
+Make.held();                         // {id,count} or null
+Make.raycast();                      // look target
 
-Make.command("ask", async (args, ctx) => {
-  const q = args.join(" ");
-  if (!q) return ctx.reply("Usage: /ask <question>");
-  try {
-    const text = await Make.ai.ask(q, "grok", { system: "Short helpful answers." });
-    ctx.reply(String(text).slice(0, 800));
-  } catch (e) { ctx.reply("AI: " + e.message); }
-}, { help: "ask <question>", allowClient: true });
+Make.player();  Make.world();  Make.getGame();
 
-// await Make.ai.chat({ provider, messages:[{role,content}], model?, system? })
+// TIMERS / TICK
+Make.after(2, () => Make.notify("2s later"));
+const stop = Make.every(5, () => Make.chat("tick"));
+Make.onTick((dt, game) => { /* every frame */ });
 
-// UI / other
-Make.title("Welcome", 3, "#8cf");
+// FX
+Make.particle(x, y, z, 0xff0000, 12);
+Make.sound("explode");
+Make.title("BOOM", 3, "#f55");
 Make.notify("Loaded");
-Make.block({ key: "ORB", name: "Orb", shape: "sphere", tex: [47,47,47,47,47,47] });
+
+// STORAGE (per mod, localStorage)
+Make.storage.set("score", 10);
+Make.storage.get("score", 0);
+
+// AI  (keys: /aikey grok|gemini|openai|claude <key>)
+Make.ai.setKey("grok", "xai-...");
+const ans = await Make.ai.ask("What is stone?", "grok");
+Make.command("ask", async (args, ctx) => {
+  try {
+    ctx.reply(await Make.ai.ask(args.join(" "), "grok"));
+  } catch (e) { ctx.reply(e.message); }
+}, { help: "ask <q>", allowClient: true });
+
+// UI / CSS / MENU
+Make.injectCSS(".my { color: red; }");
+Make.setMenuTitle("My Server");
+Make.addMenuButton("Shop", () => Make.notify("Shop"));
+ModAPI.makeDisplay("textDisplay", { text: "Hi", color: "#fff" });
 ModAPI.makeDisplay("itemDisplay", { item: "DIAMOND", size: 32 });
-ModAPI.makeDisplay("textDisplay", { text: "Hi" });
-ModAPI.makeDisplay("webImgDisplay", { url: "https://example.com/img.png" });
+ModAPI.makeDisplay("webImgDisplay", { url: "https://..." });
 ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
 
-// Vanilla commands still work: /help /give /tp /text /gamemode ...
-// AI chat commands: /aikey <provider> <key>  |  /aisettings  |  /ai [provider] <prompt>
-// Never ship API keys inside the .vxm zip — players set keys in-game.
+// BLOCKS / ITEMS FROM JS
+Make.block({ key: "ORB", name: "Orb", shape: "sphere", tex: [47,47,47,47,47,47] });
+Make.item({ key: "GEM", name: "Gem", maxStack: 64 });
+
+// LOG
+Make.log("debug info");
+
+================================================================
+VANILLA CHAT COMMANDS
+================================================================
+/help /give /tp /gamemode /time /text /kill /clear
+/aikey <provider> <key> | /aisettings | /ai [provider] prompt
+
+Never put API keys inside the .vxm zip — use /aikey in-game.
 `;
 
 
@@ -9005,6 +9344,7 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 this.replay = new ReplaySystem(this);
                 try { ModAPI.gameRef = this; } catch (e) {}
                 this.loadSettings();
+                try { this.applyRuntimeSettings && this.applyRuntimeSettings(); } catch (e) {}
                 this.setupRoomDiscovery();
                 try { this.replay.setupUI(); } catch (e) { console.warn(e); }
                 try { loadModsFromStorage(this); } catch (e) { console.warn(e); }
@@ -9141,7 +9481,8 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 this.moonMesh.visible = day < 0.45;
                 this.stars.material.opacity = Math.max(0, 1 - day * 2.2);
                 if (this.cloudGroup) {
-                    this.cloudGroup.visible = day > 0.25;
+                    const cloudsOn = !(this.settings && this.settings.clouds === false);
+                    this.cloudGroup.visible = cloudsOn && day > 0.25;
                     const op = 0.55 + day * 0.35;
                     for (const cloud of this.cloudGroup.children) {
                         if (cloud.material) cloud.material.opacity = op;
@@ -9365,7 +9706,8 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                         const sens = (this.settings && this.settings.mouseSens) || 1;
                         this.camera.rotation.order = 'YXZ';
                         this.camera.rotation.y -= e.movementX * 0.002 * sens;
-                        this.camera.rotation.x -= e.movementY * 0.002 * sens;
+                        const inv = (this.settings && this.settings.invertY) ? -1 : 1;
+                        this.camera.rotation.x -= e.movementY * 0.002 * sens * inv;
                         this.camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.camera.rotation.x));
                     }
                     if((this.state === 'inventory' || this.state === 'crafting' || this.state === 'chest' || this.state === 'furnace') && this.dragItem) {
@@ -9562,13 +9904,35 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 };
                 document.getElementById('gen-require-password')?.addEventListener('change', syncPwRow);
                 syncPwRow();
-                document.getElementById('btn-new-world').onclick = () => {
+                
+                // Minecraft-style splash texts
+                try {
+                    const splashes = [
+                        'Also try Minecraft!', 'Finite water!', 'Mods with AI!',
+                        'As seen on the internet!', 'Singleplayer!', 'Multiplayer!',
+                        'Press F5!', 'Not a bug, a feature!', 'Voxel!', 'Ultimate .vxm!',
+                        'Made with Three.js!', '90% bug free!', 'Do not distribute!',
+                        'Absolutely no memes!', 'Open source-ish!', 'Support local mods!'
+                    ];
+                    const el = document.getElementById('mc-splash');
+                    if (el) el.textContent = splashes[Math.floor(Math.random() * splashes.length)];
+                } catch (e) {}
+
+                document.getElementById('btn-options-main')?.addEventListener('click', () => {
+                    try {
+                        this._settingsFromMenu = true;
+                        const main = document.getElementById('menu-main');
+                        if (main) main.style.display = 'none';
+                        this.openSettings();
+                    } catch (e) { console.warn('options', e); }
+                });
+                (document.getElementById('btn-new-world')||{}).onclick = () => {
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-create').style.display = 'flex';
                     syncPwRow();
                     requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
-                document.getElementById('btn-back-create').onclick = () => {
+                (document.getElementById('btn-back-create')||{}).onclick = () => {
                     document.getElementById('menu-create').style.display = 'none';
                     document.getElementById('menu-main').style.display = 'flex';
                     requestAnimationFrame(() => this.fitMenuPanelsScale());
@@ -9602,7 +9966,7 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                         sl.appendChild(row);
                     });
                 };
-                document.getElementById('btn-load-world').onclick = async () => {
+                (document.getElementById('btn-load-world')||{}).onclick = async () => {
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-load').style.display = 'flex';
                     await refreshSaveList();
@@ -9624,7 +9988,7 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                     requestAnimationFrame(() => this.fitMenuPanelsScale());
                 };
 
-                document.getElementById('btn-join-mp').onclick = () => {
+                (document.getElementById('btn-join-mp')||{}).onclick = () => {
                     document.getElementById('menu-main').style.display = 'none';
                     document.getElementById('menu-join').style.display = 'flex';
                     document.getElementById('join-status').textContent = '';
@@ -10975,6 +11339,17 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 if (this.settings.renderDist == null) this.settings.renderDist = 6;
                 if (this.settings.sound == null) this.settings.sound = true;
                 if (this.settings.debug == null) this.settings.debug = false;
+                if (this.settings.fov == null) this.settings.fov = 75;
+                if (this.settings.invertY == null) this.settings.invertY = false;
+                if (this.settings.autoJump == null) this.settings.autoJump = false;
+                if (this.settings.clouds == null) this.settings.clouds = true;
+                if (this.settings.particles == null) this.settings.particles = true;
+                if (this.settings.bobbing == null) this.settings.bobbing = true;
+                if (this.settings.sfxVol == null) this.settings.sfxVol = 0.7;
+                if (this.settings.musicVol == null) this.settings.musicVol = 0.4;
+                if (this.settings.difficulty == null) this.settings.difficulty = 'normal';
+                if (this.settings.showCoords == null) this.settings.showCoords = true;
+                if (this.settings.chatOpacity == null) this.settings.chatOpacity = 1;
                 if (!this.settings.gpMap || typeof this.settings.gpMap !== 'object') {
                     this.settings.gpMap = this.defaultGamepadMap();
                 } else {
@@ -11130,9 +11505,12 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 this.refreshGamepadMapperUI();
                 this.cancelGamepadRemap();
                 const el = document.getElementById('settings-screen');
-                if (el) el.classList.add('show');
+                if (el) {
+                    el.style.display = '';
+                    el.classList.add('show');
+                }
                 if (this.state === 'play') {
-                    this.togglePause('pause');
+                    try { this.togglePause('pause'); } catch (e) {}
                 }
             }
 
@@ -11140,44 +11518,110 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                 this.cancelGamepadRemap();
                 this.applySettingsFromUI();
                 const el = document.getElementById('settings-screen');
-                if (el) el.classList.remove('show');
+                if (el) {
+                    el.classList.remove('show');
+                    el.style.display = '';
+                }
+                // Return to main menu if Options was opened from title screen
+                if (this._settingsFromMenu) {
+                    this._settingsFromMenu = false;
+                    const main = document.getElementById('menu-main');
+                    if (main && (this.state === 'menu' || !this.world)) {
+                        main.style.display = 'flex';
+                        try { this.fitMenuPanelsScale && this.fitMenuPanelsScale(); } catch (e) {}
+                    }
+                }
             }
 
             loadSettingsToUI() {
                 if (!this.settings) this.loadSettings();
                 const s = this.settings;
-                const ms = document.getElementById('set-mouse-sens');
-                const ts = document.getElementById('set-touch-sens');
-                const rd = document.getElementById('set-render-dist');
-                const snd = document.getElementById('set-sound');
-                const dbg = document.getElementById('set-debug');
-                if (ms) ms.value = s.mouseSens;
-                if (ts) ts.value = s.touchSens;
-                if (rd) rd.value = s.renderDist;
-                if (snd) snd.checked = s.sound !== false;
-                if (dbg) dbg.checked = !!s.debug;
+                const set = (id, val, isCheck) => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    if (isCheck) el.checked = !!val;
+                    else el.value = val;
+                };
+                set('set-mouse-sens', s.mouseSens);
+                set('set-touch-sens', s.touchSens);
+                set('set-render-dist', s.renderDist);
+                set('set-fov', s.fov);
+                set('set-sfx-vol', s.sfxVol);
+                set('set-music-vol', s.musicVol);
+                set('set-chat-opacity', s.chatOpacity);
+                set('set-sound', s.sound !== false, true);
+                set('set-debug', !!s.debug, true);
+                set('set-invert-y', !!s.invertY, true);
+                set('set-autojump', !!s.autoJump, true);
+                set('set-clouds', s.clouds !== false, true);
+                set('set-particles', s.particles !== false, true);
+                set('set-bobbing', s.bobbing !== false, true);
+                set('set-coords', s.showCoords !== false, true);
+                const diff = document.getElementById('set-difficulty');
+                if (diff) diff.value = s.difficulty || 'normal';
+                const lang = document.getElementById('set-lang');
+                if (lang && s.lang) lang.value = s.lang;
                 this.updateMobileMapperVisibility();
                 this.refreshGamepadMapperUI();
             }
 
             applySettingsFromUI() {
                 if (!this.settings) this.settings = {};
-                const ms = document.getElementById('set-mouse-sens');
-                const ts = document.getElementById('set-touch-sens');
-                const rd = document.getElementById('set-render-dist');
-                const snd = document.getElementById('set-sound');
-                const dbg = document.getElementById('set-debug');
-                if (ms) this.settings.mouseSens = parseFloat(ms.value) || 1;
-                if (ts) this.settings.touchSens = parseFloat(ts.value) || 1;
-                if (rd) this.settings.renderDist = parseInt(rd.value, 10) || 6;
-                if (snd) this.settings.sound = !!snd.checked;
-                if (dbg) this.settings.debug = !!dbg.checked;
+                const num = (id, def) => {
+                    const el = document.getElementById(id);
+                    if (!el) return def;
+                    const v = parseFloat(el.value);
+                    return isNaN(v) ? def : v;
+                };
+                const chk = (id, def) => {
+                    const el = document.getElementById(id);
+                    return el ? !!el.checked : def;
+                };
+                this.settings.mouseSens = num('set-mouse-sens', 1);
+                this.settings.touchSens = num('set-touch-sens', 1);
+                this.settings.renderDist = num('set-render-dist', 6) | 0;
+                this.settings.fov = num('set-fov', 75) | 0;
+                this.settings.sfxVol = num('set-sfx-vol', 0.7);
+                this.settings.musicVol = num('set-music-vol', 0.4);
+                this.settings.chatOpacity = num('set-chat-opacity', 1);
+                this.settings.sound = chk('set-sound', true);
+                this.settings.debug = chk('set-debug', false);
+                this.settings.invertY = chk('set-invert-y', false);
+                this.settings.autoJump = chk('set-autojump', false);
+                this.settings.clouds = chk('set-clouds', true);
+                this.settings.particles = chk('set-particles', true);
+                this.settings.bobbing = chk('set-bobbing', true);
+                this.settings.showCoords = chk('set-coords', true);
+                const diff = document.getElementById('set-difficulty');
+                if (diff) this.settings.difficulty = diff.value || 'normal';
+                const lang = document.getElementById('set-lang');
+                if (lang) this.settings.lang = lang.value || 'en';
                 try { localStorage.setItem('voxel_settings', JSON.stringify(this.settings)); } catch (e) {}
+                this.applyRuntimeSettings();
+            }
+
+            applyRuntimeSettings() {
+                const s = this.settings || {};
                 if (this.scene && this.scene.fog) {
-                    this.scene.fog.far = this.settings.renderDist * CHUNK_SIZE;
+                    this.scene.fog.far = (s.renderDist || 6) * CHUNK_SIZE;
                 }
+                if (this.camera && s.fov) {
+                    this.camera.fov = s.fov;
+                    this.camera.updateProjectionMatrix();
+                }
+                if (this.cloudGroup) this.cloudGroup.visible = s.clouds !== false;
+                try {
+                    if (typeof audio !== 'undefined' && audio.volumes) {
+                        audio.volumes.sfx = s.sound === false ? 0 : (s.sfxVol != null ? s.sfxVol : 0.7);
+                        audio.volumes.music = s.sound === false ? 0 : (s.musicVol != null ? s.musicVol : 0.4);
+                    }
+                } catch (e) {}
                 const debugEl = document.getElementById('debug');
-                if (debugEl) debugEl.style.display = this.settings.debug ? 'block' : 'none';
+                if (debugEl) debugEl.style.display = s.debug ? 'block' : 'none';
+                const chat = document.getElementById('chat-box');
+                if (chat) chat.style.opacity = s.chatOpacity != null ? s.chatOpacity : 1;
+                const coords = document.getElementById('coords') || document.getElementById('hud-coords');
+                if (coords) coords.style.display = s.showCoords === false ? 'none' : '';
             }
 
             togglePause(force) {
@@ -13854,6 +14298,11 @@ ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
                         this.playerView.setVisible((this.cameraMode || 0) === 0 && this.gameMode !== 'spectator');
                     }
                     try { this.updateLocalBody(dt); } catch (e) {}
+                    if (this._modTickHooks && this._modTickHooks.length) {
+                        for (const fn of this._modTickHooks.slice()) {
+                            try { fn(dt, this); } catch (e) {}
+                        }
+                    }
                     
                     this.checkPortal();
                     if (this._pendingNetherSpawn) this.tryNetherSafeSpawn();
