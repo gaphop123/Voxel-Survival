@@ -955,8 +955,50 @@
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.jsdelivr.net/gh/gaphop123/LumiaDetect.js@main/dist/LumiaDetect.min.js"></script>
 </head>
 <body>
+
+    <!-- Lumia / Windows Phone unsupported gate -->
+    <div id="lumia-unsupported" style="display:none;position:fixed;inset:0;z-index:99999;background:#0a0a12;color:#fff;font-family:'Press Start 2P',monospace;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;box-sizing:border-box;">
+        <div style="font-size:clamp(18px,5vw,28px);color:#ff5555;margin-bottom:16px;text-shadow:2px 2px 0 #000;">UNSUPPORTED DEVICE</div>
+        <div style="font-size:clamp(11px,2.8vw,14px);line-height:1.7;max-width:420px;color:#ccc;">
+            Voxel Survival does not support Microsoft Lumia / Nokia Lumia or Windows Phone devices.<br><br>
+            This game requires a modern browser with WebGL2, Web Audio, and MediaRecorder.
+        </div>
+        <div id="lumia-unsupported-detail" style="margin-top:18px;font-size:10px;color:#888;max-width:400px;"></div>
+    </div>
+    <script>
+    (function () {
+        try {
+            var info = (typeof LumiaDetect !== 'undefined' && LumiaDetect.getInfo)
+                ? LumiaDetect.getInfo()
+                : null;
+            var isLumia = !!(info && info.isLumia);
+            if (!isLumia && info && info.isWindowsPhone) {
+                var ua = (navigator.userAgent || '').toLowerCase();
+                if (ua.indexOf('lumia') !== -1 || ua.indexOf('windows phone') !== -1 || ua.indexOf('iemobile') !== -1) {
+                    isLumia = true;
+                }
+            }
+            if (!isLumia) {
+                var ua2 = (navigator.userAgent || '').toLowerCase();
+                if (ua2.indexOf('lumia') !== -1) isLumia = true;
+            }
+            if (isLumia) {
+                var el = document.getElementById('lumia-unsupported');
+                if (el) {
+                    el.style.display = 'flex';
+                    var d = document.getElementById('lumia-unsupported-detail');
+                    if (d && info) {
+                        d.textContent = [info.model, info.os, info.osVersion].filter(Boolean).join(' · ') || 'Windows Phone / Lumia detected';
+                    }
+                }
+                window.__VOXEL_LUMIA_BLOCKED__ = true;
+            }
+        } catch (e) {}
+    })();
+    </script>
 
     <!-- Main Menu -->
     <div id="main-menu">
@@ -2867,6 +2909,7 @@
                 this.ctx = null;
                 this.ready = false;
                 this.volumes = { master: 0.55, sfx: 0.85 };
+                this._destNode = null;
             }
             init() {
                 if (this.ready) return;
@@ -2876,7 +2919,17 @@
                 this.masterGain = this.ctx.createGain();
                 this.masterGain.connect(this.ctx.destination);
                 this.masterGain.gain.value = this.volumes.master;
+                try {
+                    this._destNode = this.ctx.createMediaStreamDestination();
+                    this.masterGain.connect(this._destNode);
+                } catch (e) {
+                    this._destNode = null;
+                }
                 this.ready = true;
+            }
+            getRecordStream() {
+                if (!this.ready) this.init();
+                return (this._destNode && this._destNode.stream) ? this._destNode.stream : null;
             }
             _noise(duration, freq, filterType, vol = 1) {
                 if (!this.ready) return;
@@ -10216,45 +10269,66 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                     return;
                 }
                 this._exporting = true;
-                g.notify('Exporting MP4… keep tab open');
+                g.notify('Exporting high-quality video + audio… keep tab open');
                 const wasPaused = this.paused;
                 this.paused = false;
                 this.playT = 0;
                 this.scrubTo(0);
                 this.speed = 1;
 
-                const stream = canvas.captureStream(30);
-                let mime = 'video/mp4';
+                try { if (typeof audio !== 'undefined') audio.init(); } catch (e) {}
+                try { if (audio && audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); } catch (e) {}
+
+                const fps = 60;
+                const videoStream = canvas.captureStream(fps);
+                const combined = new MediaStream();
+                videoStream.getVideoTracks().forEach(t => combined.addTrack(t));
+                try {
+                    const aStream = (typeof audio !== 'undefined' && audio.getRecordStream) ? audio.getRecordStream() : null;
+                    if (aStream) aStream.getAudioTracks().forEach(t => combined.addTrack(t));
+                } catch (e) {}
+
+                let mime = 'video/webm;codecs=vp9,opus';
                 if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp9';
+                if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp8,opus';
                 if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp8';
                 if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
+                if (!MediaRecorder.isTypeSupported(mime) && MediaRecorder.isTypeSupported('video/mp4')) mime = 'video/mp4';
                 this._mediaChunks = [];
-                const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
+                let rec;
+                try {
+                    rec = new MediaRecorder(combined, {
+                        mimeType: mime,
+                        videoBitsPerSecond: 12_000_000,
+                        audioBitsPerSecond: 192_000
+                    });
+                } catch (e) {
+                    rec = new MediaRecorder(combined, { mimeType: mime });
+                }
                 this._mediaRec = rec;
                 rec.ondataavailable = (e) => { if (e.data && e.data.size) this._mediaChunks.push(e.data); };
                 const done = new Promise(resolve => { rec.onstop = resolve; });
-                rec.start(200);
+                rec.start(100);
 
-                // Play through once at 1x wall-clock related to duration (capped)
                 const startWall = performance.now();
-                const targetMs = Math.min(120000, Math.max(1000, this.duration * 1000));
                 await new Promise(resolve => {
                     const tick = () => {
                         if (!this.playing || this.playT >= this.duration - 0.05) {
                             resolve();
                             return;
                         }
-                        // force advance if lagging
                         const elapsed = (performance.now() - startWall) / 1000;
                         if (elapsed > this.duration + 2) resolve();
                         else requestAnimationFrame(tick);
                     };
                     requestAnimationFrame(tick);
                 });
-                // small settle
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 400));
                 try { rec.stop(); } catch (e) {}
                 await done;
+                try { combined.getTracks().forEach(t => t.stop()); } catch (e) {}
+                try { videoStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+
                 const blob = new Blob(this._mediaChunks, { type: mime });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -10267,7 +10341,8 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                 setTimeout(() => URL.revokeObjectURL(url), 5000);
                 this._exporting = false;
                 this.paused = wasPaused;
-                g.notify('Export finished (' + (ext === '.mp4' ? 'MP4' : 'WebM — convert to MP4 if needed') + ')');
+                const hasAudio = combined.getAudioTracks().length > 0;
+                g.notify('Export finished (' + (ext === '.mp4' ? 'MP4' : 'WebM') + (hasAudio ? ' + audio' : ' · no audio track') + ')');
             }
 
             setupUI() {
@@ -16043,12 +16118,36 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
                     return;
                 }
                 try {
-                    const stream = canvas.captureStream(30);
-                    let mime = 'video/webm;codecs=vp9';
+                    try { if (typeof audio !== 'undefined') audio.init(); } catch (e) {}
+                    try { if (audio && audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume(); } catch (e) {}
+
+                    const fps = 60;
+                    const videoStream = canvas.captureStream(fps);
+                    const combined = new MediaStream();
+                    videoStream.getVideoTracks().forEach(t => combined.addTrack(t));
+                    try {
+                        const aStream = (typeof audio !== 'undefined' && audio.getRecordStream) ? audio.getRecordStream() : null;
+                        if (aStream) aStream.getAudioTracks().forEach(t => combined.addTrack(t));
+                    } catch (e) {}
+
+                    let mime = 'video/webm;codecs=vp9,opus';
+                    if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp9';
+                    if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm;codecs=vp8,opus';
                     if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/webm';
-                    if (!MediaRecorder.isTypeSupported(mime)) mime = 'video/mp4';
+                    if (!MediaRecorder.isTypeSupported(mime) && MediaRecorder.isTypeSupported('video/mp4')) mime = 'video/mp4';
+
                     this._captureChunks = [];
-                    this._captureRecorder = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 4_000_000 });
+                    this._captureStream = combined;
+                    this._captureVideoStream = videoStream;
+                    try {
+                        this._captureRecorder = new MediaRecorder(combined, {
+                            mimeType: mime,
+                            videoBitsPerSecond: 12_000_000,
+                            audioBitsPerSecond: 192_000
+                        });
+                    } catch (e) {
+                        this._captureRecorder = new MediaRecorder(combined, { mimeType: mime });
+                    }
                     this._captureMime = mime;
                     this._captureRecorder.ondataavailable = (e) => {
                         if (e.data && e.data.size) this._captureChunks.push(e.data);
@@ -16062,16 +16161,20 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
                             a.download = 'voxel-capture-' + Date.now() + (this._captureMime && this._captureMime.includes('mp4') ? '.mp4' : '.webm');
                             a.click();
                             setTimeout(() => URL.revokeObjectURL(url), 5000);
-                            this.notify('Capture saved');
+                            this.notify('Capture saved (HQ' + (combined.getAudioTracks().length ? ' + audio' : '') + ')');
                         } catch (e) {
                             this.notify('Capture save failed');
                         }
+                        try { if (this._captureStream) this._captureStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                        try { if (this._captureVideoStream) this._captureVideoStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+                        this._captureStream = null;
+                        this._captureVideoStream = null;
                         this._capturing = false;
                         this._updateCaptureButton();
                     };
-                    this._captureRecorder.start(1000);
+                    this._captureRecorder.start(250);
                     this._capturing = true;
-                    this.notify('Recording gameplay… (F9 or pause to stop)');
+                    this.notify('Recording HQ gameplay + audio… (F9 or pause to stop)');
                     this._updateCaptureButton();
                 } catch (e) {
                     console.warn(e);
@@ -16231,6 +16334,9 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
         }
 
         window.onload = () => {
+            if (window.__VOXEL_LUMIA_BLOCKED__) {
+                return;
+            }
             window.game = new Game();
             // Fit menu panels on first paint (mobile / short screens)
             requestAnimationFrame(() => {
