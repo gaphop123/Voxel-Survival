@@ -2345,91 +2345,192 @@
             65: 'oak_door_bottom', 66: 'oak_door_top', 67: 'emerald_ore', 68: 'emerald_block', 69: 'fire_0', 70: 'white_wool', 76: 'coal_block', 77: 'redstone_block', 78: 'hay_block', 84: 'quartz_block_side', 88: 'soul_sand', 91: 'sea_lantern', 95: 'slime_block'
         };
 
+        // Load block textures from InventivetalentDev/minecraft-assets @26.2 (individual PNGs),
+        // then fall back to zardoy/mc-assets atlas if needed.
+        // https://github.com/InventivetalentDev/minecraft-assets/tree/26.2/assets/minecraft/textures/block
+        const MC_ASSETS_26_2_BLOCK = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/block/';
+        const MC_ASSETS_26_2_ITEM = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/item/';
+
+        function loadImageCross(url) {
+            return new Promise((resolve, reject) => {
+                const i = new Image();
+                i.crossOrigin = 'anonymous';
+                i.onload = () => resolve(i);
+                i.onerror = () => reject(new Error('img fail ' + url));
+                i.src = url;
+            });
+        }
+
+        function tintTile(ctx, dx, dy, TILE, tr, tg, tb) {
+            const idata = ctx.getImageData(dx, dy, TILE, TILE);
+            const d = idata.data;
+            for (let i = 0; i < d.length; i += 4) {
+                if (d[i + 3] < 8) continue;
+                d[i] = (d[i] * tr / 255) | 0;
+                d[i + 1] = (d[i + 1] * tg / 255) | 0;
+                d[i + 2] = (d[i + 2] * tb / 255) | 0;
+            }
+            ctx.putImageData(idata, dx, dy);
+        }
+
+        async function applyMinecraftTexturesFromInventivetalent(atlasCanvas, tex) {
+            const ctx = atlasCanvas.getContext('2d');
+            const TILE = 16, COLS = 16;
+            ctx.imageSmoothingEnabled = false;
+            const TINTS = {
+                grass_block_top: [0x91, 0xbd, 0x59],
+                grass_block_side: [0x91, 0xbd, 0x59],
+                oak_leaves: [0x77, 0xab, 0x2f],
+                water_still: [0x3f, 0x76, 0xe4]
+            };
+            // Some textures live under item/ or alternate names
+            const ALIASES = {
+                torch: 'torch',
+                chest_side: 'oak_planks',
+                bed_head_top: 'red_wool',
+                bed_feet_end: 'red_wool',
+                fire_0: 'fire_0'
+            };
+            let applied = 0;
+            const dirtImgPromise = loadImageCross(MC_ASSETS_26_2_BLOCK + 'dirt.png').catch(() => null);
+            const dirtImg = await dirtImgPromise;
+
+            const tasks = Object.entries(MC_TEX_MAP).map(async ([tileStr, name]) => {
+                const tile = +tileStr;
+                const dx = (tile % COLS) * TILE;
+                const dy = Math.floor(tile / COLS) * TILE;
+                const file = (ALIASES[name] || name) + '.png';
+                let img = null;
+                try {
+                    img = await loadImageCross(MC_ASSETS_26_2_BLOCK + file);
+                } catch (e1) {
+                    try {
+                        img = await loadImageCross(MC_ASSETS_26_2_ITEM + file);
+                    } catch (e2) {
+                        return 0;
+                    }
+                }
+                ctx.clearRect(dx, dy, TILE, TILE);
+                ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, TILE, TILE);
+                if (TINTS[name]) {
+                    const [tr, tg, tb] = TINTS[name];
+                    if (name === 'grass_block_side' && dirtImg) {
+                        // dirt body + tinted grass fringe (MC style)
+                        ctx.drawImage(dirtImg, 0, 0, dirtImg.width, dirtImg.height, dx, dy, TILE, TILE);
+                        // draw top ~4px of grass side tinted
+                        const tmp = document.createElement('canvas');
+                        tmp.width = TILE; tmp.height = 5;
+                        const tctx = tmp.getContext('2d');
+                        tctx.imageSmoothingEnabled = false;
+                        tctx.drawImage(img, 0, 0, img.width, Math.max(1, img.height * 5 / 16), 0, 0, TILE, 5);
+                        const fringe = tctx.getImageData(0, 0, TILE, 5);
+                        const fd = fringe.data;
+                        for (let i = 0; i < fd.length; i += 4) {
+                            if (fd[i + 3] < 8) continue;
+                            fd[i] = (fd[i] * tr / 255) | 0;
+                            fd[i + 1] = (fd[i + 1] * tg / 255) | 0;
+                            fd[i + 2] = (fd[i + 2] * tb / 255) | 0;
+                        }
+                        tctx.putImageData(fringe, 0, 0);
+                        ctx.drawImage(tmp, dx, dy);
+                    } else {
+                        tintTile(ctx, dx, dy, TILE, tr, tg, tb);
+                    }
+                }
+                return 1;
+            });
+            const results = await Promise.all(tasks);
+            applied = results.reduce((a, b) => a + b, 0);
+            if (applied > 0) {
+                tex.needsUpdate = true;
+                console.log('[Voxel Survival] Applied', applied, 'block textures from InventivetalentDev/minecraft-assets@26.2');
+            }
+            return applied;
+        }
+
+        async function applyMinecraftTexturesFromMcAssetsAtlas(atlasCanvas, tex) {
+            let base = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist';
+            let mapRes = await fetch(base + '/blocksAtlases.json');
+            if (!mapRes.ok) {
+                base = 'https://unpkg.com/mc-assets@latest/dist';
+                mapRes = await fetch(base + '/blocksAtlases.json');
+            }
+            if (!mapRes.ok) throw new Error('atlas map HTTP ' + mapRes.status);
+            const mapJson = await mapRes.json();
+            const latest = mapJson.latest || mapJson;
+            const textures = latest.textures || {};
+            const srcW = latest.width || 1024;
+            const srcH = latest.height || 1024;
+            const tileSize = latest.tileSize || 16;
+
+            const img = await loadImageCross(base + '/blocksAtlasLatest.png');
+
+            const ctx = atlasCanvas.getContext('2d');
+            const TILE = 16, COLS = 16;
+            ctx.imageSmoothingEnabled = false;
+
+            const TINTS = {
+                grass_block_top: [0x91, 0xbd, 0x59],
+                grass_block_side: [0x91, 0xbd, 0x59],
+                oak_leaves: [0x77, 0xab, 0x2f],
+                water_still: [0x3f, 0x76, 0xe4]
+            };
+
+            let applied = 0;
+            for (const [tileStr, name] of Object.entries(MC_TEX_MAP)) {
+                const info = textures[name];
+                if (!info) continue;
+                const sx = Math.round(info.u * srcW);
+                const sy = Math.round(info.v * srcH);
+                const sw = Math.round((info.su != null ? info.su : tileSize / srcW) * srcW) || tileSize;
+                const sh = Math.round((info.sv != null ? info.sv : tileSize / srcH) * srcH) || tileSize;
+                const tile = +tileStr;
+                const dx = (tile % COLS) * TILE;
+                const dy = Math.floor(tile / COLS) * TILE;
+                ctx.clearRect(dx, dy, TILE, TILE);
+                ctx.drawImage(img, sx, sy, sw, sh, dx, dy, TILE, TILE);
+
+                if (TINTS[name]) {
+                    const [tr, tg, tb] = TINTS[name];
+                    tintTile(ctx, dx, dy, TILE, tr, tg, tb);
+                    if (name === 'grass_block_side' && textures['dirt']) {
+                        const di = textures['dirt'];
+                        const dsx = Math.round(di.u * srcW), dsy = Math.round(di.v * srcH);
+                        ctx.drawImage(img, dsx, dsy, tileSize, tileSize, dx, dy + 4, TILE, 12);
+                        const fringe = ctx.getImageData(dx, dy, TILE, 5);
+                        const fd = fringe.data;
+                        for (let i = 0; i < fd.length; i += 4) {
+                            if (fd[i + 3] < 8) continue;
+                            fd[i] = (fd[i] * tr / 255) | 0;
+                            fd[i + 1] = (fd[i + 1] * tg / 255) | 0;
+                            fd[i + 2] = (fd[i + 2] * tb / 255) | 0;
+                        }
+                        ctx.putImageData(fringe, dx, dy);
+                    }
+                }
+                applied++;
+            }
+            tex.needsUpdate = true;
+            console.log('[Voxel Survival] Applied', applied, 'block textures from mc-assets atlas');
+            return applied;
+        }
+
         async function applyMinecraftTextures(atlasCanvas, tex) {
             try {
-                let base = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist';
-                let mapRes = await fetch(base + '/blocksAtlases.json');
-                if (!mapRes.ok) {
-                    base = 'https://unpkg.com/mc-assets@latest/dist';
-                    mapRes = await fetch(base + '/blocksAtlases.json');
-                }
-                if (!mapRes.ok) throw new Error('atlas map HTTP ' + mapRes.status);
-                const mapJson = await mapRes.json();
-                const latest = mapJson.latest || mapJson;
-                const textures = latest.textures || {};
-                const srcW = latest.width || 1024;
-                const srcH = latest.height || 1024;
-                const tileSize = latest.tileSize || 16;
-
-                const img = await new Promise((resolve, reject) => {
-                    const i = new Image();
-                    i.crossOrigin = 'anonymous';
-                    i.onload = () => resolve(i);
-                    i.onerror = reject;
-                    i.src = base + '/blocksAtlasLatest.png';
-                });
-
-                const ctx = atlasCanvas.getContext('2d');
-                const TILE = 16, COLS = 16;
-                ctx.imageSmoothingEnabled = false;
-
-                // Modern MC grass/leaves/water are grayscale — apply biome tints
-                const TINTS = {
-                    grass_block_top: [0x91, 0xbd, 0x59],
-                    grass_block_side: [0x91, 0xbd, 0x59],
-                    oak_leaves: [0x77, 0xab, 0x2f],
-                    water_still: [0x3f, 0x76, 0xe4]
-                };
-
-                let applied = 0;
-                for (const [tileStr, name] of Object.entries(MC_TEX_MAP)) {
-                    const info = textures[name];
-                    if (!info) continue;
-                    const sx = Math.round(info.u * srcW);
-                    const sy = Math.round(info.v * srcH);
-                    const sw = Math.round((info.su != null ? info.su : tileSize / srcW) * srcW) || tileSize;
-                    const sh = Math.round((info.sv != null ? info.sv : tileSize / srcH) * srcH) || tileSize;
-                    const tile = +tileStr;
-                    const dx = (tile % COLS) * TILE;
-                    const dy = Math.floor(tile / COLS) * TILE;
-                    ctx.clearRect(dx, dy, TILE, TILE);
-                    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, TILE, TILE);
-
-                    if (TINTS[name]) {
-                        const [tr, tg, tb] = TINTS[name];
-                        const idata = ctx.getImageData(dx, dy, TILE, TILE);
-                        const d = idata.data;
-                        for (let i = 0; i < d.length; i += 4) {
-                            if (d[i + 3] < 8) continue;
-                            d[i] = (d[i] * tr / 255) | 0;
-                            d[i + 1] = (d[i + 1] * tg / 255) | 0;
-                            d[i + 2] = (d[i + 2] * tb / 255) | 0;
-                        }
-                        ctx.putImageData(idata, dx, dy);
-                        // Grass side: dirt bottom, green top strip
-                        if (name === 'grass_block_side' && textures['dirt']) {
-                            const di = textures['dirt'];
-                            const dsx = Math.round(di.u * srcW), dsy = Math.round(di.v * srcH);
-                            ctx.drawImage(img, dsx, dsy, tileSize, tileSize, dx, dy + 4, TILE, 12);
-                            const fringe = ctx.getImageData(dx, dy, TILE, 5);
-                            const fd = fringe.data;
-                            for (let i = 0; i < fd.length; i += 4) {
-                                if (fd[i + 3] < 8) continue;
-                                fd[i] = (fd[i] * tr / 255) | 0;
-                                fd[i + 1] = (fd[i + 1] * tg / 255) | 0;
-                                fd[i + 2] = (fd[i + 2] * tb / 255) | 0;
-                            }
-                            ctx.putImageData(fringe, dx, dy);
-                        }
-                    }
-                    applied++;
-                }
-                tex.needsUpdate = true;
-                console.log('[Voxel Survival] Applied', applied, 'block textures from mc-assets (zardoy)');
-                return applied > 0;
+                // Prefer official extracted assets @26.2
+                let applied = await applyMinecraftTexturesFromInventivetalent(atlasCanvas, tex);
+                if (applied >= 20) return true;
+                // Fill remaining / fallback via atlas package
+                const atlasApplied = await applyMinecraftTexturesFromMcAssetsAtlas(atlasCanvas, tex);
+                return (applied + atlasApplied) > 0;
             } catch (err) {
-                console.warn('[Voxel Survival] mc-assets unavailable, procedural fallback:', err);
-                return false;
+                console.warn('[Voxel Survival] texture sources unavailable, procedural fallback:', err);
+                try {
+                    const n = await applyMinecraftTexturesFromMcAssetsAtlas(atlasCanvas, tex);
+                    return n > 0;
+                } catch (e2) {
+                    return false;
+                }
             }
         }
 
@@ -4200,17 +4301,17 @@ for (let chunk of this.chunks.values()) {
             leg:   [4, 20, 4, 12]
         };
         const PLAYER_SKIN_PRESETS = {
-            steve: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/player/wide/steve.png',
-            alex: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/player/slim/alex.png',
-            steve_slim: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/player/slim/steve.png',
+            steve: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/entity/player/wide/steve.png',
+            alex: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/entity/player/slim/alex.png',
+            steve_slim: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/entity/player/slim/steve.png',
             // fallbacks
-            steve_fb: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.20.4/assets/minecraft/textures/entity/player/wide/steve.png'
+            steve_fb: 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/entity/player/wide/steve.png'
         };
         const PLAYER_SKIN_URLS = [
             PLAYER_SKIN_PRESETS.steve,
             PLAYER_SKIN_PRESETS.steve_fb,
             PLAYER_SKIN_PRESETS.alex,
-            'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/steve.png'
+            'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/entity/player/wide/steve.png'
         ];
 
         // Shirt / cloth tint presets (when no full skin PNG)
@@ -5663,8 +5764,8 @@ const BLOCK_DROP_COLORS = {
         };
 
         // Entity textures from mc-assets (assets/minecraft/textures/entity/...)
-        // Entity skins from InventivetalentDev/minecraft-assets @1.21.4
-        const ENTITY_TEX_URL = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/';
+        // Entity skins from InventivetalentDev/minecraft-assets @26.2
+        const ENTITY_TEX_URL = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/entity/';
         const ENTITY_TEX_PATHS = {
             COW: 'cow/cow.png', PIG: 'pig/pig.png', ZOMBIE: 'zombie/zombie.png',
             CREEPER: 'creeper/creeper.png', SHEEP: 'sheep/sheep.png', SPIDER: 'spider/spider.png',
@@ -5682,8 +5783,9 @@ const BLOCK_DROP_COLORS = {
             if (entityImageCache[type]) return entityImageCache[type];
             const bases = [
                 ENTITY_TEX_URL,
-                'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.20.4/assets/minecraft/textures/entity/',
-                'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/1.21.4/assets/minecraft/textures/entity/'
+                'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/entity/',
+                'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@1.21.4/assets/minecraft/textures/entity/',
+                'https://raw.githubusercontent.com/InventivetalentDev/minecraft-assets/26.2/assets/minecraft/textures/entity/'
             ];
             entityImageCache[type] = new Promise((resolve) => {
                 let i = 0;
@@ -10231,7 +10333,7 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                 applyMinecraftTextures(atlasData.atlasCanvas, this.texAtlas).then((ok) => {
                     if (ok) {
                         this.itemIcons = generateItemIcons(atlasData.atlasCanvas);
-                        this.notify('Block textures: mc-assets');
+                        this.notify('Block textures: minecraft-assets@26.2');
                         if (this.world) {
                             for (const ch of this.world.chunks.values()) {
                                 if (ch.loaded) ch.markDirty();
@@ -15540,6 +15642,37 @@ Save as PNG and upload in-game.`;
                         this.ambient.intensity = 0.55 + lightIntensity * 0.25;
                         this.hemi.intensity = 0.35 + lightIntensity * 0.2;
                         this.fillLight.intensity = 0.25;
+                    }
+
+                    // Depth darkness: lower Y → darker (caves / deep underground)
+                    // Surface ~Y 32–40 in this world; bedrock near Y 0–4
+                    if (this.player && this.world && this.world.dimension !== 'nether' && !this.player.headInWater) {
+                        const py = this.player.pos.y;
+                        // 0 at y >= 36, ~1 at y <= 4
+                        const depthDark = Math.max(0, Math.min(1, (36 - py) / 32));
+                        if (depthDark > 0.02) {
+                            const keep = 1 - depthDark * 0.88; // up to ~88% darker at bedrock
+                            this.ambient.intensity *= keep;
+                            if (this.dirLight) this.dirLight.intensity *= Math.max(0.05, keep * keep);
+                            if (this.hemi) this.hemi.intensity *= keep;
+                            if (this.fillLight) this.fillLight.intensity *= keep;
+                            // Closer, darker fog underground
+                            const fogNear = 2 + (1 - depthDark) * 18;
+                            const fogFar = 8 + (1 - depthDark) * (RENDER_DISTANCE * CHUNK_SIZE * 0.7);
+                            this.scene.fog.near = Math.min(this.scene.fog.near, fogNear);
+                            this.scene.fog.far = Math.min(this.scene.fog.far, fogFar);
+                            // Blend background toward black
+                            const bg = this.scene.background;
+                            if (bg && bg.r != null) {
+                                const k = 1 - depthDark * 0.92;
+                                bg.r *= k; bg.g *= k; bg.b *= k;
+                            }
+                            if (this.scene.fog && this.scene.fog.color) {
+                                const fc = this.scene.fog.color;
+                                const k2 = 1 - depthDark * 0.9;
+                                fc.r *= k2; fc.g *= k2; fc.b *= k2;
+                            }
+                        }
                     }
 
                     if (this.isMobile) this.applyMobileInput(dt);
