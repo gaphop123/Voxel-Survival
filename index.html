@@ -1102,7 +1102,7 @@
     <div id="main-menu">
         <div id="menu-main" class="menu-panel mc-main-menu" style="display: flex;">
             <div class="menu-title mc-title">VOXEL SURVIVAL</div>
-            <div class="mc-splash" id="mc-splash">Also try Minecraft!</div>
+            <div class="mc-splash" id="mc-splash">Agriculture &amp; Skies!</div>
             <div class="menu-subtitle mc-subtitle">A blocky survival sandbox</div>
             <button class="menu-btn mc-btn" id="btn-new-world">Singleplayer</button>
             <button class="menu-btn mc-btn" id="btn-join-mp">Multiplayer</button>
@@ -1131,7 +1131,7 @@
                 </select>
             </div>
             <div class="mc-footer">
-                <span class="mc-ver">Voxel Survival 1.8</span>
+                <span class="mc-ver">Voxel Survival 1.11</span>
                 <span class="mc-copy"></span>
             </div>
         </div>
@@ -1709,7 +1709,12 @@
             REINFORCED_DEEPSLATE: 188, END_STONE: 189, PURPUR: 190,
             ANVIL: 191, NETHER_BRICK: 192, ANCIENT_DEBRIS: 193, NETHERITE_BLOCK: 194,
             SOUL_SOIL: 195, CRIMSON_NYLIUM: 196, WARPED_NYLIUM: 197, NETHER_GOLD_ORE: 198,
-            NETHER_BRICK_FENCE: 199
+            NETHER_BRICK_FENCE: 199,
+            // v1.11 Agriculture
+            FARMLAND: 202, FARMLAND_DRY: 203,
+            WHEAT_0: 204, WHEAT_1: 205, WHEAT_2: 206, WHEAT_3: 207,
+            WHEAT_4: 208, WHEAT_5: 209, WHEAT_6: 210, WHEAT_7: 211,
+            CARROTS: 212, POTATOES: 213
         };
 
         const BlockRegistry = {
@@ -1793,6 +1798,19 @@
             [BLOCKS.MYCELIUM]: { name: "Mycelium", solid: true, tex: [1, 1, 0, 2, 1, 1], type: 'dirt' },
             [BLOCKS.GRASS_PATH]: { name: "Grass Path", solid: true, tex: [2, 2, 1, 2, 2, 2], type: 'dirt', shape: 'path', pathHeight: 0.9375 },
             [BLOCKS.DIRT_PATH]: { name: "Dirt Path", solid: true, tex: [2, 2, 2, 2, 2, 2], type: 'dirt', shape: 'path', pathHeight: 0.9375 },
+            [BLOCKS.FARMLAND]: { name: "Farmland", solid: true, tex: [2, 2, 2, 2, 2, 2], type: 'dirt', shape: 'path', pathHeight: 0.9375, farmland: true },
+            [BLOCKS.FARMLAND_DRY]: { name: "Farmland", solid: true, tex: [2, 2, 2, 2, 2, 2], type: 'dirt', shape: 'path', pathHeight: 0.9375, farmland: true },
+            [BLOCKS.WHEAT_0]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 0, drops: 0 },
+            [BLOCKS.WHEAT_1]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 1, drops: 0 },
+            [BLOCKS.WHEAT_2]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 2, drops: 0 },
+            [BLOCKS.WHEAT_3]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 3, drops: 0 },
+            [BLOCKS.WHEAT_4]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 4, drops: 0 },
+            [BLOCKS.WHEAT_5]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 5, drops: 0 },
+            [BLOCKS.WHEAT_6]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 6, drops: 0 },
+            [BLOCKS.WHEAT_7]: { name: "Wheat", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, cropStage: 7, drops: 0 },
+            [BLOCKS.CARROTS]: { name: "Carrots", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, drops: 222 },
+            [BLOCKS.POTATOES]: { name: "Potatoes", solid: false, transparent: true, tex: [21, 21, 21, 21, 21, 21], type: 'plant', shape: 'cross', crop: true, drops: 223 },
+
             [BLOCKS.PODZOL]: { name: "Podzol", solid: true, tex: [2, 2, 2, 2, 2, 2], type: 'dirt' },
             [BLOCKS.ANDESITE]: { name: "Andesite", solid: true, tex: [3, 3, 3, 3, 3, 3], type: 'stone' },
             [BLOCKS.DIORITE]: { name: "Diorite", solid: true, tex: [4, 4, 4, 4, 4, 4], type: 'stone' },
@@ -1864,13 +1882,17 @@
             GOLD_HELMET: 168, GOLD_CHESTPLATE: 169, GOLD_LEGGINGS: 170, GOLD_BOOTS: 171,
             DIAMOND_HELMET: 172, DIAMOND_CHESTPLATE: 173, DIAMOND_LEGGINGS: 174, DIAMOND_BOOTS: 175,
             NETHERITE_SCRAP: 180, NETHERITE_INGOT: 181, NETHERITE_PICKAXE: 182, NETHERITE_SWORD: 183,
-            NETHERITE_SHOVEL: 184, BLAZE_ROD: 210, BLAZE_POWDER: 211
+            NETHERITE_SHOVEL: 184, BLAZE_ROD: 210, BLAZE_POWDER: 211,
+            // v1.11 Agriculture & combat
+            WOODEN_HOE: 214, STONE_HOE: 215, IRON_HOE: 216, GOLD_HOE: 217, DIAMOND_HOE: 218,
+            WHEAT_SEEDS: 220, WHEAT: 221, CARROT: 222, POTATO: 223, BAKED_POTATO: 224,
+            BONE_MEAL: 225, SHIELD: 226
         };
 
 
         // Mining hardness (seconds with bare hand roughly); tools speed it up
         const BLOCK_HARDNESS = {
-            [BLOCKS.GRASS]: 0.6, [BLOCKS.DIRT]: 0.5, [BLOCKS.SAND]: 0.5, [BLOCKS.GRAVEL]: 0.6, [BLOCKS.GRASS_PATH]: 0.5, [BLOCKS.DIRT_PATH]: 0.5,
+            [BLOCKS.GRASS]: 0.6, [BLOCKS.DIRT]: 0.5, [BLOCKS.SAND]: 0.5, [BLOCKS.GRAVEL]: 0.6, [BLOCKS.GRASS_PATH]: 0.5, [BLOCKS.DIRT_PATH]: 0.5, [BLOCKS.FARMLAND]: 0.6, [BLOCKS.FARMLAND_DRY]: 0.6, [BLOCKS.WHEAT_0]: 0, [BLOCKS.WHEAT_1]: 0, [BLOCKS.WHEAT_2]: 0, [BLOCKS.WHEAT_3]: 0, [BLOCKS.WHEAT_4]: 0, [BLOCKS.WHEAT_5]: 0, [BLOCKS.WHEAT_6]: 0, [BLOCKS.WHEAT_7]: 0, [BLOCKS.CARROTS]: 0, [BLOCKS.POTATOES]: 0,
             [BLOCKS.WOOD]: 2.0, [BLOCKS.PLANKS]: 2.0, [BLOCKS.LEAVES]: 0.25,
             [BLOCKS.STONE]: 1.5, [BLOCKS.COBBLESTONE]: 2.0, [BLOCKS.STONE_BRICKS]: 1.5,
             [BLOCKS.COAL_ORE]: 3.0, [BLOCKS.IRON_ORE]: 3.0, [BLOCKS.GOLD_ORE]: 3.0,
@@ -2003,7 +2025,19 @@
             [ITEMS.NETHERITE_INGOT]: { name: "Netherite Ingot", maxStack: 64, type: 'item' },
             [ITEMS.NETHERITE_PICKAXE]: { name: "Netherite Pickaxe", maxStack: 1, type: 'tool', toolType: 'pickaxe', tier: 5 },
             [ITEMS.NETHERITE_SWORD]: { name: "Netherite Sword", maxStack: 1, type: 'tool', toolType: 'sword', tier: 5, damage: 6 },
-            [ITEMS.NETHERITE_SHOVEL]: { name: "Netherite Shovel", maxStack: 1, type: 'tool', toolType: 'shovel', tier: 5 }
+            [ITEMS.NETHERITE_SHOVEL]: { name: "Netherite Shovel", maxStack: 1, type: 'tool', toolType: 'shovel', tier: 5 },
+            [ITEMS.WOODEN_HOE]: { name: "Wooden Hoe", maxStack: 1, type: 'tool', toolType: 'hoe', tier: 1 },
+            [ITEMS.STONE_HOE]: { name: "Stone Hoe", maxStack: 1, type: 'tool', toolType: 'hoe', tier: 2 },
+            [ITEMS.IRON_HOE]: { name: "Iron Hoe", maxStack: 1, type: 'tool', toolType: 'hoe', tier: 3 },
+            [ITEMS.GOLD_HOE]: { name: "Golden Hoe", maxStack: 1, type: 'tool', toolType: 'hoe', tier: 2 },
+            [ITEMS.DIAMOND_HOE]: { name: "Diamond Hoe", maxStack: 1, type: 'tool', toolType: 'hoe', tier: 4 },
+            [ITEMS.WHEAT_SEEDS]: { name: "Wheat Seeds", maxStack: 64, type: 'item', plant: BLOCKS.WHEAT_0 },
+            [ITEMS.WHEAT]: { name: "Wheat", maxStack: 64, type: 'item' },
+            [ITEMS.CARROT]: { name: "Carrot", maxStack: 64, type: 'food', heal: 2, plant: BLOCKS.CARROTS },
+            [ITEMS.POTATO]: { name: "Potato", maxStack: 64, type: 'food', heal: 1, plant: BLOCKS.POTATOES },
+            [ITEMS.BAKED_POTATO]: { name: "Baked Potato", maxStack: 64, type: 'food', heal: 3 },
+            [ITEMS.BONE_MEAL]: { name: "Bone Meal", maxStack: 64, type: 'item', boneMeal: true },
+            [ITEMS.SHIELD]: { name: "Shield", maxStack: 1, type: 'tool', toolType: 'shield' }
         };
 
         // Recipes
@@ -2014,7 +2048,7 @@
             [BLOCKS.IRON_ORE]: ITEMS.IRON_INGOT,
             [BLOCKS.GOLD_ORE]: ITEMS.GOLD_INGOT,
             [BLOCKS.CLAY]: BLOCKS.BRICK,
-            [ITEMS.RAW_BEEF]: ITEMS.COOKED_BEEF,
+            [ITEMS.RAW_BEEF]: ITEMS.COOKED_BEEF, [ITEMS.POTATO]: ITEMS.BAKED_POTATO,
             [ITEMS.RAW_CHICKEN]: ITEMS.COOKED_CHICKEN,
             [BLOCKS.WOOD]: ITEMS.COAL, // charcoal as coal
             [BLOCKS.ANCIENT_DEBRIS]: ITEMS.NETHERITE_SCRAP,
@@ -2118,6 +2152,17 @@
             { shape: [ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, null, ITEMS.STICK, null, null, ITEMS.STICK, null], out: ITEMS.NETHERITE_PICKAXE, count: 1 },
             { shape: [null, ITEMS.NETHERITE_INGOT, null, null, ITEMS.NETHERITE_INGOT, null, null, ITEMS.STICK, null], out: ITEMS.NETHERITE_SWORD, count: 1 },
             { shape: [null, ITEMS.NETHERITE_INGOT, null, null, ITEMS.STICK, null, null, ITEMS.STICK, null], out: ITEMS.NETHERITE_SHOVEL, count: 1 },
+            // v1.11 hoes & farming
+            { shape: [BLOCKS.PLANKS, BLOCKS.PLANKS, null, null, ITEMS.STICK, null, null, ITEMS.STICK, null], out: ITEMS.WOODEN_HOE, count: 1 },
+            { shape: [BLOCKS.COBBLESTONE, BLOCKS.COBBLESTONE, null, null, ITEMS.STICK, null, null, ITEMS.STICK, null], out: ITEMS.STONE_HOE, count: 1 },
+            { shape: [ITEMS.IRON_INGOT, ITEMS.IRON_INGOT, null, null, ITEMS.STICK, null, null, ITEMS.STICK, null], out: ITEMS.IRON_HOE, count: 1 },
+            { shape: [ITEMS.GOLD_INGOT, ITEMS.GOLD_INGOT, null, null, ITEMS.STICK, null, null, ITEMS.STICK, null], out: ITEMS.GOLD_HOE, count: 1 },
+            { shape: [ITEMS.DIAMOND, ITEMS.DIAMOND, null, null, ITEMS.STICK, null, null, ITEMS.STICK, null], out: ITEMS.DIAMOND_HOE, count: 1 },
+            { in: [ITEMS.WHEAT, ITEMS.WHEAT, ITEMS.WHEAT], out: ITEMS.BREAD, count: 1 },
+            { in: [ITEMS.BONE], out: ITEMS.BONE_MEAL, count: 3 },
+            { shape: [null, BLOCKS.PLANKS, null, BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS, null, BLOCKS.PLANKS, null], out: ITEMS.SHIELD, count: 1 },
+            { shape: [null, ITEMS.IRON_INGOT, null, BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS, null, BLOCKS.PLANKS, null], out: ITEMS.SHIELD, count: 1 },
+
             { shape: [ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT], out: BLOCKS.NETHERITE_BLOCK, count: 1 },
             { shape: [BLOCKS.NETHER_BRICK, BLOCKS.NETHER_BRICK, null, BLOCKS.NETHER_BRICK, BLOCKS.NETHER_BRICK, null, null, null, null], out: BLOCKS.NETHER_BRICK_FENCE, count: 6 }
         ];
@@ -2929,6 +2974,19 @@
                 ctx.fillStyle = '#4fc3f7'; ctx.fillRect(-5,-14,10,4);
             });
             icons[ITEMS.BREAD] = makeIcon(ctx => { ctx.fillStyle='#d7a86e'; ctx.beginPath(); ctx.ellipse(16,18,12,8,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#c48a4a'; ctx.fillRect(6,14,20,3); });
+            icons[ITEMS.WOODEN_HOE] = makeIcon(ctx => { ctx.fillStyle='#8d6e63'; ctx.fillRect(14,4,4,18); ctx.fillStyle='#a1887f'; ctx.fillRect(8,4,16,4); ctx.fillRect(6,6,4,4); });
+            icons[ITEMS.STONE_HOE] = makeIcon(ctx => { ctx.fillStyle='#8d6e63'; ctx.fillRect(14,4,4,18); ctx.fillStyle='#9e9e9e'; ctx.fillRect(8,4,16,4); ctx.fillRect(6,6,4,4); });
+            icons[ITEMS.IRON_HOE] = makeIcon(ctx => { ctx.fillStyle='#8d6e63'; ctx.fillRect(14,4,4,18); ctx.fillStyle='#eceff1'; ctx.fillRect(8,4,16,4); ctx.fillRect(6,6,4,4); });
+            icons[ITEMS.GOLD_HOE] = makeIcon(ctx => { ctx.fillStyle='#8d6e63'; ctx.fillRect(14,4,4,18); ctx.fillStyle='#ffd54f'; ctx.fillRect(8,4,16,4); ctx.fillRect(6,6,4,4); });
+            icons[ITEMS.DIAMOND_HOE] = makeIcon(ctx => { ctx.fillStyle='#8d6e63'; ctx.fillRect(14,4,4,18); ctx.fillStyle='#4dd0e1'; ctx.fillRect(8,4,16,4); ctx.fillRect(6,6,4,4); });
+            icons[ITEMS.WHEAT_SEEDS] = makeIcon(ctx => { ctx.fillStyle='#8bc34a'; for(let i=0;i<6;i++){ctx.fillRect(6+i*3,12+((i%2)*4),3,3);} });
+            icons[ITEMS.WHEAT] = makeIcon(ctx => { ctx.fillStyle='#f0e68c'; ctx.fillRect(10,6,4,18); ctx.fillStyle='#daa520'; ctx.fillRect(8,4,8,6); ctx.fillRect(6,8,3,4); ctx.fillRect(15,8,3,4); });
+            icons[ITEMS.CARROT] = makeIcon(ctx => { ctx.fillStyle='#ff9800'; ctx.beginPath(); ctx.moveTo(16,6); ctx.lineTo(22,26); ctx.lineTo(10,26); ctx.fill(); ctx.fillStyle='#4caf50'; ctx.fillRect(14,2,4,6); });
+            icons[ITEMS.POTATO] = makeIcon(ctx => { ctx.fillStyle='#d7ccc8'; ctx.beginPath(); ctx.ellipse(16,16,10,8,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#a1887f'; ctx.fillRect(12,14,2,2); ctx.fillRect(18,18,2,2); });
+            icons[ITEMS.BAKED_POTATO] = makeIcon(ctx => { ctx.fillStyle='#ffe0b2'; ctx.beginPath(); ctx.ellipse(16,16,10,8,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#ffb74d'; ctx.fillRect(10,14,12,4); });
+            icons[ITEMS.BONE_MEAL] = makeIcon(ctx => { ctx.fillStyle='#fafafa'; ctx.beginPath(); ctx.arc(16,16,10,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#e0e0e0'; ctx.fillRect(12,12,3,3); ctx.fillRect(18,18,3,3); });
+            icons[ITEMS.SHIELD] = makeIcon(ctx => { ctx.fillStyle='#8d6e63'; ctx.fillRect(8,4,16,22); ctx.fillStyle='#5d4037'; ctx.strokeRect(8,4,16,22); ctx.fillStyle='#cfd8dc'; ctx.fillRect(12,8,8,10); ctx.fillStyle='#90a4ae'; ctx.fillRect(14,10,4,6); });
+
             icons[ITEMS.COOKED_PORK] = makeIcon(ctx => { ctx.fillStyle='#e57373'; ctx.fillRect(6,10,20,14); ctx.fillStyle='#ffcdd2'; ctx.fillRect(8,12,6,4); });
             icons[ITEMS.RAW_BEEF] = makeIcon(ctx => { ctx.fillStyle='#ef5350'; ctx.fillRect(6,10,20,14); });
             icons[ITEMS.COOKED_BEEF] = makeIcon(ctx => { ctx.fillStyle='#8d6e63'; ctx.fillRect(6,10,20,14); ctx.fillStyle='#a1887f'; ctx.fillRect(8,12,6,4); });
@@ -5441,6 +5499,9 @@ const BLOCK_DROP_COLORS = {
                 
                 this.health = 10; 
                 this.hunger = 10;
+                this.xp = 0;
+                this.xpLevel = 0;
+                this.blocking = false;
                 this.oxygen = 10;
                 this.maxOxygen = 10;
                 this.headInWater = false;
@@ -5496,6 +5557,23 @@ const BLOCK_DROP_COLORS = {
             takeDamage(amount, reason) {
                 const mode = this.game.gameMode;
                 if (mode === 'creative' || mode === 'spectator') return;
+                // Shield block (right-click hold / blocking flag)
+                if (this.blocking) {
+                    const off = this.inventory && this.inventory[this.hotbarSelect];
+                    const hasShield = off && off.id === ITEMS.SHIELD;
+                    // Also accept shield anywhere in hotbar when blocking
+                    let shieldOk = hasShield;
+                    if (!shieldOk && this.inventory) {
+                        for (let i = 0; i < 9; i++) {
+                            if (this.inventory[i] && this.inventory[i].id === ITEMS.SHIELD) { shieldOk = true; break; }
+                        }
+                    }
+                    if (shieldOk) {
+                        amount = Math.max(0, Math.floor(amount * 0.15));
+                        if (this.game && this.game.notify) this.game.notify('Blocked!');
+                        if (amount <= 0) { audio.playSound('click'); return; }
+                    }
+                }
                 const def = this.getArmorDefense ? this.getArmorDefense() : 0;
                 // Each armor point reduces damage by ~4% (MC-like soft cap)
                 const reduced = Math.max(1, Math.ceil(amount * (1 - Math.min(0.8, def * 0.04))));
@@ -5860,6 +5938,28 @@ const BLOCK_DROP_COLORS = {
                     }
                 }
                 return null;
+            }
+
+
+            addXP(amount) {
+                if (!amount || amount <= 0) return;
+                if (this.game && this.game.gameMode === 'creative') return;
+                this.xp = (this.xp || 0) + amount;
+                let leveled = false;
+                while (this.xp >= this.xpToNext()) {
+                    this.xp -= this.xpToNext();
+                    this.xpLevel = (this.xpLevel || 0) + 1;
+                    leveled = true;
+                }
+                if (leveled && this.game) {
+                    this.game.notify('Level up! Lv ' + this.xpLevel);
+                    audio.playSound('click');
+                }
+                if (this.game && this.game.updateHUD) this.game.updateHUD();
+            }
+            xpToNext() {
+                const lv = this.xpLevel || 0;
+                return 7 + lv * 5;
             }
 
             addItem(id, count=1) {
@@ -8606,7 +8706,16 @@ const BLOCK_DROP_COLORS = {
         const GAME_CHANGELOG = `
 Voxel Survival — Changelog
 =========================
-v1.10 (latest)
+v1.11 (latest) — Agriculture & Skies
+• Farming: farmland, hoes, wheat crops (8 stages), carrots, potatoes
+• Bone meal accelerates crop growth
+• Weather: rain, thunder storms, wet farmland hydration
+• Experience points from mining ores & defeating mobs
+• Shield: hold to block incoming damage
+• Bread from 3 wheat; bake potatoes in furnace
+• XP HUD + level-up feedback
+
+v1.10
 • FP hand holds any inventory item/block
 • Place blocks with id >= 100
 • .vxm formatVersion 9 (events, takeItem, title)
@@ -10910,13 +11019,17 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                         this._mouseBreaking = true;
                         this.handleInteract('break');
                     }
-                    if(e.button === 2) this.handleInteract('place');
+                    if(e.button === 2) {
+                        this._mousePlacing = true;
+                        this.handleInteract('place');
+                    }
                 });
                 window.addEventListener('mouseup', e => {
                     if (e.button === 0) {
                         this._mouseBreaking = false;
                         this.cancelMining();
                     }
+                    if (e.button === 2) this._mousePlacing = false;
                 });
                 
                 document.addEventListener('pointerlockchange', () => {
@@ -12201,6 +12314,120 @@ Save as PNG and upload in-game.`;
                 if (!this.fireTimers) this.fireTimers = {};
                 const k = x + ',' + y + ',' + z;
                 this.fireTimers[k] = 20; // seconds until extinguish
+            }
+
+
+            // ===== v1.11 Weather & Crops =====
+            updateWeather(dt) {
+                if (!this.world || this.world.dimension === 'nether') {
+                    this.isRaining = false;
+                    return;
+                }
+                if (this._weatherT == null) {
+                    this._weatherT = 30 + Math.random() * 90;
+                    this.isRaining = false;
+                    this._rainIntensity = 0;
+                }
+                this._weatherT -= dt;
+                if (this._weatherT <= 0) {
+                    if (this.isRaining) {
+                        this.isRaining = false;
+                        this._weatherT = 60 + Math.random() * 180;
+                        this.notify('The rain stopped');
+                    } else {
+                        this.isRaining = true;
+                        this._weatherT = 40 + Math.random() * 100;
+                        this._thunderNext = 8 + Math.random() * 25;
+                        this.notify('It started raining…');
+                    }
+                }
+                // Smooth intensity
+                const target = this.isRaining ? 1 : 0;
+                this._rainIntensity = (this._rainIntensity || 0) + (target - (this._rainIntensity || 0)) * Math.min(1, dt * 1.5);
+
+                if (this._rainIntensity > 0.05) {
+                    // Dim sky slightly
+                    if (this.scene && this.scene.fog && !this.player.headInWater) {
+                        this.scene.fog.near = Math.min(this.scene.fog.near, 12);
+                        this.scene.fog.far = Math.min(this.scene.fog.far, 48);
+                    }
+                    // Rain particles near player
+                    if (this.particles && this.player && Math.random() < 0.6 * this._rainIntensity) {
+                        const p = this.player.pos;
+                        for (let i = 0; i < 3; i++) {
+                            const rx = p.x + (Math.random() - 0.5) * 14;
+                            const rz = p.z + (Math.random() - 0.5) * 14;
+                            const ry = p.y + 8 + Math.random() * 6;
+                            this.particles.spawn(rx, ry, rz, 0x90caf9, 1, 0.4, 2.5);
+                        }
+                    }
+                    // Thunder
+                    if (this.isRaining) {
+                        this._thunderNext = (this._thunderNext || 15) - dt;
+                        if (this._thunderNext <= 0) {
+                            this._thunderNext = 10 + Math.random() * 30;
+                            audio.playSound('explode');
+                            // flash
+                            if (this.ambient) {
+                                const prev = this.ambient.intensity;
+                                this.ambient.intensity = Math.min(1.5, prev + 0.8);
+                                setTimeout(() => { if (this.ambient) this.ambient.intensity = prev; }, 120);
+                            }
+                        }
+                    }
+                }
+            }
+
+            updateCrops(dt) {
+                if (!this.world || !this.player) return;
+                // Only host / singleplayer advances crops
+                if (this.mp && this.mp.enabled && !this.mp.isHost) return;
+                this._cropTick = (this._cropTick || 0) + dt;
+                if (this._cropTick < 2.5) return;
+                this._cropTick = 0;
+                const px = Math.floor(this.player.pos.x);
+                const pz = Math.floor(this.player.pos.z);
+                const py = Math.floor(this.player.pos.y);
+                const rainBoost = this.isRaining ? 2.2 : 1;
+                // Scan nearby for crops & farmland hydration
+                for (let dx = -8; dx <= 8; dx++) {
+                    for (let dz = -8; dz <= 8; dz++) {
+                        for (let dy = -3; dy <= 3; dy++) {
+                            const x = px + dx, y = py + dy, z = pz + dz;
+                            const id = this.world.getBlock(x, y, z);
+                            // Hydrate / dry farmland
+                            if (id === BLOCKS.FARMLAND || id === BLOCKS.FARMLAND_DRY) {
+                                let wet = this.isRaining;
+                                if (!wet) {
+                                    for (let wx = -2; wx <= 2 && !wet; wx++) {
+                                        for (let wz = -2; wz <= 2 && !wet; wz++) {
+                                            const wid = this.world.getBlock(x + wx, y, z + wz);
+                                            if (wid === BLOCKS.WATER) wet = true;
+                                        }
+                                    }
+                                }
+                                const want = wet ? BLOCKS.FARMLAND : BLOCKS.FARMLAND_DRY;
+                                if (id !== want && Math.random() < 0.35) {
+                                    this.world.setBlock(x, y, z, want);
+                                    if (this.mp && this.mp.enabled) this.mp.sendBlock(x, y, z, want);
+                                }
+                                // Trample if player standing on farmland
+                                continue;
+                            }
+                            // Grow wheat stages
+                            if (id >= BLOCKS.WHEAT_0 && id < BLOCKS.WHEAT_7) {
+                                const soil = this.world.getBlock(x, y - 1, z);
+                                const hydrated = soil === BLOCKS.FARMLAND || this.isRaining;
+                                const chance = (hydrated ? 0.18 : 0.06) * rainBoost;
+                                if (Math.random() < chance) {
+                                    const nid = id + 1;
+                                    this.world.setBlock(x, y, z, nid);
+                                    if (this.mp && this.mp.enabled) this.mp.sendBlock(x, y, z, nid);
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             updateFire(dt) {
@@ -14560,10 +14787,36 @@ Save as PNG and upload in-game.`;
                     if (canDrop && dropId) {
                         this.spawnGroundItem(dropId, 1, x + 0.5, y + 0.3, z + 0.5, true);
                     }
+                    // Experience from ores & crops
+                    const xpMap = {
+                        [BLOCKS.COAL_ORE]: 1, [BLOCKS.IRON_ORE]: 1, [BLOCKS.GOLD_ORE]: 2,
+                        [BLOCKS.DIAMOND_ORE]: 4, [BLOCKS.EMERALD_ORE]: 4, [BLOCKS.LAPIS_ORE]: 2,
+                        [BLOCKS.REDSTONE_ORE]: 1, [BLOCKS.COPPER_ORE]: 1, [BLOCKS.NETHER_GOLD_ORE]: 1,
+                        [BLOCKS.WHEAT_7]: 1, [BLOCKS.CARROTS]: 1, [BLOCKS.POTATOES]: 1
+                    };
+                    if (xpMap[id] && this.player && this.player.addXP) this.player.addXP(xpMap[id]);
+                    // Mature wheat drops seeds + wheat
+                    if (id === BLOCKS.WHEAT_7 && canDrop) {
+                        this.spawnGroundItem(ITEMS.WHEAT, 1, x + 0.5, y + 0.3, z + 0.5, true);
+                        this.spawnGroundItem(ITEMS.WHEAT_SEEDS, 1 + Math.floor(Math.random() * 2), x + 0.5, y + 0.4, z + 0.5, true);
+                    } else if (id >= BLOCKS.WHEAT_0 && id < BLOCKS.WHEAT_7 && canDrop) {
+                        this.spawnGroundItem(ITEMS.WHEAT_SEEDS, 1, x + 0.5, y + 0.3, z + 0.5, true);
+                    }
+
                     if (id === BLOCKS.GRAVEL && Math.random() < 0.25) {
                         this.spawnGroundItem(ITEMS.FLINT, 1, x + 0.5, y + 0.4, z + 0.5, true);
                         this.notify('Flint!');
                     }
+                    if ((id === BLOCKS.GRASS || id === BLOCKS.FLOWER) && Math.random() < 0.15) {
+                        this.spawnGroundItem(ITEMS.WHEAT_SEEDS, 1, x + 0.5, y + 0.4, z + 0.5, true);
+                    }
+                    if (id === BLOCKS.CARROTS && canDrop) {
+                        this.spawnGroundItem(ITEMS.CARROT, 1 + Math.floor(Math.random() * 2), x + 0.5, y + 0.3, z + 0.5, true);
+                    }
+                    if (id === BLOCKS.POTATOES && canDrop) {
+                        this.spawnGroundItem(ITEMS.POTATO, 1 + Math.floor(Math.random() * 2), x + 0.5, y + 0.3, z + 0.5, true);
+                    }
+
                 }
                 this.updateHUD();
                 this.cancelMining();
@@ -14660,6 +14913,7 @@ Save as PNG and upload in-game.`;
                                 mob.takeDamage(dmg, true);
                                 audio.playSound('hurt');
                                 if (mob.dead) {
+                                    if (this.player.addXP) this.player.addXP(mob.data.hostile ? 5 : 2);
                                     for (let drop of (mob.data.drops || [])) {
                                         const span = Math.max(0, (drop.max || 1) - (drop.min || 0));
                                         const cnt = (drop.min || 0) + Math.floor(Math.random() * (span + 1));
@@ -14799,6 +15053,74 @@ Save as PNG and upload in-game.`;
                             this.tryLightPortal(hx, hy, hz);
                         }
                         return;
+                    }
+
+                    // Hoe: till dirt/grass into farmland
+                    if (target && ItemRegistry[item.id]?.toolType === 'hoe') {
+                        const hx = target.hit.x, hy = target.hit.y, hz = target.hit.z;
+                        const hid = this.world.getBlock(hx, hy, hz);
+                        if (hid === BLOCKS.GRASS || hid === BLOCKS.DIRT || hid === BLOCKS.GRASS_PATH || hid === BLOCKS.DIRT_PATH || hid === BLOCKS.PODZOL || hid === BLOCKS.MYCELIUM) {
+                            const above = this.world.getBlock(hx, hy + 1, hz);
+                            if (!above || above === BLOCKS.AIR) {
+                                this.world.setBlock(hx, hy, hz, BLOCKS.FARMLAND);
+                                if (this.mp && this.mp.enabled) this.mp.sendBlock(hx, hy, hz, BLOCKS.FARMLAND);
+                                audio.playSound('place');
+                                this.notify('Tilled farmland');
+                                this.updateHUD();
+                                return;
+                            }
+                        }
+                    }
+
+                    // Bone meal: grow crops
+                    if (target && item.id === ITEMS.BONE_MEAL) {
+                        const hx = target.hit.x, hy = target.hit.y, hz = target.hit.z;
+                        const hid = this.world.getBlock(hx, hy, hz);
+                        const reg = BlockRegistry[hid];
+                        if (reg && reg.crop) {
+                            let next = hid;
+                            if (hid >= BLOCKS.WHEAT_0 && hid < BLOCKS.WHEAT_7) next = hid + 1;
+                            else if (hid === BLOCKS.WHEAT_7) next = BLOCKS.WHEAT_7;
+                            else next = hid;
+                            if (hid >= BLOCKS.WHEAT_0 && hid < BLOCKS.WHEAT_7) {
+                                // jump 1–3 stages
+                                next = Math.min(BLOCKS.WHEAT_7, hid + 1 + Math.floor(Math.random() * 3));
+                                this.world.setBlock(hx, hy, hz, next);
+                                if (this.mp && this.mp.enabled) this.mp.sendBlock(hx, hy, hz, next);
+                                if (this.gameMode !== 'creative') {
+                                    item.count--;
+                                    if (item.count <= 0) this.player.inventory[this.player.hotbarSelect] = null;
+                                }
+                                audio.playSound('place');
+                                this.particles && this.particles.spawn(hx + 0.5, hy + 0.5, hz + 0.5, 0xa5d6a7, 8, 1.5, 0.4);
+                                this.notify('Crop grew!');
+                                this.updateHUD();
+                                return;
+                            }
+                        }
+                        // Also bone-meal farmland to plant nothing — skip
+                    }
+
+                    // Plant seeds / carrot / potato on farmland
+                    if (target && ItemRegistry[item.id]?.plant) {
+                        const hx = target.hit.x, hy = target.hit.y, hz = target.hit.z;
+                        const hid = this.world.getBlock(hx, hy, hz);
+                        if (hid === BLOCKS.FARMLAND || hid === BLOCKS.FARMLAND_DRY) {
+                            const above = this.world.getBlock(hx, hy + 1, hz);
+                            if (!above || above === BLOCKS.AIR) {
+                                const plantId = ItemRegistry[item.id].plant;
+                                this.world.setBlock(hx, hy + 1, hz, plantId);
+                                if (this.mp && this.mp.enabled) this.mp.sendBlock(hx, hy + 1, hz, plantId);
+                                if (this.gameMode !== 'creative') {
+                                    item.count--;
+                                    if (item.count <= 0) this.player.inventory[this.player.hotbarSelect] = null;
+                                }
+                                audio.playSound('place');
+                                this.notify('Planted');
+                                this.updateHUD();
+                                return;
+                            }
+                        }
                     }
 
                     // Shovel: convert grass/dirt into path
@@ -15650,7 +15972,10 @@ Save as PNG and upload in-game.`;
                 const gmEl = document.getElementById('gamemode-hud');
                 if (gmEl) {
                     const m = (this.gameMode || 'survival').toUpperCase();
-                    gmEl.textContent = m + '  [F4]';
+                    const xpL = (this.player.xpLevel || 0);
+                    const xp = (this.player.xp || 0);
+                    const need = this.player.xpToNext ? this.player.xpToNext() : 7;
+                    gmEl.innerHTML = m + '  [F4]<br><span style="color:#a5d6a7;font-size:10px;">Lv ' + xpL + ' · ' + xp + '/' + need + ' XP</span>';
                     gmEl.style.color = m === 'CREATIVE' ? '#ffd54f' : (m === 'SPECTATOR' ? '#ce93d8' : '#8cf');
                 }
 
@@ -15867,7 +16192,15 @@ Save as PNG and upload in-game.`;
                     this.updateAllFurnaces(dt);
                     this.updateGroundItems(dt);
                     this.updateFire(dt);
+                    this.updateWeather(dt);
+                    this.updateCrops(dt);
                     this.updateCompassHud();
+                    // Shield blocking: right mouse held with shield, or mobile place held with shield
+                    if (this.player) {
+                        const held = this.player.inventory[this.player.hotbarSelect];
+                        const hasShield = held && held.id === ITEMS.SHIELD;
+                        this.player.blocking = !!(hasShield && (this._mousePlacing || this.input?.keys?.['KeyR']));
+                    }
                     // Local player control only while actively playing (not while menu open)
                     if (this.state === 'play') {
                         this.player.update(dt, this.input);
