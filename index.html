@@ -1981,7 +1981,8 @@
             // v1.11 Agriculture & combat
             WOODEN_HOE: 214, STONE_HOE: 215, IRON_HOE: 216, GOLD_HOE: 217, DIAMOND_HOE: 218,
             WHEAT_SEEDS: 220, WHEAT: 221, CARROT: 222, POTATO: 223, BAKED_POTATO: 224,
-            BONE_MEAL: 225, SHIELD: 226
+            BONE_MEAL: 225, SHIELD: 226,
+            SLIME_BALL: 227, MAGMA_CREAM: 228, GHAST_TEAR: 229, GOLD_NUGGET: 230
         };
 
 
@@ -6097,6 +6098,8 @@ const BLOCK_DROP_COLORS = {
             PIG: { name: 'Pig', health: 8, speed: 1.9, hostile: false, size: [0.9, 0.9, 0.9], drops: [{id: ITEMS.COOKED_PORK, min:1, max:3}] },
             CHICKEN: { name: 'Chicken', health: 4, speed: 2.2, hostile: false, size: [0.4, 0.7, 0.4], drops: [{id: ITEMS.RAW_CHICKEN, min:1, max:1}, {id: ITEMS.FEATHER, min:0, max:2}] },
             SHEEP: { name: 'Sheep', health: 8, speed: 1.8, hostile: false, size: [0.9, 1.3, 0.7], drops: [{id: ITEMS.WOOL, min:1, max:1}] },
+            WOLF: { name: 'Wolf', health: 8, speed: 2.4, hostile: false, size: [0.6, 0.85, 1.0], drops: [{id: ITEMS.BONE, min:0, max:1}] },
+            SLIME: { name: 'Slime', health: 16, speed: 1.4, hostile: true, size: [1.0, 1.0, 1.0], damage: 2, drops: [{id: 227, min:0, max:2}] },
             ZOMBIE: { name: 'Zombie', health: 20, speed: 2.3, hostile: true, size: [0.6, 1.95, 0.6], damage: 2, drops: [{id: ITEMS.ROTTEN_FLESH, min:0, max:2}] },
             CREEPER: { name: 'Creeper', health: 20, speed: 1.8, hostile: true, size: [0.6, 1.7, 0.6], damage: 0, explodes: true, drops: [{id: ITEMS.GUNPOWDER, min:0, max:2}] },
             SKELETON: { name: 'Skeleton', health: 20, speed: 2.1, hostile: true, size: [0.6, 1.95, 0.6], damage: 2, ranged: true, drops: [{id: ITEMS.BONE, min:0, max:2}, {id: ITEMS.ARROW, min:0, max:2}] },
@@ -6104,7 +6107,13 @@ const BLOCK_DROP_COLORS = {
             CAVE_SPIDER: { name: 'Cave Spider', health: 12, speed: 2.8, hostile: true, size: [0.7, 0.5, 0.7], damage: 2, poison: true, drops: [{id: ITEMS.STRING, min:0, max:2}] },
             ENDERMAN: { name: 'Enderman', health: 40, speed: 2.5, hostile: true, size: [0.6, 2.9, 0.6], damage: 4, teleports: true, drops: [{id: ITEMS.ENDER_PEARL, min:0, max:1}] },
             SILVERFISH: { name: 'Silverfish', health: 8, speed: 2.4, hostile: true, size: [0.4, 0.3, 0.8], damage: 1, drops: [] },
-            BLAZE: { name: 'Blaze', health: 20, speed: 1.6, hostile: true, size: [0.6, 1.8, 0.6], damage: 3, flying: true, fireImmune: true, drops: [{id: ITEMS.BLAZE_ROD, min: 0, max: 1}] },
+            BLAZE: { name: 'Blaze', health: 20, speed: 1.6, hostile: true, size: [0.6, 1.8, 0.6], damage: 3, flying: true, fireImmune: true, nether: true, drops: [{id: ITEMS.BLAZE_ROD, min: 0, max: 1}] },
+            GHAST: { name: 'Ghast', health: 10, speed: 1.2, hostile: true, size: [2.5, 2.5, 2.5], damage: 4, flying: true, fireImmune: true, ranged: true, nether: true, drops: [{id: ITEMS.GUNPOWDER, min:0, max:2}] },
+            MAGMA_CUBE: { name: 'Magma Cube', health: 16, speed: 1.3, hostile: true, size: [1.0, 1.0, 1.0], damage: 3, fireImmune: true, nether: true, drops: [{id: 228, min:0, max:1}] },
+            ZOMBIE_PIGLIN: { name: 'Zombified Piglin', health: 20, speed: 2.2, hostile: true, size: [0.6, 1.95, 0.6], damage: 3, fireImmune: true, nether: true, drops: [{id: ITEMS.GOLD_INGOT, min:0, max:1}, {id: ITEMS.ROTTEN_FLESH, min:0, max:1}] },
+            WITHER_SKELETON: { name: 'Wither Skeleton', health: 20, speed: 2.0, hostile: true, size: [0.7, 2.4, 0.7], damage: 4, fireImmune: true, nether: true, drops: [{id: ITEMS.BONE, min:0, max:2}, {id: ITEMS.COAL, min:0, max:1}] },
+            PIGLIN: { name: 'Piglin', health: 16, speed: 2.2, hostile: true, size: [0.6, 1.95, 0.6], damage: 3, fireImmune: true, nether: true, drops: [{id: ITEMS.GOLD_INGOT, min:0, max:1}] },
+            HOGLIN: { name: 'Hoglin', health: 40, speed: 2.0, hostile: true, size: [1.4, 1.4, 2.0], damage: 4, fireImmune: true, nether: true, drops: [{id: ITEMS.COOKED_PORK, min:1, max:3}, {id: ITEMS.LEATHER, min:0, max:2}] },
             VILLAGER: { name: 'Villager', health: 20, speed: 1.5, hostile: false, size: [0.6, 1.95, 0.6], villager: true, drops: [{id: 153, min: 0, max: 2}] },
             IRON_GOLEM: { name: 'Iron Golem', health: 50, speed: 1.2, hostile: false, size: [1.4, 2.7, 1.4], golem: true, damage: 7, drops: [{id: ITEMS.IRON_INGOT, min: 2, max: 3}, {id: BLOCKS.FLOWER, min: 1, max: 1}] }
         };
@@ -6117,8 +6126,11 @@ const BLOCK_DROP_COLORS = {
             CREEPER: 'creeper/creeper.png', SHEEP: 'sheep/sheep.png', SPIDER: 'spider/spider.png',
             SKELETON: 'skeleton/skeleton.png', ENDERMAN: 'enderman/enderman.png',
             IRON_GOLEM: 'iron_golem/iron_golem.png', VILLAGER: 'villager/villager.png',
-            CAVE_SPIDER: 'spider/spider.png', BLAZE: 'blaze/blaze.png', SLIME: 'slime/slime.png',
-            WOLF: 'wolf/wolf.png'
+            CAVE_SPIDER: 'spider/cave_spider.png', BLAZE: 'blaze/blaze.png', SLIME: 'slime/slime.png',
+            WOLF: 'wolf/wolf.png', GHAST: 'ghast/ghast.png',
+            MAGMA_CUBE: 'slime/magmacube.png', ZOMBIE_PIGLIN: 'zombie_pigman.png',
+            WITHER_SKELETON: 'skeleton/wither_skeleton.png', PIGLIN: 'piglin/piglin.png',
+            HOGLIN: 'hoglin/hoglin.png', CHICKEN: 'chicken.png'
         };
         const entityTextureCache = {}; // type -> THREE.Texture
         const entityImageCache = {};   // type -> HTMLImageElement
@@ -6585,6 +6597,71 @@ const BLOCK_DROP_COLORS = {
                     // Vine accents
                     this.mesh.add(makeBox(0.15, 0.4, 0.05, 0x2e7d32, -0.4, 1.8, 0.36));
                     this.mesh.add(makeBox(0.1, 0.3, 0.05, 0x2e7d32, 0.35, 1.5, 0.36));
+                } else if (t === 'BLAZE') {
+                    this.parts.head = makeBox(0.55, 0.55, 0.55, 0xffcc33, 0, 1.5, 0);
+                    this.parts.body = makeBox(0.4, 0.7, 0.4, 0xffaa00, 0, 0.95, 0);
+                    for (let i = 0; i < 6; i++) {
+                        const a = (i / 6) * Math.PI * 2;
+                        this.mesh.add(makeBox(0.12, 0.5, 0.12, 0xff8800, Math.cos(a)*0.45, 0.7, Math.sin(a)*0.45));
+                    }
+                    this.mesh.add(this.parts.head, this.parts.body);
+                } else if (t === 'GHAST') {
+                    this.parts.body = makeBox(2.2, 2.2, 2.2, 0xf0f0f0, 0, 1.5, 0);
+                    this.mesh.add(this.parts.body);
+                    for (let i = 0; i < 9; i++) {
+                        const lx = ((i % 3) - 1) * 0.5;
+                        const lz = (Math.floor(i / 3) - 1) * 0.5;
+                        this.mesh.add(makeBox(0.18, 0.9, 0.18, 0xe0e0e0, lx, 0.2, lz));
+                    }
+                } else if (t === 'MAGMA_CUBE' || t === 'SLIME') {
+                    const col = t === 'MAGMA_CUBE' ? 0xff4400 : 0x66bb6a;
+                    this.parts.body = makeBox(1.0, 1.0, 1.0, col, 0, 0.5, 0);
+                    this.mesh.add(this.parts.body);
+                    this.mesh.add(makeBox(0.2, 0.2, 0.05, 0x111111, -0.25, 0.7, 0.51));
+                    this.mesh.add(makeBox(0.2, 0.2, 0.05, 0x111111, 0.25, 0.7, 0.51));
+                } else if (t === 'ZOMBIE_PIGLIN' || t === 'PIGLIN') {
+                    const skin = t === 'PIGLIN' ? 0xe8a070 : 0x5a8a5a;
+                    this.parts.head = makeBox(0.5, 0.5, 0.5, skin, 0, 1.7, 0);
+                    this.parts.body = makeBox(0.55, 0.8, 0.3, skin, 0, 1.1, 0);
+                    this.parts.legL = makeBox(0.25, 0.7, 0.25, skin, -0.15, 0.35, 0);
+                    this.parts.legR = makeBox(0.25, 0.7, 0.25, skin, 0.15, 0.35, 0);
+                    this.parts.armL = makeBox(0.22, 0.7, 0.22, skin, -0.4, 1.1, 0);
+                    this.parts.armR = makeBox(0.22, 0.7, 0.22, skin, 0.4, 1.1, 0);
+                    this.mesh.add(makeBox(0.35, 0.25, 0.25, 0xffa0a0, 0, 1.55, 0.3));
+                    this.mesh.add(this.parts.head, this.parts.body, this.parts.legL, this.parts.legR, this.parts.armL, this.parts.armR);
+                } else if (t === 'WITHER_SKELETON') {
+                    this.parts.head = makeBox(0.55, 0.55, 0.55, 0x222222, 0, 2.1, 0);
+                    this.parts.body = makeBox(0.45, 0.9, 0.25, 0x333333, 0, 1.4, 0);
+                    this.parts.legL = makeBox(0.2, 0.9, 0.2, 0x222222, -0.12, 0.45, 0);
+                    this.parts.legR = makeBox(0.2, 0.9, 0.2, 0x222222, 0.12, 0.45, 0);
+                    this.parts.armL = makeBox(0.18, 0.9, 0.18, 0x222222, -0.35, 1.4, 0);
+                    this.parts.armR = makeBox(0.18, 0.9, 0.18, 0x222222, 0.35, 1.4, 0);
+                    this.mesh.add(this.parts.head, this.parts.body, this.parts.legL, this.parts.legR, this.parts.armL, this.parts.armR);
+                } else if (t === 'HOGLIN') {
+                    this.parts.body = makeBox(1.4, 1.0, 2.0, 0xc4a070, 0, 0.9, 0);
+                    this.parts.head = makeBox(0.7, 0.6, 0.8, 0xb89060, 0, 1.2, 1.2);
+                    this.parts.legFL = makeBox(0.3, 0.6, 0.3, 0x8d6e50, -0.4, 0.3, 0.6);
+                    this.parts.legFR = makeBox(0.3, 0.6, 0.3, 0x8d6e50, 0.4, 0.3, 0.6);
+                    this.parts.legBL = makeBox(0.3, 0.6, 0.3, 0x8d6e50, -0.4, 0.3, -0.6);
+                    this.parts.legBR = makeBox(0.3, 0.6, 0.3, 0x8d6e50, 0.4, 0.3, -0.6);
+                    this.mesh.add(makeBox(0.1, 0.35, 0.1, 0xfff8e1, -0.25, 0.95, 1.55));
+                    this.mesh.add(makeBox(0.1, 0.35, 0.1, 0xfff8e1, 0.25, 0.95, 1.55));
+                    this.mesh.add(this.parts.body, this.parts.head, this.parts.legFL, this.parts.legFR, this.parts.legBL, this.parts.legBR);
+                } else if (t === 'WOLF') {
+                    this.parts.body = makeBox(0.5, 0.45, 0.9, 0xbfbfbf, 0, 0.55, 0);
+                    this.parts.head = makeBox(0.4, 0.4, 0.4, 0xd0d0d0, 0, 0.7, 0.55);
+                    this.parts.legFL = makeBox(0.15, 0.35, 0.15, 0xa0a0a0, -0.15, 0.18, 0.3);
+                    this.parts.legFR = makeBox(0.15, 0.35, 0.15, 0xa0a0a0, 0.15, 0.18, 0.3);
+                    this.parts.legBL = makeBox(0.15, 0.35, 0.15, 0xa0a0a0, -0.15, 0.18, -0.3);
+                    this.parts.legBR = makeBox(0.15, 0.35, 0.15, 0xa0a0a0, 0.15, 0.18, -0.3);
+                    this.mesh.add(makeBox(0.15, 0.4, 0.15, 0xbfbfbf, 0, 0.7, -0.5));
+                    this.mesh.add(this.parts.body, this.parts.head, this.parts.legFL, this.parts.legFR, this.parts.legBL, this.parts.legBR);
+                } else {
+                    this.parts.head = makeBox(0.5, 0.5, 0.5, 0xaaaaaa, 0, 1.7, 0);
+                    this.parts.body = makeBox(0.5, 0.75, 0.3, 0x888888, 0, 1.1, 0);
+                    this.parts.legL = makeBox(0.22, 0.7, 0.22, 0x666666, -0.14, 0.35, 0);
+                    this.parts.legR = makeBox(0.22, 0.7, 0.22, 0x666666, 0.14, 0.35, 0);
+                    this.mesh.add(this.parts.head, this.parts.body, this.parts.legL, this.parts.legR);
                 }
             }
 
@@ -10819,97 +10896,93 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
             constructor(hostEl) {
                 this.host = hostEl;
                 this.running = true;
+                this.MENU_SEED = 6751724;
+
                 this.scene = new THREE.Scene();
                 this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
-                this.camera.position.set(0, 8, 28);
-                this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+                this.camera.position.set(0, 28, 48);
+
+                this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance' });
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
                 hostEl.innerHTML = '';
                 hostEl.appendChild(this.renderer.domElement);
+                hostEl.style.display = 'block';
 
-                this.scene.background = new THREE.Color(0x7eb6e8);
-                this.scene.fog = new THREE.Fog(0x9ec8e8, 40, 120);
-
-                this.scene.add(new THREE.AmbientLight(0xffffff, 0.75));
-                const sun = new THREE.DirectionalLight(0xfff5d6, 1.05);
-                sun.position.set(30, 50, 20);
+                this.scene.background = new THREE.Color(0x87CEEB);
+                this.scene.fog = new THREE.Fog(0x9ec8e8, 50, 140);
+                this.scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+                const sun = new THREE.DirectionalLight(0xfff5d6, 1.1);
+                sun.position.set(40, 80, 30);
                 this.scene.add(sun);
-                this.scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a7a32, 0.5));
+                this.scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a7a32, 0.48));
 
-                this.world = new THREE.Group();
-                const grassM = new THREE.MeshLambertMaterial({ color: 0x5b8c3e });
-                const dirtM = new THREE.MeshLambertMaterial({ color: 0x7a5c2e });
-                const stoneM = new THREE.MeshLambertMaterial({ color: 0x7a7a7a });
-                const sandM = new THREE.MeshLambertMaterial({ color: 0xd4c07a });
-                const waterM = new THREE.MeshLambertMaterial({ color: 0x3a80c0 });
-                const leafM = new THREE.MeshLambertMaterial({ color: 0x3d8b3d });
-                const logM = new THREE.MeshLambertMaterial({ color: 0x6b4423 });
-                const snowM = new THREE.MeshLambertMaterial({ color: 0xf0f4ff });
-                const box = new THREE.BoxGeometry(1, 1, 1);
+                let texAtlas = null;
+                try { if (window.game && window.game.texAtlas) texAtlas = window.game.texAtlas; } catch (e) {}
+                if (!texAtlas) {
+                    try {
+                        const atlasData = generateTextureAtlas();
+                        texAtlas = atlasData.tex;
+                    } catch (e) { console.warn('MenuBackgroundWorld atlas', e); }
+                }
 
-                const size = 16;
-                for (let x = -size; x <= size; x++) {
-                    for (let z = -size; z <= size; z++) {
-                        const dist = Math.sqrt(x * x + z * z);
-                        if (dist > size) continue;
-                        if (dist > 10 && ((x + z) & 1)) continue;
-                        const hNoise = Math.sin(x * 0.35) * Math.cos(z * 0.28) * 2.2
-                            + Math.sin(x * 0.12 + z * 0.09) * 1.4
-                            + Math.cos(x * 0.55) * 0.6;
-                        let h = Math.floor(2 + hNoise * (1 - dist / size));
-                        if (h < 0) h = 0;
-                        if (h > 5) h = 5;
-                        if (h <= 1 && dist < size - 2) {
-                            const w = new THREE.Mesh(box, waterM);
-                            w.position.set(x, 0.5, z);
-                            this.world.add(w);
-                            continue;
-                        }
-                        for (let y = 0; y <= h; y++) {
-                            let mat = stoneM;
-                            if (y === h) {
-                                if (h >= 6) mat = snowM;
-                                else if (h <= 2 && dist > size * 0.55) mat = sandM;
-                                else mat = grassM;
-                            } else if (y >= h - 2) mat = dirtM;
-                            const m = new THREE.Mesh(box, mat);
-                            m.position.set(x, y + 0.5, z);
-                            this.world.add(m);
-                        }
-                        if (h >= 3 && h < 6 && Math.random() < 0.03 && dist < size - 4) {
-                            const th = 2 + Math.floor(Math.random() * 2);
-                            for (let ty = 1; ty <= th; ty++) {
-                                const tr = new THREE.Mesh(box, logM);
-                                tr.position.set(x, h + ty + 0.5, z);
-                                this.world.add(tr);
-                            }
-                            for (let lx = -1; lx <= 1; lx++) {
-                                for (let lz = -1; lz <= 1; lz++) {
-                                    for (let ly = 0; ly <= 1; ly++) {
-                                        if (Math.abs(lx) + Math.abs(lz) + ly > 2) continue;
-                                        const lf = new THREE.Mesh(box, leafM);
-                                        lf.position.set(x + lx, h + th + ly + 0.5, z + lz);
-                                        this.world.add(lf);
-                                    }
-                                }
+                this.voxelWorld = null;
+                this._lookY = 32;
+                this._center = new THREE.Vector3(0, 40, 0);
+                if (texAtlas) {
+                    try {
+                        this.voxelWorld = new World(this.scene, texAtlas, this.MENU_SEED, 'overworld');
+                        const rd = Math.min(RENDER_DISTANCE, 5);
+                        for (let cx = -rd; cx <= rd; cx++) {
+                            for (let cz = -rd; cz <= rd; cz++) {
+                                if (Math.hypot(cx, cz) <= rd + 0.1) this.voxelWorld.requestChunk(cx, cz);
                             }
                         }
+                    } catch (e) {
+                        console.warn('MenuBackgroundWorld world gen failed', e);
+                        this.voxelWorld = null;
                     }
                 }
-                this.scene.add(this.world);
 
                 const sunBall = new THREE.Mesh(
-                    new THREE.SphereGeometry(2.2, 12, 12),
-                    new THREE.MeshBasicMaterial({ color: 0xffe066 })
+                    new THREE.SphereGeometry(2.4, 12, 12),
+                    new THREE.MeshBasicMaterial({ color: 0xffe066, fog: false })
                 );
-                sunBall.position.set(40, 28, -30);
+                sunBall.position.set(60, 48, -40);
                 this.scene.add(sunBall);
 
                 this._t = 0;
+                this._heightSampled = false;
                 this.animate = this.animate.bind(this);
-                window.addEventListener('resize', () => this.onResize());
+                this._onResize = () => this.onResize();
+                window.addEventListener('resize', this._onResize);
                 this.animate();
+            }
+
+            sampleSurfaceHeight() {
+                if (!this.voxelWorld || this._heightSampled) return;
+                let loaded = 0;
+                for (const ch of this.voxelWorld.chunks.values()) if (ch.loaded) loaded++;
+                if (loaded < 4) return;
+                let bestY = 28;
+                for (let y = CHUNK_HEIGHT - 2; y >= 4; y--) {
+                    const id = this.voxelWorld.getBlock(0, y, 0);
+                    if (id && id !== BLOCKS.AIR && id !== BLOCKS.WATER && BlockRegistry[id]?.solid) {
+                        bestY = y + 1; break;
+                    }
+                }
+                let sum = bestY, n = 1;
+                for (const [sx, sz] of [[8,0],[-8,0],[0,8],[0,-8],[16,16],[-12,8]]) {
+                    for (let y = CHUNK_HEIGHT - 2; y >= 4; y--) {
+                        const id = this.voxelWorld.getBlock(sx, y, sz);
+                        if (id && id !== BLOCKS.AIR && id !== BLOCKS.WATER && BlockRegistry[id]?.solid) {
+                            sum += y + 1; n++; break;
+                        }
+                    }
+                }
+                this._lookY = sum / n;
+                this._center = new THREE.Vector3(0, this._lookY + 4, 0);
+                this._heightSampled = true;
             }
 
             onResize() {
@@ -10923,26 +10996,50 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                 if (!this.running) return;
                 requestAnimationFrame(this.animate);
                 this._t += 0.016;
-                const ang = this._t * 0.08;
-                const rad = 26;
+                if (this.voxelWorld) {
+                    try { this.voxelWorld.update(this._center || new THREE.Vector3(0, 40, 0)); } catch (e) {}
+                    this.sampleSurfaceHeight();
+                }
+                const ang = this._t * 0.045;
+                const rad = 42;
+                const lookY = this._lookY || 28;
                 this.camera.position.x = Math.sin(ang) * rad;
                 this.camera.position.z = Math.cos(ang) * rad;
-                this.camera.position.y = 10 + Math.sin(this._t * 0.2) * 1.5;
-                this.camera.lookAt(0, 3, 0);
-                if (this.world) this.world.rotation.y = Math.sin(this._t * 0.05) * 0.02;
+                this.camera.position.y = lookY + 18 + Math.sin(this._t * 0.15) * 2.5;
+                this.camera.lookAt(0, lookY + 2, 0);
                 this.renderer.render(this.scene, this.camera);
             }
 
             dispose() {
                 this.running = false;
+                try { window.removeEventListener('resize', this._onResize); } catch (e) {}
+                try {
+                    if (this.voxelWorld) {
+                        if (this.voxelWorld.workers) {
+                            for (const w of this.voxelWorld.workers) { try { w.terminate(); } catch (e2) {} }
+                            this.voxelWorld.workers = [];
+                        }
+                        if (this.voxelWorld.chunks) {
+                            for (const ch of this.voxelWorld.chunks.values()) {
+                                try {
+                                    if (ch.mesh) { this.scene.remove(ch.mesh); if (ch.mesh.geometry) ch.mesh.geometry.dispose(); }
+                                    if (ch.waterMesh) { this.scene.remove(ch.waterMesh); if (ch.waterMesh.geometry) ch.waterMesh.geometry.dispose(); }
+                                } catch (e3) {}
+                            }
+                            this.voxelWorld.chunks.clear();
+                        }
+                    }
+                } catch (e) {}
                 try {
                     this.renderer.dispose();
                     if (this.renderer.domElement && this.renderer.domElement.parentNode) {
                         this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
                     }
                 } catch (e) {}
+                this.voxelWorld = null;
             }
         }
+
 
         class Game {
             constructor() {
@@ -12539,21 +12636,21 @@ Save as PNG and upload in-game.`;
                 const px = Math.floor(this.player.pos.x);
                 const py = Math.floor(this.player.pos.y);
                 const pz = Math.floor(this.player.pos.z);
-                // Feet + body cells
-                const keys = [
-                    px + ',' + py + ',' + pz,
-                    px + ',' + (py + 1) + ',' + pz
-                ];
                 let inLit = false;
                 if (this.activePortals) {
-                    for (const k of keys) if (this.activePortals.has(k)) inLit = true;
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dz = -1; dz <= 1; dz++) {
+                            for (const oy of [0, 1, -1]) {
+                                if (this.activePortals.has((px+dx)+','+(py+oy)+','+(pz+dz))) inLit = true;
+                            }
+                        }
+                    }
                 }
-                const inFrame = this.isInsidePortalFrame(px, py, pz) || this.isInsidePortalFrame(px, py - 1, pz);
+                const inFrame = this.isInsidePortalFrame(px, py, pz) || this.isInsidePortalFrame(px, py + 1, pz) || this.isInsidePortalFrame(px, py - 1, pz);
                 const hasFire = this.portalHasFireNear(px, py, pz);
-                // Standing in a valid lit portal (activated cells, or fire inside frame)
-                if (inFrame && (inLit || hasFire)) {
-                    this.portalTimer = (this.portalTimer || 0) + 0.05;
-                    if (this.portalTimer > 1.0) {
+                if ((inFrame && (inLit || hasFire)) || inLit) {
+                    this.portalTimer = (this.portalTimer || 0) + 0.08;
+                    if (this.portalTimer > 1.2) {
                         this.portalTimer = 0;
                         try { audio.playSound('portal'); } catch (e) {}
                         this.notify('Entering portal...');
@@ -12564,14 +12661,12 @@ Save as PNG and upload in-game.`;
                             this.switchDimension('overworld');
                         }
                     }
-                } else if (inFrame && !inLit && !hasFire) {
-                    // Unlit frame — nudge player to light it
-                    this.portalTimer = 0;
                 } else {
-                    this.portalTimer = Math.max(0, (this.portalTimer || 0) - 0.12);
+                    this.portalTimer = Math.max(0, (this.portalTimer || 0) - 0.15);
                 }
             }
 
+            
             portalHasFireNear(x, y, z) {
                 for (let dx = -1; dx <= 1; dx++) {
                     for (let dy = -1; dy <= 2; dy++) {
@@ -12585,101 +12680,140 @@ Save as PNG and upload in-game.`;
 
             // True if (x,y,z) is an air/fire cell inside a 1-wide or 2-wide obsidian portal frame
             isInsidePortalFrame(x, y, z) {
-                const airish = (bx, by, bz) => {
-                    const id = this.world.getBlock(bx, by, bz);
-                    return !id || id === BLOCKS.AIR || id === BLOCKS.FIRE;
-                };
-                if (!airish(x, y, z)) return false;
-
-                const obs = (bx, by, bz) => this.world.getBlock(bx, by, bz) === BLOCKS.OBSIDIAN;
-
-                // Heights: 2 or 3 tall interior (player may stand on bottom air)
-                for (const h of [2, 3]) {
-                    // All interior column cells must be air/fire
-                    let colAir = true;
-                    for (let i = 0; i < h; i++) {
-                        if (!airish(x, y + i, z)) { colAir = false; break; }
-                    }
-                    if (!colAir) continue;
-
-                    // ---- X-axis frame (portal faces Z) ----
-                    // 1-wide: obs at x-1 and x+1
-                    let x1 = true;
-                    for (let i = 0; i < h; i++) {
-                        if (!obs(x - 1, y + i, z) || !obs(x + 1, y + i, z)) x1 = false;
-                    }
-                    if (x1 && (obs(x, y - 1, z) || obs(x, y + h, z))) return true;
-
-                    // 2-wide left cell: obs at x-1, air at x+1, obs at x+2
-                    let x2L = airish(x + 1, y, z);
-                    for (let i = 0; i < h && x2L; i++) {
-                        if (!obs(x - 1, y + i, z) || !obs(x + 2, y + i, z) || !airish(x + 1, y + i, z)) x2L = false;
-                    }
-                    if (x2L && (obs(x, y - 1, z) || obs(x + 1, y - 1, z) || obs(x, y + h, z) || obs(x + 1, y + h, z))) return true;
-
-                    // 2-wide right cell: obs at x+1, air at x-1, obs at x-2
-                    let x2R = airish(x - 1, y, z);
-                    for (let i = 0; i < h && x2R; i++) {
-                        if (!obs(x + 1, y + i, z) || !obs(x - 2, y + i, z) || !airish(x - 1, y + i, z)) x2R = false;
-                    }
-                    if (x2R && (obs(x, y - 1, z) || obs(x - 1, y - 1, z) || obs(x, y + h, z) || obs(x - 1, y + h, z))) return true;
-
-                    // ---- Z-axis frame (portal faces X) ----
-                    let z1 = true;
-                    for (let i = 0; i < h; i++) {
-                        if (!obs(x, y + i, z - 1) || !obs(x, y + i, z + 1)) z1 = false;
-                    }
-                    if (z1 && (obs(x, y - 1, z) || obs(x, y + h, z))) return true;
-
-                    let z2L = airish(x, y, z + 1);
-                    for (let i = 0; i < h && z2L; i++) {
-                        if (!obs(x, y + i, z - 1) || !obs(x, y + i, z + 2) || !airish(x, y + i, z + 1)) z2L = false;
-                    }
-                    if (z2L && (obs(x, y - 1, z) || obs(x, y - 1, z + 1) || obs(x, y + h, z) || obs(x, y + h, z + 1))) return true;
-
-                    let z2R = airish(x, y, z - 1);
-                    for (let i = 0; i < h && z2R; i++) {
-                        if (!obs(x, y + i, z + 1) || !obs(x, y + i, z - 2) || !airish(x, y + i, z - 1)) z2R = false;
-                    }
-                    if (z2R && (obs(x, y - 1, z) || obs(x, y - 1, z - 1) || obs(x, y + h, z) || obs(x, y + h, z - 1))) return true;
-                }
-                return false;
-            }
-
-            tryLightPortal(fx, fy, fz) {
-                if (!this.activePortals) this.activePortals = new Set();
-                let lit = 0;
-                for (let dx = -5; dx <= 5; dx++) {
-                    for (let dy = -2; dy <= 5; dy++) {
-                        for (let dz = -5; dz <= 5; dz++) {
-                            const x = fx + dx, y = fy + dy, z = fz + dz;
-                            if (!this.isInsidePortalFrame(x, y, z)) continue;
-                            for (let h = 0; h < 3; h++) {
-                                this.activePortals.add(x + ',' + (y + h) + ',' + z);
-                            }
-                            // Ensure a long-lived fire marker in the portal
-                            const id = this.world.getBlock(x, y, z);
-                            if (!id || id === BLOCKS.AIR) {
-                                this.world.setBlock(x, y, z, BLOCKS.FIRE);
-                                if (this.mp && this.mp.enabled) this.mp.sendBlock(x, y, z, BLOCKS.FIRE);
-                                this.registerFire(x, y, z);
-                                if (this.fireTimers) this.fireTimers[x + ',' + y + ',' + z] = 99999;
-                            } else if (id === BLOCKS.FIRE) {
-                                if (this.fireTimers) this.fireTimers[x + ',' + y + ',' + z] = 99999;
-                            }
-                            lit++;
+                const id = this.world.getBlock(x, y, z);
+                if (id && id !== BLOCKS.AIR && id !== BLOCKS.FIRE) return false;
+                if (typeof this.findPortalFramesNear === 'function') {
+                    const frames = this.findPortalFramesNear(x, y, z);
+                    for (const f of frames) {
+                        if (f.axis === 'x') {
+                            if (z === f.z0 && x >= f.x0 && x < f.x0 + f.w && y >= f.y0 && y < f.y0 + f.h) return true;
+                        } else {
+                            if (x === f.x0 && z >= f.z0 && z < f.z0 + f.w && y >= f.y0 && y < f.y0 + f.h) return true;
                         }
                     }
                 }
-                if (lit > 0) {
-                    this.notify('Nether portal activated! Walk inside to travel');
-                    try { audio.playSound('portal'); } catch (e) {}
-                    return true;
-                }
-                this.notify('No portal frame found — need obs sides + floor/ceiling');
+                if (this.activePortals && this.activePortals.has(x + ',' + y + ',' + z)) return true;
                 return false;
             }
 
+            
+            tryLightPortal(fx, fy, fz) {
+                if (!this.activePortals) this.activePortals = new Set();
+                let lit = 0;
+                const tried = new Set();
+                for (let ox = -6; ox <= 6; ox++) {
+                    for (let oy = -3; oy <= 4; oy++) {
+                        for (let oz = -6; oz <= 6; oz++) {
+                            const bx = fx + ox, by = fy + oy, bz = fz + oz;
+                            const frames = this.findPortalFramesNear(bx, by, bz);
+                            for (const frame of frames) {
+                                const key = frame.axis + ':' + frame.x0 + ',' + frame.y0 + ',' + frame.z0 + ':' + frame.w + 'x' + frame.h;
+                                if (tried.has(key)) continue;
+                                tried.add(key);
+                                for (let ix = 0; ix < frame.w; ix++) {
+                                    for (let iy = 0; iy < frame.h; iy++) {
+                                        let px, py, pz;
+                                        if (frame.axis === 'x') {
+                                            px = frame.x0 + ix; py = frame.y0 + iy; pz = frame.z0;
+                                        } else {
+                                            px = frame.x0; py = frame.y0 + iy; pz = frame.z0 + ix;
+                                        }
+                                        const id = this.world.getBlock(px, py, pz);
+                                        if (!id || id === BLOCKS.AIR || id === BLOCKS.FIRE) {
+                                            this.world.setBlock(px, py, pz, BLOCKS.FIRE);
+                                            if (this.mp && this.mp.enabled) this.mp.sendBlock(px, py, pz, BLOCKS.FIRE);
+                                            this.registerFire(px, py, pz);
+                                            if (this.fireTimers) this.fireTimers[px + ',' + py + ',' + pz] = 99999;
+                                        }
+                                        this.activePortals.add(px + ',' + py + ',' + pz);
+                                        lit++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (lit === 0 && this.isInsidePortalFrame(fx, fy, fz)) {
+                    for (let h = 0; h < 3; h++) {
+                        const id = this.world.getBlock(fx, fy + h, fz);
+                        if (!id || id === BLOCKS.AIR || id === BLOCKS.FIRE) {
+                            this.world.setBlock(fx, fy + h, fz, BLOCKS.FIRE);
+                            if (this.mp && this.mp.enabled) this.mp.sendBlock(fx, fy + h, fz, BLOCKS.FIRE);
+                        }
+                        this.activePortals.add(fx + ',' + (fy + h) + ',' + fz);
+                        if (this.fireTimers) this.fireTimers[fx + ',' + (fy + h) + ',' + fz] = 99999;
+                        lit++;
+                    }
+                }
+                if (lit > 0) {
+                    this.notify('Nether portal activated! Stand inside to travel');
+                    try { audio.playSound('portal'); } catch (e) {}
+                    return true;
+                }
+                this.notify('Build a portal: 4×5 obsidian frame (2×3 inside), light with flint & steel');
+                return false;
+            }
+
+            findPortalFramesNear(cx, cy, cz) {
+                const frames = [];
+                const obs = (x, y, z) => this.world.getBlock(x, y, z) === BLOCKS.OBSIDIAN;
+                const empty = (x, y, z) => {
+                    const id = this.world.getBlock(x, y, z);
+                    return !id || id === BLOCKS.AIR || id === BLOCKS.FIRE;
+                };
+                for (const axis of ['x', 'z']) {
+                    for (const w of [2, 1]) {
+                        for (const h of [3, 2]) {
+                            for (let dx = -w; dx <= 0; dx++) {
+                                for (let dy = -h; dy <= 0; dy++) {
+                                    let x0, y0, z0;
+                                    if (axis === 'x') { x0 = cx + dx; y0 = cy + dy; z0 = cz; }
+                                    else { x0 = cx; y0 = cy + dy; z0 = cz + dx; }
+                                    let ok = true;
+                                    for (let ix = 0; ix < w && ok; ix++) {
+                                        for (let iy = 0; iy < h && ok; iy++) {
+                                            const px = axis === 'x' ? x0 + ix : x0;
+                                            const py = y0 + iy;
+                                            const pz = axis === 'x' ? z0 : z0 + ix;
+                                            if (!empty(px, py, pz)) ok = false;
+                                        }
+                                    }
+                                    if (!ok) continue;
+                                    for (let iy = 0; iy < h && ok; iy++) {
+                                        if (axis === 'x') {
+                                            if (!obs(x0 - 1, y0 + iy, z0) || !obs(x0 + w, y0 + iy, z0)) ok = false;
+                                        } else {
+                                            if (!obs(x0, y0 + iy, z0 - 1) || !obs(x0, y0 + iy, z0 + w)) ok = false;
+                                        }
+                                    }
+                                    if (!ok) continue;
+                                    let floorOk = false, ceilOk = false;
+                                    for (let ix = 0; ix < w; ix++) {
+                                        if (axis === 'x') {
+                                            if (obs(x0 + ix, y0 - 1, z0)) floorOk = true;
+                                            if (obs(x0 + ix, y0 + h, z0)) ceilOk = true;
+                                        } else {
+                                            if (obs(x0, y0 - 1, z0 + ix)) floorOk = true;
+                                            if (obs(x0, y0 + h, z0 + ix)) ceilOk = true;
+                                        }
+                                    }
+                                    if (axis === 'x') {
+                                        if (obs(x0 - 1, y0 - 1, z0) || obs(x0 + w, y0 - 1, z0)) floorOk = true;
+                                        if (obs(x0 - 1, y0 + h, z0) || obs(x0 + w, y0 + h, z0)) ceilOk = true;
+                                    } else {
+                                        if (obs(x0, y0 - 1, z0 - 1) || obs(x0, y0 - 1, z0 + w)) floorOk = true;
+                                        if (obs(x0, y0 + h, z0 - 1) || obs(x0, y0 + h, z0 + w)) ceilOk = true;
+                                    }
+                                    if (floorOk && ceilOk) frames.push({ axis, x0, y0, z0, w, h });
+                                }
+                            }
+                        }
+                    }
+                }
+                return frames;
+            }
+
+            
             registerFire(x, y, z) {
                 if (!this.fireTimers) this.fireTimers = {};
                 const k = x + ',' + y + ',' + z;
@@ -13024,35 +13158,42 @@ Save as PNG and upload in-game.`;
             spawnHostileMobs() {
                 // Clients: host is authority for hostile spawns
                 if (this.mp && this.mp.enabled && !this.mp.isHost) return;
-                if (this.mobs.filter(m => m.data.hostile && !m.dead).length > 14) return;
+                if (this.mobs.filter(m => m.data.hostile && !m.dead).length > 18) return;
                 const px = this.player.pos.x, pz = this.player.pos.z;
                 const inNether = this.world && this.world.dimension === 'nether';
-                for (let i = 0; i < 2; i++) {
+                const count = inNether ? 3 : 2;
+                for (let i = 0; i < count; i++) {
                     const angle = Math.random() * Math.PI * 2;
-                    const dist = 16 + Math.random() * 14;
+                    const dist = 14 + Math.random() * 16;
                     const x = px + Math.cos(angle) * dist;
                     const z = pz + Math.sin(angle) * dist;
                     let type;
                     if (inNether) {
-                        // Blazes near fortresses; otherwise nether hostiles
                         const r = Math.random();
-                        if (r < 0.55) type = 'BLAZE';
-                        else if (r < 0.8) type = 'ZOMBIE';
-                        else type = 'SKELETON';
+                        if (r < 0.18) type = 'BLAZE';
+                        else if (r < 0.32) type = 'GHAST';
+                        else if (r < 0.48) type = 'ZOMBIE_PIGLIN';
+                        else if (r < 0.60) type = 'MAGMA_CUBE';
+                        else if (r < 0.72) type = 'WITHER_SKELETON';
+                        else if (r < 0.84) type = 'PIGLIN';
+                        else if (r < 0.94) type = 'HOGLIN';
+                        else type = 'BLAZE';
                     } else {
                         const r = Math.random();
-                        if (r < 0.3) type = 'ZOMBIE';
-                        else if (r < 0.5) type = 'SKELETON';
-                        else if (r < 0.65) type = 'SPIDER';
-                        else if (r < 0.8) type = 'CREEPER';
-                        else if (r < 0.9) type = 'CAVE_SPIDER';
-                        else if (r < 0.97) type = 'ENDERMAN';
+                        if (r < 0.22) type = 'ZOMBIE';
+                        else if (r < 0.40) type = 'SKELETON';
+                        else if (r < 0.54) type = 'SPIDER';
+                        else if (r < 0.68) type = 'CREEPER';
+                        else if (r < 0.78) type = 'CAVE_SPIDER';
+                        else if (r < 0.86) type = 'SLIME';
+                        else if (r < 0.93) type = 'ENDERMAN';
                         else type = 'SILVERFISH';
                     }
                     this.spawnMobAt(type, x, z);
                 }
             }
 
+            
             applyHostMobs(list) {
                 if (!list || !this.world || !this.scene) return;
                 if (!this.mobs) this.mobs = [];
@@ -13131,7 +13272,7 @@ Save as PNG and upload in-game.`;
             async loadWorld(name) {
                 this.clearChat();
                 document.getElementById('main-menu').style.display = 'none';
-                try { const _mbg=document.getElementById('menu-world-bg'); if(_mbg)_mbg.style.display='none'; if(this.renderer&&this.renderer.domElement)this.renderer.domElement.style.display='block'; } catch(e){}
+                try { const _mbg=document.getElementById('menu-world-bg'); if(_mbg)_mbg.style.display='none'; if(window._menuBgWorld){try{window._menuBgWorld.dispose();}catch(_e){} window._menuBgWorld=null;} if(this.renderer&&this.renderer.domElement)this.renderer.domElement.style.display='block'; } catch(e){}
                 document.getElementById('hud').style.display = 'block';
                 await saveSys.init();
                 audio.init();
@@ -13222,7 +13363,7 @@ Save as PNG and upload in-game.`;
                         if (!full) { this.notify('Could not load replay'); return; }
                         document.getElementById('menu-replay').style.display = 'none';
                         document.getElementById('main-menu').style.display = 'none';
-                        try { const _mbg=document.getElementById('menu-world-bg'); if(_mbg)_mbg.style.display='none'; if(this.renderer&&this.renderer.domElement)this.renderer.domElement.style.display='block'; } catch(e){}
+                        try { const _mbg=document.getElementById('menu-world-bg'); if(_mbg)_mbg.style.display='none'; if(window._menuBgWorld){try{window._menuBgWorld.dispose();}catch(_e){} window._menuBgWorld=null;} if(this.renderer&&this.renderer.domElement)this.renderer.domElement.style.display='block'; } catch(e){}
                         await this.replay.playRecording(full);
                     };
                     card.querySelector('[data-act=del]').onclick = async (ev) => {
@@ -16662,8 +16803,9 @@ Save as PNG and upload in-game.`;
                         }
                     }
 
-                    // Spawn hostiles at night
-                    if (this.isNight && Math.random() < 0.015) {
+                    // Spawn hostiles at night (overworld) or anytime in the Nether
+                    const inNetherDim = this.world && this.world.dimension === 'nether';
+                    if ((inNetherDim && Math.random() < 0.025) || (this.isNight && Math.random() < 0.015)) {
                         this.spawnHostileMobs();
                     }
 
