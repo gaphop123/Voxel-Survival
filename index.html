@@ -950,14 +950,109 @@
         }
         .replay-card:hover { background: #9e9e9e; }
         .replay-card .rp-meta { font-size: 9px; color: #333; margin-top: 4px; opacity: 0.9; }
+
+        /* ===== Boot loading screen ===== */
+        #boot-loading {
+            position: fixed; inset: 0; z-index: 100000;
+            background: #0a0a12;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            font-family: 'Press Start 2P', monospace; color: #eee;
+            transition: opacity 0.55s ease, visibility 0.55s;
+        }
+        #boot-loading.boot-done {
+            opacity: 0; visibility: hidden; pointer-events: none;
+        }
+        #boot-loading .boot-logo {
+            font-size: clamp(18px, 4vw, 28px);
+            color: #fff;
+            text-shadow: 3px 3px 0 #3f3f3f;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        #boot-loading .boot-sub {
+            font-size: 10px; color: #8cf; margin-bottom: 22px;
+            text-shadow: 1px 1px 0 #000;
+        }
+        #boot-canvas-wrap {
+            width: min(280px, 70vw); height: min(280px, 70vw);
+            margin: 0 auto 20px; position: relative;
+            border: 3px solid #373737;
+            border-top-color: #fff; border-left-color: #fff;
+            background: #1a2740;
+            box-shadow: inset 1px 1px 0 #fff, 4px 4px 0 rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        #boot-canvas-wrap canvas {
+            width: 100% !important; height: 100% !important;
+            display: block; image-rendering: pixelated;
+        }
+        #boot-bar-outer {
+            width: min(320px, 80vw); height: 18px;
+            background: #222; border: 3px solid #373737;
+            border-top-color: #fff; border-left-color: #fff;
+            box-sizing: border-box; margin: 8px 0;
+        }
+        #boot-bar-inner {
+            height: 100%; width: 0%;
+            background: linear-gradient(180deg, #7cfc6a 0%, #3d9e2f 50%, #2e7d22 100%);
+            transition: width 0.25s ease;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.25);
+        }
+        #boot-status {
+            font-size: 10px; color: #aaa; margin-top: 10px;
+            text-align: center; min-height: 28px; max-width: 90vw;
+            line-height: 1.5;
+        }
+        #boot-pct {
+            font-size: 11px; color: #cfc; margin-top: 4px;
+        }
+
+        /* Menu spinning world canvas behind UI */
+        #menu-world-bg {
+            position: fixed; inset: 0; z-index: 0;
+            pointer-events: none;
+            background: #87CEEB;
+        }
+        #menu-world-bg canvas {
+            width: 100% !important; height: 100% !important;
+            display: block;
+        }
+        #main-menu {
+            z-index: 100;
+            background: transparent !important;
+        }
+        #main-menu::before {
+            opacity: 0.12 !important;
+        }
+        /* Pixel HUD icons */
+        .stat-bar svg.mc-icon, .hunger-bar svg.mc-icon, .oxygen-bar svg.mc-icon {
+            width: 18px; height: 18px;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            flex-shrink: 0;
+        }
+        .stat-bar svg.mc-icon.empty,
+        .hunger-bar svg.mc-icon.empty,
+        .oxygen-bar svg.mc-icon.empty { opacity: 0.35; }
+
     </style>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.jsdelivr.net/gh/gaphop123/LumiaDetect.js@main/dist/LumiaDetect.min.js"></script>
 </head>
 <body>
+
+    <!-- Boot loading screen -->
+    <div id="boot-loading">
+        <div class="boot-logo">VOXEL SURVIVAL</div>
+        <div class="boot-sub">Loading world…</div>
+        <div id="boot-canvas-wrap"></div>
+        <div id="boot-bar-outer"><div id="boot-bar-inner"></div></div>
+        <div id="boot-pct">0%</div>
+        <div id="boot-status">Initializing…</div>
+    </div>
+    <div id="menu-world-bg" aria-hidden="true"></div>
 
     <!-- Lumia / Windows Phone unsupported gate (IE/Edge Mobile friendly CSS) -->
     <style id="lumia-block-css">
@@ -1099,7 +1194,7 @@
     </script>
 
     <!-- Main Menu -->
-    <div id="main-menu">
+    <div id="main-menu" style="display:none;">
         <div id="menu-main" class="menu-panel mc-main-menu" style="display: flex;">
             <div class="menu-title mc-title">VOXEL SURVIVAL</div>
             <div class="mc-splash" id="mc-splash">Agriculture &amp; Skies!</div>
@@ -1131,7 +1226,7 @@
                 </select>
             </div>
             <div class="mc-footer">
-                <span class="mc-ver">Voxel Survival 1.11</span>
+                <span class="mc-ver">Voxel Survival 1.12</span>
                 <span class="mc-copy"></span>
             </div>
         </div>
@@ -10577,6 +10672,278 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
             }
         }
 
+
+        /* ==============================================================================
+           MENU SPINNING WORLD + BOOT LOADER (Minecraft-style)
+        ============================================================================== */
+        const BootUI = {
+            set(pct, status) {
+                const bar = document.getElementById('boot-bar-inner');
+                const pctEl = document.getElementById('boot-pct');
+                const st = document.getElementById('boot-status');
+                if (bar) bar.style.width = Math.max(0, Math.min(100, pct)) + '%';
+                if (pctEl) pctEl.textContent = Math.round(Math.max(0, Math.min(100, pct))) + '%';
+                if (st && status != null) st.textContent = status;
+            },
+            hide() {
+                const el = document.getElementById('boot-loading');
+                if (!el) return;
+                el.classList.add('boot-done');
+                setTimeout(() => { try { el.style.display = 'none'; } catch (e) {} }, 600);
+            }
+        };
+
+        class MenuSpinWorld {
+            constructor(container) {
+                this.container = container;
+                this.running = true;
+                this.w = container.clientWidth || 280;
+                this.h = container.clientHeight || 280;
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x87CEEB);
+                this.camera = new THREE.PerspectiveCamera(42, this.w / this.h, 0.1, 200);
+                this.camera.position.set(0, 2.2, 9.5);
+                this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+                this.renderer.setSize(this.w, this.h, false);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+                container.innerHTML = '';
+                container.appendChild(this.renderer.domElement);
+
+                const amb = new THREE.AmbientLight(0xffffff, 0.7);
+                this.scene.add(amb);
+                const sun = new THREE.DirectionalLight(0xfff2cc, 1.1);
+                sun.position.set(6, 12, 4);
+                this.scene.add(sun);
+
+                const sky = new THREE.Mesh(
+                    new THREE.SphereGeometry(40, 16, 12),
+                    new THREE.MeshBasicMaterial({ color: 0x7ec8f5, side: THREE.BackSide })
+                );
+                this.scene.add(sky);
+
+                this.clouds = new THREE.Group();
+                const cloudMat = new THREE.MeshLambertMaterial({ color: 0xffffff });
+                for (let i = 0; i < 14; i++) {
+                    const c = new THREE.Mesh(new THREE.BoxGeometry(
+                        0.8 + Math.random() * 1.6,
+                        0.35 + Math.random() * 0.25,
+                        0.6 + Math.random() * 1.2
+                    ), cloudMat);
+                    const a = Math.random() * Math.PI * 2;
+                    const r = 4.5 + Math.random() * 3;
+                    c.position.set(Math.cos(a) * r, 3.2 + Math.random() * 1.2, Math.sin(a) * r);
+                    this.clouds.add(c);
+                }
+                this.scene.add(this.clouds);
+
+                this.planet = new THREE.Group();
+                const R = 2.4;
+                const colors = {
+                    grass: 0x5a9c3a, dirt: 0x8b6914, stone: 0x888888,
+                    sand: 0xe0c878, snow: 0xf0f4ff, water: 0x3a7bd5,
+                    leaf: 0x3d8b3d, log: 0x6b4423
+                };
+                const geo = new THREE.BoxGeometry(0.38, 0.38, 0.38);
+                const mats = {};
+                for (const k of Object.keys(colors)) {
+                    mats[k] = new THREE.MeshLambertMaterial({ color: colors[k] });
+                }
+                const step = 0.48;
+                for (let x = -R; x <= R; x += step) {
+                    for (let y = -R; y <= R; y += step) {
+                        for (let z = -R; z <= R; z += step) {
+                            const d = Math.sqrt(x * x + y * y + z * z);
+                            if (d > R || d < R - 0.95) continue;
+                            const n = Math.sin(x * 2.1) * Math.cos(z * 1.7) + Math.sin(y * 3.3) * 0.4;
+                            const ny = y / R;
+                            let mat = mats.stone;
+                            if (ny > 0.55 + n * 0.08) mat = mats.snow;
+                            else if (ny > 0.15) mat = (n > 0.2 ? mats.leaf : mats.grass);
+                            else if (ny > -0.05) mat = mats.dirt;
+                            else if (ny > -0.35) mat = mats.sand;
+                            else mat = mats.water;
+                            if (mat === mats.grass && Math.random() < 0.04) {
+                                const trunk = new THREE.Mesh(geo, mats.log);
+                                trunk.position.set(x, y + 0.4, z);
+                                this.planet.add(trunk);
+                                const leaf = new THREE.Mesh(geo, mats.leaf);
+                                leaf.position.set(x, y + 0.8, z);
+                                this.planet.add(leaf);
+                            }
+                            const m = new THREE.Mesh(geo, mat);
+                            m.position.set(x, y, z);
+                            this.planet.add(m);
+                        }
+                    }
+                }
+                this.scene.add(this.planet);
+
+                const sunMesh = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.55, 12, 12),
+                    new THREE.MeshBasicMaterial({ color: 0xffee88 })
+                );
+                sunMesh.position.set(8, 5, -6);
+                this.scene.add(sunMesh);
+
+                this._t = 0;
+                this.animate = this.animate.bind(this);
+                this.animate();
+            }
+
+            animate() {
+                if (!this.running) return;
+                requestAnimationFrame(this.animate);
+                this._t += 0.016;
+                if (this.planet) {
+                    this.planet.rotation.y += 0.006;
+                    this.planet.rotation.x = Math.sin(this._t * 0.15) * 0.08;
+                }
+                if (this.clouds) this.clouds.rotation.y -= 0.0015;
+                this.camera.position.x = Math.sin(this._t * 0.12) * 0.4;
+                this.camera.lookAt(0, 0.2, 0);
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            dispose() {
+                this.running = false;
+                try {
+                    this.renderer.dispose();
+                    if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+                        this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+                    }
+                } catch (e) {}
+            }
+        }
+
+        class MenuBackgroundWorld {
+            constructor(hostEl) {
+                this.host = hostEl;
+                this.running = true;
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+                this.camera.position.set(0, 8, 28);
+                this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+                hostEl.innerHTML = '';
+                hostEl.appendChild(this.renderer.domElement);
+
+                this.scene.background = new THREE.Color(0x7eb6e8);
+                this.scene.fog = new THREE.Fog(0x9ec8e8, 40, 120);
+
+                this.scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+                const sun = new THREE.DirectionalLight(0xfff5d6, 1.05);
+                sun.position.set(30, 50, 20);
+                this.scene.add(sun);
+                this.scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a7a32, 0.5));
+
+                this.world = new THREE.Group();
+                const grassM = new THREE.MeshLambertMaterial({ color: 0x5b8c3e });
+                const dirtM = new THREE.MeshLambertMaterial({ color: 0x7a5c2e });
+                const stoneM = new THREE.MeshLambertMaterial({ color: 0x7a7a7a });
+                const sandM = new THREE.MeshLambertMaterial({ color: 0xd4c07a });
+                const waterM = new THREE.MeshLambertMaterial({ color: 0x3a80c0 });
+                const leafM = new THREE.MeshLambertMaterial({ color: 0x3d8b3d });
+                const logM = new THREE.MeshLambertMaterial({ color: 0x6b4423 });
+                const snowM = new THREE.MeshLambertMaterial({ color: 0xf0f4ff });
+                const box = new THREE.BoxGeometry(1, 1, 1);
+
+                const size = 16;
+                for (let x = -size; x <= size; x++) {
+                    for (let z = -size; z <= size; z++) {
+                        const dist = Math.sqrt(x * x + z * z);
+                        if (dist > size) continue;
+                        if (dist > 10 && ((x + z) & 1)) continue;
+                        const hNoise = Math.sin(x * 0.35) * Math.cos(z * 0.28) * 2.2
+                            + Math.sin(x * 0.12 + z * 0.09) * 1.4
+                            + Math.cos(x * 0.55) * 0.6;
+                        let h = Math.floor(2 + hNoise * (1 - dist / size));
+                        if (h < 0) h = 0;
+                        if (h > 5) h = 5;
+                        if (h <= 1 && dist < size - 2) {
+                            const w = new THREE.Mesh(box, waterM);
+                            w.position.set(x, 0.5, z);
+                            this.world.add(w);
+                            continue;
+                        }
+                        for (let y = 0; y <= h; y++) {
+                            let mat = stoneM;
+                            if (y === h) {
+                                if (h >= 6) mat = snowM;
+                                else if (h <= 2 && dist > size * 0.55) mat = sandM;
+                                else mat = grassM;
+                            } else if (y >= h - 2) mat = dirtM;
+                            const m = new THREE.Mesh(box, mat);
+                            m.position.set(x, y + 0.5, z);
+                            this.world.add(m);
+                        }
+                        if (h >= 3 && h < 6 && Math.random() < 0.03 && dist < size - 4) {
+                            const th = 2 + Math.floor(Math.random() * 2);
+                            for (let ty = 1; ty <= th; ty++) {
+                                const tr = new THREE.Mesh(box, logM);
+                                tr.position.set(x, h + ty + 0.5, z);
+                                this.world.add(tr);
+                            }
+                            for (let lx = -1; lx <= 1; lx++) {
+                                for (let lz = -1; lz <= 1; lz++) {
+                                    for (let ly = 0; ly <= 1; ly++) {
+                                        if (Math.abs(lx) + Math.abs(lz) + ly > 2) continue;
+                                        const lf = new THREE.Mesh(box, leafM);
+                                        lf.position.set(x + lx, h + th + ly + 0.5, z + lz);
+                                        this.world.add(lf);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                this.scene.add(this.world);
+
+                const sunBall = new THREE.Mesh(
+                    new THREE.SphereGeometry(2.2, 12, 12),
+                    new THREE.MeshBasicMaterial({ color: 0xffe066 })
+                );
+                sunBall.position.set(40, 28, -30);
+                this.scene.add(sunBall);
+
+                this._t = 0;
+                this.animate = this.animate.bind(this);
+                window.addEventListener('resize', () => this.onResize());
+                this.animate();
+            }
+
+            onResize() {
+                if (!this.running) return;
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+
+            animate() {
+                if (!this.running) return;
+                requestAnimationFrame(this.animate);
+                this._t += 0.016;
+                const ang = this._t * 0.08;
+                const rad = 26;
+                this.camera.position.x = Math.sin(ang) * rad;
+                this.camera.position.z = Math.cos(ang) * rad;
+                this.camera.position.y = 10 + Math.sin(this._t * 0.2) * 1.5;
+                this.camera.lookAt(0, 3, 0);
+                if (this.world) this.world.rotation.y = Math.sin(this._t * 0.05) * 0.02;
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            dispose() {
+                this.running = false;
+                try {
+                    this.renderer.dispose();
+                    if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+                        this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+                    }
+                } catch (e) {}
+            }
+        }
+
         class Game {
             constructor() {
                 this.scene = new THREE.Scene();
@@ -10588,6 +10955,7 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                 this.renderer.setSize(window.innerWidth, window.innerHeight);
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                 document.body.appendChild(this.renderer.domElement);
+                this.renderer.domElement.style.display = 'none';
                 this.rendererBackend = 'WebGL2';
 
                 // Brighter ambient for day feel
@@ -11689,9 +12057,6 @@ Tools: Blockbench, Aseprite, Piskel, Skindex.`;
                 }
                 // Lucide icons for mobile controls
                 try {
-                    if (window.lucide && typeof lucide.createIcons === 'function') {
-                        lucide.createIcons();
-                    }
                 } catch (e) {}
 
                 const chatClose = document.getElementById('chat-close-btn');
@@ -12069,6 +12434,11 @@ Save as PNG and upload in-game.`;
                 const genPanelHide = document.getElementById('menu-generating');
                 if (genPanelHide) genPanelHide.style.display = 'none';
                 document.getElementById('hud').style.display = 'block';
+                try {
+                    const mbg = document.getElementById('menu-world-bg');
+                    if (mbg) mbg.style.display = 'none';
+                    if (this.renderer && this.renderer.domElement) this.renderer.domElement.style.display = 'block';
+                } catch (e) {}
                 
                 this.state = 'play';
                 this.updateHUD();
@@ -12761,6 +13131,7 @@ Save as PNG and upload in-game.`;
             async loadWorld(name) {
                 this.clearChat();
                 document.getElementById('main-menu').style.display = 'none';
+                try { const _mbg=document.getElementById('menu-world-bg'); if(_mbg)_mbg.style.display='none'; if(this.renderer&&this.renderer.domElement)this.renderer.domElement.style.display='block'; } catch(e){}
                 document.getElementById('hud').style.display = 'block';
                 await saveSys.init();
                 audio.init();
@@ -12768,6 +13139,13 @@ Save as PNG and upload in-game.`;
                 const data = await saveSys.loadWorld(name);
                 if(!data) {
                     this.notify("Failed to load saved world.");
+                    try {
+                        document.getElementById('main-menu').style.display = 'flex';
+                        const mbg = document.getElementById('menu-world-bg');
+                        if (mbg) mbg.style.display = 'block';
+                        if (this.renderer && this.renderer.domElement) this.renderer.domElement.style.display = 'none';
+                        document.getElementById('hud').style.display = 'none';
+                    } catch (e) {}
                     return;
                 }
 
@@ -12844,6 +13222,7 @@ Save as PNG and upload in-game.`;
                         if (!full) { this.notify('Could not load replay'); return; }
                         document.getElementById('menu-replay').style.display = 'none';
                         document.getElementById('main-menu').style.display = 'none';
+                        try { const _mbg=document.getElementById('menu-world-bg'); if(_mbg)_mbg.style.display='none'; if(this.renderer&&this.renderer.domElement)this.renderer.domElement.style.display='block'; } catch(e){}
                         await this.replay.playRecording(full);
                     };
                     card.querySelector('[data-act=del]').onclick = async (ev) => {
@@ -13567,6 +13946,14 @@ Save as PNG and upload in-game.`;
                 document.getElementById('hud').style.display = 'none';
                 document.getElementById('main-menu').style.display = 'flex';
                 document.getElementById('menu-main').style.display = 'flex';
+                try {
+                    const mbg = document.getElementById('menu-world-bg');
+                    if (mbg) mbg.style.display = 'block';
+                    if (this.renderer && this.renderer.domElement) this.renderer.domElement.style.display = 'none';
+                    if (!window._menuBgWorld || !window._menuBgWorld.running) {
+                        if (mbg) window._menuBgWorld = new MenuBackgroundWorld(mbg);
+                    }
+                } catch (e) {}
                 try { document.exitPointerLock(); } catch (e) {}
                 if (this.mp) { try { this.mp.destroy(); } catch (e) {} this.mp = null; }
                 // Clear world meshes
@@ -14655,7 +15042,6 @@ Save as PNG and upload in-game.`;
                         return;
                     }
                     await this.mp.toggleVoiceChat();
-                    try { if (window.lucide) lucide.createIcons(); } catch (e) {}
                 });
                 bindBtn('btn-hotbar-prev', () => {
                     if (!this.player || this.state !== 'play') return;
@@ -15979,16 +16365,16 @@ Save as PNG and upload in-game.`;
                     gmEl.style.color = m === 'CREATIVE' ? '#ffd54f' : (m === 'SPECTATOR' ? '#ce93d8' : '#8cf');
                 }
 
+                // Classic Minecraft-style 8-bit pixel HUD icons
                 const heartSvg = (full) => full
-                    ? '<svg class="full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>'
-                    : '<svg class="empty" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>';
-                // Lucide-style drumstick
+                    ? '<svg class="full mc-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges"><rect fill="#000" x="1" y="0" width="2" height="1"/><rect fill="#000" x="6" y="0" width="2" height="1"/><rect fill="#000" x="0" y="1" width="1" height="2"/><rect fill="#000" x="3" y="1" width="1" height="1"/><rect fill="#000" x="5" y="1" width="1" height="1"/><rect fill="#000" x="8" y="1" width="1" height="2"/><rect fill="#e53e3e" x="1" y="1" width="2" height="1"/><rect fill="#e53e3e" x="6" y="1" width="2" height="1"/><rect fill="#ff6b6b" x="1" y="2" width="1" height="1"/><rect fill="#e53e3e" x="2" y="2" width="5" height="1"/><rect fill="#c62828" x="7" y="2" width="1" height="1"/><rect fill="#000" x="0" y="3" width="1" height="2"/><rect fill="#ff6b6b" x="1" y="3" width="1" height="1"/><rect fill="#e53e3e" x="2" y="3" width="5" height="1"/><rect fill="#c62828" x="7" y="3" width="1" height="1"/><rect fill="#000" x="8" y="3" width="1" height="2"/><rect fill="#e53e3e" x="1" y="4" width="7" height="1"/><rect fill="#000" x="1" y="5" width="1" height="1"/><rect fill="#e53e3e" x="2" y="5" width="5" height="1"/><rect fill="#000" x="7" y="5" width="1" height="1"/><rect fill="#000" x="2" y="6" width="1" height="1"/><rect fill="#c62828" x="3" y="6" width="3" height="1"/><rect fill="#000" x="6" y="6" width="1" height="1"/><rect fill="#000" x="3" y="7" width="1" height="1"/><rect fill="#c62828" x="4" y="7" width="1" height="1"/><rect fill="#000" x="5" y="7" width="1" height="1"/><rect fill="#000" x="4" y="8" width="1" height="1"/></svg>'
+                    : '<svg class="empty mc-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges"><rect fill="#000" x="1" y="0" width="2" height="1"/><rect fill="#000" x="6" y="0" width="2" height="1"/><rect fill="#000" x="0" y="1" width="1" height="2"/><rect fill="#000" x="3" y="1" width="3" height="1"/><rect fill="#000" x="8" y="1" width="1" height="2"/><rect fill="#555" x="1" y="1" width="2" height="1"/><rect fill="#555" x="6" y="1" width="2" height="1"/><rect fill="#555" x="1" y="2" width="7" height="2"/><rect fill="#000" x="0" y="3" width="1" height="2"/><rect fill="#000" x="8" y="3" width="1" height="2"/><rect fill="#555" x="1" y="4" width="7" height="1"/><rect fill="#000" x="1" y="5" width="1" height="1"/><rect fill="#555" x="2" y="5" width="5" height="1"/><rect fill="#000" x="7" y="5" width="1" height="1"/><rect fill="#000" x="2" y="6" width="1" height="1"/><rect fill="#555" x="3" y="6" width="3" height="1"/><rect fill="#000" x="6" y="6" width="1" height="1"/><rect fill="#000" x="3" y="7" width="3" height="1"/><rect fill="#000" x="4" y="8" width="1" height="1"/></svg>';
                 const drumSvg = (full) => full
-                    ? '<svg class="full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2"><path d="M15.4 15.63a2 2 0 1 1-2.83-2.83l6.36-6.36a2 2 0 1 1 2.83 2.83z"/><path d="M8.5 8.5 5 12l7 7 3.5-3.5"/><path d="m3 21 3-3"/></svg>'
-                    : '<svg class="empty" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.4 15.63a2 2 0 1 1-2.83-2.83l6.36-6.36a2 2 0 1 1 2.83 2.83z"/><path d="M8.5 8.5 5 12l7 7 3.5-3.5"/><path d="m3 21 3-3"/></svg>';
+                    ? '<svg class="full mc-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges"><rect fill="#000" x="5" y="0" width="3" height="1"/><rect fill="#000" x="4" y="1" width="1" height="1"/><rect fill="#f5d76e" x="5" y="1" width="3" height="1"/><rect fill="#000" x="8" y="1" width="1" height="2"/><rect fill="#000" x="3" y="2" width="1" height="1"/><rect fill="#e8b84a" x="4" y="2" width="4" height="1"/><rect fill="#000" x="2" y="3" width="1" height="1"/><rect fill="#d4a017" x="3" y="3" width="4" height="1"/><rect fill="#000" x="7" y="3" width="1" height="1"/><rect fill="#000" x="1" y="4" width="1" height="1"/><rect fill="#c68642" x="2" y="4" width="4" height="1"/><rect fill="#000" x="6" y="4" width="1" height="1"/><rect fill="#000" x="0" y="5" width="1" height="2"/><rect fill="#a0522d" x="1" y="5" width="4" height="1"/><rect fill="#000" x="5" y="5" width="1" height="1"/><rect fill="#8b4513" x="1" y="6" width="3" height="1"/><rect fill="#000" x="4" y="6" width="1" height="1"/><rect fill="#000" x="1" y="7" width="3" height="1"/><rect fill="#000" x="0" y="7" width="1" height="1"/></svg>'
+                    : '<svg class="empty mc-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges"><rect fill="#000" x="5" y="0" width="3" height="1"/><rect fill="#000" x="4" y="1" width="5" height="1"/><rect fill="#555" x="5" y="1" width="3" height="1"/><rect fill="#000" x="3" y="2" width="1" height="1"/><rect fill="#555" x="4" y="2" width="4" height="1"/><rect fill="#000" x="8" y="2" width="1" height="1"/><rect fill="#000" x="2" y="3" width="1" height="1"/><rect fill="#555" x="3" y="3" width="4" height="1"/><rect fill="#000" x="7" y="3" width="1" height="1"/><rect fill="#000" x="1" y="4" width="1" height="1"/><rect fill="#555" x="2" y="4" width="4" height="1"/><rect fill="#000" x="6" y="4" width="1" height="1"/><rect fill="#000" x="0" y="5" width="1" height="2"/><rect fill="#555" x="1" y="5" width="4" height="1"/><rect fill="#000" x="5" y="5" width="1" height="1"/><rect fill="#555" x="1" y="6" width="3" height="1"/><rect fill="#000" x="4" y="6" width="1" height="1"/><rect fill="#000" x="0" y="7" width="4" height="1"/></svg>';
                 const dropSvg = (full) => full
-                    ? '<svg class="full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>'
-                    : '<svg class="empty" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>';
+                    ? '<svg class="full mc-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges"><rect fill="#000" x="4" y="0" width="1" height="1"/><rect fill="#000" x="3" y="1" width="1" height="1"/><rect fill="#4fc3f7" x="4" y="1" width="1" height="1"/><rect fill="#000" x="5" y="1" width="1" height="1"/><rect fill="#000" x="2" y="2" width="1" height="1"/><rect fill="#81d4fa" x="3" y="2" width="1" height="1"/><rect fill="#29b6f6" x="4" y="2" width="1" height="1"/><rect fill="#0288d1" x="5" y="2" width="1" height="1"/><rect fill="#000" x="6" y="2" width="1" height="1"/><rect fill="#000" x="1" y="3" width="1" height="2"/><rect fill="#4fc3f7" x="2" y="3" width="1" height="1"/><rect fill="#29b6f6" x="3" y="3" width="3" height="1"/><rect fill="#0277bd" x="6" y="3" width="1" height="1"/><rect fill="#000" x="7" y="3" width="1" height="2"/><rect fill="#29b6f6" x="2" y="4" width="5" height="1"/><rect fill="#000" x="1" y="5" width="1" height="1"/><rect fill="#0288d1" x="2" y="5" width="5" height="1"/><rect fill="#000" x="7" y="5" width="1" height="1"/><rect fill="#000" x="2" y="6" width="1" height="1"/><rect fill="#0277bd" x="3" y="6" width="3" height="1"/><rect fill="#000" x="6" y="6" width="1" height="1"/><rect fill="#000" x="3" y="7" width="3" height="1"/></svg>'
+                    : '<svg class="empty mc-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges"><rect fill="#000" x="4" y="0" width="1" height="1"/><rect fill="#000" x="3" y="1" width="3" height="1"/><rect fill="#555" x="4" y="1" width="1" height="1"/><rect fill="#000" x="2" y="2" width="1" height="1"/><rect fill="#555" x="3" y="2" width="3" height="1"/><rect fill="#000" x="6" y="2" width="1" height="1"/><rect fill="#000" x="1" y="3" width="1" height="2"/><rect fill="#555" x="2" y="3" width="5" height="2"/><rect fill="#000" x="7" y="3" width="1" height="2"/><rect fill="#000" x="1" y="5" width="1" height="1"/><rect fill="#555" x="2" y="5" width="5" height="1"/><rect fill="#000" x="7" y="5" width="1" height="1"/><rect fill="#000" x="2" y="6" width="5" height="1"/><rect fill="#000" x="3" y="7" width="3" height="1"/></svg>';
 
                 const healthEl = document.getElementById('health-bar');
                 if (healthEl) {
@@ -16764,7 +17150,7 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
             }
         }
 
-        window.onload = () => {
+        window.onload = async () => {
             if (window.__VOXEL_LUMIA_BLOCKED__) {
                 try {
                     document.documentElement.classList.add('lumia-blocked');
@@ -16776,6 +17162,8 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
                     }
                     var mm = document.getElementById('main-menu');
                     if (mm) { mm.style.display = 'none'; mm.style.visibility = 'hidden'; }
+                    var boot = document.getElementById('boot-loading');
+                    if (boot) boot.style.display = 'none';
                     var canvases = document.getElementsByTagName('canvas');
                     for (var i = 0; i < canvases.length; i++) {
                         canvases[i].style.display = 'none';
@@ -16783,8 +17171,74 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
                 } catch (e) {}
                 return;
             }
+
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+            BootUI.set(5, 'Starting engine…');
+
+            let bootSpin = null;
+            try {
+                const wrap = document.getElementById('boot-canvas-wrap');
+                if (wrap) {
+                    bootSpin = new MenuSpinWorld(wrap);
+                    BootUI.set(12, 'Spinning preview world…');
+                }
+            } catch (e) {
+                console.warn('boot spin', e);
+            }
+
+            await sleep(200);
+            BootUI.set(20, 'Loading Three.js scene…');
+
             window.game = new Game();
-            // Fit menu panels on first paint (mobile / short screens)
+            BootUI.set(40, 'Generating texture atlas…');
+            await sleep(150);
+
+            BootUI.set(55, 'Loading block textures…');
+            try {
+                await Promise.race([
+                    new Promise((resolve) => {
+                        const t0 = performance.now();
+                        const tick = () => {
+                            if (window._gameItemIcons || performance.now() - t0 > 4500) resolve();
+                            else requestAnimationFrame(tick);
+                        };
+                        tick();
+                    }),
+                    sleep(5000)
+                ]);
+            } catch (e) { console.warn(e); }
+
+            BootUI.set(72, 'Loading mods & saves…');
+            await sleep(120);
+            try {
+                if (window.game) {
+                    try { loadModsFromStorage(window.game); } catch (e) {}
+                }
+            } catch (e) {}
+
+            BootUI.set(85, 'Preparing main menu…');
+            try {
+                const bg = document.getElementById('menu-world-bg');
+                if (bg) {
+                    window._menuBgWorld = new MenuBackgroundWorld(bg);
+                }
+            } catch (e) { console.warn('menu bg world', e); }
+
+            BootUI.set(95, 'Almost ready…');
+            await sleep(250);
+            BootUI.set(100, 'Done!');
+            await sleep(200);
+
+            try { if (bootSpin) bootSpin.dispose(); } catch (e) {}
+
+            BootUI.hide();
+            const mainMenuEl = document.getElementById('main-menu');
+            if (mainMenuEl) mainMenuEl.style.display = '';
+            try {
+                const mainPanel = document.getElementById('menu-main');
+                if (mainPanel) mainPanel.style.display = 'flex';
+            } catch (e) {}
+
             requestAnimationFrame(() => {
                 try { window.game.fitMenuPanelsScale(); } catch (e) {}
                 setTimeout(() => { try { window.game.fitMenuPanelsScale(); } catch (e) {} }, 100);
