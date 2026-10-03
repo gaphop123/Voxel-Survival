@@ -887,40 +887,6 @@
         }
         #mod-ui-root .mc-ui-textimage img { image-rendering: pixelated; }
 
-        /* SurfaceGui (Roblox-style world UI) */
-        #mod-surfacegui-root {
-            position: fixed; inset: 0; z-index: 95; pointer-events: none;
-            overflow: hidden;
-        }
-        .mc-sg-panel {
-            position: absolute; pointer-events: auto;
-            transform-origin: center center;
-            background: rgba(0,0,0,0.55);
-            border: 2px solid rgba(255,255,255,0.35);
-            box-sizing: border-box;
-            font-family: 'Press Start 2P', monospace;
-            color: #fff;
-            image-rendering: pixelated;
-        }
-        .mc-sg-panel.mc-sg-hidden { display: none !important; }
-        .mc-sg-panel .mc-ui-frame, .mc-sg-panel .mc-ui-scroll {
-            background: transparent; border: none; box-shadow: none;
-        }
-        .mc-sg-panel .mc-ui-btn, .mc-sg-panel .mc-ui-textbtn, .mc-sg-panel .mc-ui-imagebtn {
-            pointer-events: auto; cursor: pointer;
-        }
-        #mod-ui-root .mc-ui-imagebtn {
-            pointer-events: auto; cursor: pointer;
-            background: #8b8b8b; border: 3px solid #373737; border-top-color: #fff; border-left-color: #fff;
-            padding: 4px; display: inline-flex; align-items: center; justify-content: center;
-            font-family: 'Press Start 2P', monospace; color: #222;
-        }
-        #mod-ui-root .mc-ui-imagebtn:active {
-            border-top-color: #373737; border-left-color: #373737; border-bottom-color: #fff; border-right-color: #fff;
-        }
-        #mod-ui-root .mc-ui-imagebtn img { image-rendering: pixelated; max-width: 100%; max-height: 100%; pointer-events: none; }
-        #mod-ui-root .mc-ui-label { pointer-events: none; color: #222; font-family: 'Press Start 2P', monospace; font-size: 11px; }
-
         /* ===== Replay / Recording (Minecraft-style) ===== */
         #rec-indicator {
             display: none; position: absolute; top: 12px; left: 12px; z-index: 200;
@@ -1073,7 +1039,7 @@
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdn.jsdelivr.net/gh/gaphop123/LumiaDetect.js@main/dist/LumiaDetect.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/gaphop123/LumiaDetect.js@3cbc3174defd507a2b3ba0178e2025aa7b00910b/dist/LumiaDetect.min.js"></script>
 </head>
 <body>
 
@@ -1231,7 +1197,7 @@
     <div id="main-menu" style="display:none;">
         <div id="menu-main" class="menu-panel mc-main-menu" style="display: flex;">
             <div class="menu-title mc-title">VOXEL SURVIVAL</div>
-            <div class="mc-splash" id="mc-splash">Agriculture &amp; Skies!</div>
+            <div class="mc-splash" id="mc-splash">First-Person Hands!</div>
             <div class="menu-subtitle mc-subtitle">A blocky survival sandbox</div>
             <button class="menu-btn mc-btn" id="btn-new-world">Singleplayer</button>
             <button class="menu-btn mc-btn" id="btn-join-mp">Multiplayer</button>
@@ -1260,7 +1226,7 @@
                 </select>
             </div>
             <div class="mc-footer">
-                <span class="mc-ver">Voxel Survival 1.12</span>
+                <span class="mc-ver">Voxel Survival 1.14</span>
                 <span class="mc-copy"></span>
             </div>
         </div>
@@ -1352,7 +1318,7 @@
             <div class="menu-title">VOXEL MODS</div>
             <div class="menu-subtitle" style="max-width:520px;text-align:left;font-size:12px;line-height:1.45;color:#bbb;">
                 <b>.vxm</b> = ZIP pack: <code>mod.json</code> + optional <code>mod.js</code>, textures (.png/.jpg/.webp/.gif/.svg/.bmp), sounds (.wav/.mp3/.ogg). Include an <code>icon.png</code> (or logo/pack, any supported format) at the pack root to show a real logo instead of a letter.<br>
-                Also accepts plain <code>.json</code> (legacy). <b>v10:</b> <code>SurfaceGui</code>, players/MP API, ImageButton. Shapes: sphere, cylinder, cross, path. Drop files or multi-select.
+                Also accepts plain <code>.json</code> (legacy). <b>v6 shapes:</b> <code>sphere</code>, <code>cylinder</code>, <code>cross</code>, <code>path</code> in block defs. Drop files or multi-select.
             </div>
             <div id="mod-dropzone" style="width:100%;max-width:480px;border:2px dashed #5a7a9a;border-radius:10px;padding:18px;margin:10px 0;text-align:center;color:#9ab;background:rgba(30,50,70,0.4);cursor:pointer;">
                 Drop .vxm ZIP / .json here<br><span style="font-size:11px;opacity:0.8;">or click to browse (multi-select)</span>
@@ -1753,7 +1719,6 @@
     <div id="debug"></div>
     <div id="title-text-overlay"></div>
     <div id="mod-ui-root"></div>
-    <div id="mod-surfacegui-root" aria-hidden="true"></div>
     <div id="rec-indicator"><span class="rec-dot"></span><span id="rec-label">REC 00:00</span></div>
     <div id="replay-hud">
         <div id="replay-banner">REPLAY · FREECAM · SPECTATOR</div>
@@ -2658,7 +2623,8 @@
             50: 'cactus_side', 51: 'sugar_cane', 52: 'sponge', 53: 'furnace_side', 54: 'furnace_top',
             55: 'oak_planks', 56: 'chest_side', // approx
             60: 'sandstone', 61: 'sandstone_top', 62: 'gold_block', 63: 'iron_block', 64: 'diamond_block',
-            65: 'oak_door_bottom', 66: 'oak_door_top', 67: 'emerald_ore', 68: 'emerald_block', 69: 'fire_0', 70: 'white_wool', 76: 'coal_block', 77: 'redstone_block', 78: 'hay_block', 84: 'quartz_block_side', 88: 'soul_sand', 91: 'sea_lantern', 95: 'slime_block'
+            57: 'red_wool', 58: 'blue_wool', 59: 'green_wool',
+            65: 'oak_door_bottom', 66: 'oak_door_top', 67: 'emerald_ore', 68: 'emerald_block', 69: 'fire_0', 70: 'white_wool', 76: 'coal_block', 77: 'redstone_block', 78: 'hay_block_side', 84: 'quartz_block_side', 88: 'soul_sand', 91: 'sea_lantern', 95: 'slime_block'
         };
 
         // Load block textures from InventivetalentDev/minecraft-assets @26.2 (individual PNGs),
@@ -2667,12 +2633,20 @@
         const MC_ASSETS_26_2_BLOCK = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/block/';
         const MC_ASSETS_26_2_ITEM = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/textures/item/';
 
-        function loadImageCross(url) {
+        function loadImageCross(url, timeoutMs = 8000) {
             return new Promise((resolve, reject) => {
                 const i = new Image();
+                let settled = false;
+                const done = (fn, arg) => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    fn(arg);
+                };
+                const timer = setTimeout(() => done(reject, new Error('img timeout ' + url)), timeoutMs);
                 i.crossOrigin = 'anonymous';
-                i.onload = () => resolve(i);
-                i.onerror = () => reject(new Error('img fail ' + url));
+                i.onload = () => done(resolve, i);
+                i.onerror = () => done(reject, new Error('img fail ' + url));
                 i.src = url;
             });
         }
@@ -2705,7 +2679,9 @@
                 chest_side: 'oak_planks',
                 bed_head_top: 'red_wool',
                 bed_feet_end: 'red_wool',
-                fire_0: 'fire_0'
+                fire_0: 'fire_0',
+                hay_block: 'hay_block_side',
+                hay_block_side: 'hay_block_side'
             };
             let applied = 0;
             const dirtImgPromise = loadImageCross(MC_ASSETS_26_2_BLOCK + 'dirt.png').catch(() => null);
@@ -2727,7 +2703,9 @@
                     }
                 }
                 ctx.clearRect(dx, dy, TILE, TILE);
-                ctx.drawImage(img, 0, 0, img.width, img.height, dx, dy, TILE, TILE);
+                // Vertical animation strips (water/lava/fire/sea_lantern): use first frame only
+                const srcH = (img.height > img.width) ? img.width : img.height;
+                ctx.drawImage(img, 0, 0, img.width, srcH, dx, dy, TILE, TILE);
                 if (TINTS[name]) {
                     const [tr, tg, tb] = TINTS[name];
                     if (name === 'grass_block_side' && dirtImg) {
@@ -2765,10 +2743,10 @@
         }
 
         async function applyMinecraftTexturesFromMcAssetsAtlas(atlasCanvas, tex) {
-            let base = 'https://cdn.jsdelivr.net/npm/mc-assets@latest/dist';
+            let base = 'https://cdn.jsdelivr.net/npm/mc-assets@0.2.88/dist';
             let mapRes = await fetch(base + '/blocksAtlases.json');
             if (!mapRes.ok) {
-                base = 'https://unpkg.com/mc-assets@latest/dist';
+                base = 'https://unpkg.com/mc-assets@0.2.88/dist';
                 mapRes = await fetch(base + '/blocksAtlases.json');
             }
             if (!mapRes.ok) throw new Error('atlas map HTTP ' + mapRes.status);
@@ -2838,13 +2816,37 @@
                 if (applied >= 20) return true;
                 // Fill remaining / fallback via atlas package
                 const atlasApplied = await applyMinecraftTexturesFromMcAssetsAtlas(atlasCanvas, tex);
-                return (applied + atlasApplied) > 0;
+                const ok = (applied + atlasApplied) > 0;
+                if (!ok && !window.__vxTexFallbackNotified) {
+                    window.__vxTexFallbackNotified = true;
+                    try { if (typeof audio !== 'undefined') {} } catch (e) {}
+                    console.warn('[Voxel Survival] Using procedural textures (CDN unreachable)');
+                    try {
+                        const g = window.game;
+                        if (g && g.notify) g.notify('Block textures unavailable — using procedural');
+                    } catch (e) {}
+                }
+                return ok;
             } catch (err) {
                 console.warn('[Voxel Survival] texture sources unavailable, procedural fallback:', err);
                 try {
                     const n = await applyMinecraftTexturesFromMcAssetsAtlas(atlasCanvas, tex);
+                    if (!(n > 0) && !window.__vxTexFallbackNotified) {
+                        window.__vxTexFallbackNotified = true;
+                        try {
+                            const g = window.game;
+                            if (g && g.notify) g.notify('Block textures unavailable — using procedural');
+                        } catch (e) {}
+                    }
                     return n > 0;
                 } catch (e2) {
+                    if (!window.__vxTexFallbackNotified) {
+                        window.__vxTexFallbackNotified = true;
+                        try {
+                            const g = window.game;
+                            if (g && g.notify) g.notify('Block textures unavailable — using procedural');
+                        } catch (e) {}
+                    }
                     return false;
                 }
             }
@@ -3220,21 +3222,27 @@
             }
             _noise(duration, freq, filterType, vol = 1) {
                 if (!this.ready) return;
-                const n = Math.floor(this.ctx.sampleRate * duration);
-                const buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
-                const d = buf.getChannelData(0);
-                for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+                // Cache a reusable white-noise buffer (~1s)
+                if (!this._noiseBuf) {
+                    const n = Math.floor(this.ctx.sampleRate * 1.0);
+                    const buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
+                    const d = buf.getChannelData(0);
+                    for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+                    this._noiseBuf = buf;
+                }
                 const src = this.ctx.createBufferSource();
-                src.buffer = buf;
+                src.buffer = this._noiseBuf;
                 const f = this.ctx.createBiquadFilter();
                 f.type = filterType;
                 f.frequency.value = freq;
                 const g = this.ctx.createGain();
-                const v = this.volumes.sfx * vol;
+                const master = (this.volumes.master != null ? this.volumes.master : 1);
+                const v = Math.max(0.0001, (this.volumes.sfx != null ? this.volumes.sfx : 1) * master * vol);
                 g.gain.setValueAtTime(v, this.ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + Math.max(0.02, duration));
                 src.connect(f); f.connect(g); g.connect(this.masterGain);
                 src.start();
+                try { src.stop(this.ctx.currentTime + duration + 0.05); } catch (e) {}
             }
             _tone(freq, type, duration, vol = 1, slide = 0) {
                 if (!this.ready) return;
@@ -3243,137 +3251,235 @@
                 osc.type = type;
                 osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
                 if (slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, freq + slide), this.ctx.currentTime + duration);
-                const v = this.volumes.sfx * vol;
+                const master = (this.volumes.master != null ? this.volumes.master : 1);
+                const v = Math.max(0.0001, (this.volumes.sfx != null ? this.volumes.sfx : 1) * master * vol);
                 g.gain.setValueAtTime(v, this.ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
+                g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + Math.max(0.02, duration));
                 osc.connect(g); g.connect(this.masterGain);
                 osc.start();
                 osc.stop(this.ctx.currentTime + duration);
             }
-            _playMcAsset(type) {
-                if (!this._mcBase) {
-                    // InventivetalentDev/minecraft-assets @26.2 via jsDelivr (CORS-friendly)
-                    this._mcBase = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/sounds/';
-                    this._mcFailed = {};
-                    this._mcMap = {
-                        break: ['dig/grass1.ogg','dig/grass2.ogg','dig/stone1.ogg','dig/stone2.ogg','dig/wood1.ogg','dig/gravel1.ogg'],
-                        place: ['dig/stone1.ogg','dig/stone2.ogg','dig/wood1.ogg','dig/wood2.ogg'],
-                        step: ['step/grass1.ogg','step/grass2.ogg','step/stone1.ogg','step/stone2.ogg','step/wood1.ogg'],
-                        click: ['random/click.ogg'],
-                        hurt: ['damage/hit1.ogg','damage/hit2.ogg','damage/hit3.ogg'],
-                        splash: ['liquid/splash.ogg','liquid/splash2.ogg'],
-                        swim: ['liquid/swim1.ogg','liquid/swim2.ogg','liquid/swim3.ogg'],
-                        explode: ['random/explode1.ogg','random/explode2.ogg','random/explode3.ogg','random/explode4.ogg'],
-                        eat: ['random/eat1.ogg','random/eat2.ogg','random/eat3.ogg'],
-                        door: ['block/wooden_door/open1.ogg','block/wooden_door/open2.ogg','block/wooden_door/close1.ogg'],
-                        fizz: ['random/fizz.ogg'],
-                        pop: ['random/pop.ogg'],
-                        levelup: ['random/levelup.ogg'],
-                        bow: ['random/bow.ogg'],
-                        death: ['damage/fallbig.ogg','damage/hit1.ogg']
-                    };
+            _ensureMcMap() {
+                if (this._mcBase) return;
+                this._mcBase = 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/sounds/';
+                this._mcFailed = {};
+                this._mcFailAt = {};
+                this._mcBuffers = this._mcBuffers || new Map();
+                this._mcLoading = this._mcLoading || new Map();
+                this._mcCooldown = this._mcCooldown || {};
+                this._mcMap = {
+                    break: ['dig/grass1.ogg','dig/grass2.ogg','dig/stone1.ogg','dig/stone2.ogg','dig/wood1.ogg','dig/gravel1.ogg'],
+                    place: ['dig/stone1.ogg','dig/stone2.ogg','dig/wood1.ogg','dig/wood2.ogg'],
+                    step: ['step/grass1.ogg','step/grass2.ogg','step/stone1.ogg','step/stone2.ogg','step/wood1.ogg'],
+                    click: ['random/click.ogg'],
+                    hurt: ['damage/hit1.ogg','damage/hit2.ogg','damage/hit3.ogg'],
+                    splash: ['liquid/splash.ogg','liquid/splash2.ogg'],
+                    swim: ['liquid/swim1.ogg','liquid/swim2.ogg','liquid/swim3.ogg'],
+                    explode: ['random/explode1.ogg','random/explode2.ogg','random/explode3.ogg','random/explode4.ogg'],
+                    eat: ['random/eat1.ogg','random/eat2.ogg','random/eat3.ogg'],
+                    door: ['block/wooden_door/open1.ogg','block/wooden_door/open2.ogg','block/wooden_door/close1.ogg'],
+                    fizz: ['random/fizz.ogg'],
+                    pop: ['random/pop.ogg'],
+                    levelup: ['random/levelup.ogg'],
+                    bow: ['random/bow.ogg'],
+                    death: ['damage/fallbig.ogg','damage/hit1.ogg'],
+                    // Material groups
+                    'break.grass': ['dig/grass1.ogg','dig/grass2.ogg','dig/grass3.ogg','dig/grass4.ogg'],
+                    'break.stone': ['dig/stone1.ogg','dig/stone2.ogg','dig/stone3.ogg','dig/stone4.ogg'],
+                    'break.wood': ['dig/wood1.ogg','dig/wood2.ogg','dig/wood3.ogg','dig/wood4.ogg'],
+                    'break.gravel': ['dig/gravel1.ogg','dig/gravel2.ogg','dig/gravel3.ogg','dig/gravel4.ogg'],
+                    'break.sand': ['dig/sand1.ogg','dig/sand2.ogg','dig/sand3.ogg','dig/sand4.ogg'],
+                    'break.snow': ['dig/snow1.ogg','dig/snow2.ogg','dig/snow3.ogg','dig/snow4.ogg'],
+                    'break.cloth': ['dig/cloth1.ogg','dig/cloth2.ogg','dig/cloth3.ogg','dig/cloth4.ogg'],
+                    'break.glass': ['dig/stone1.ogg','dig/stone2.ogg','dig/stone3.ogg'],
+                    'place.grass': ['dig/grass1.ogg','dig/grass2.ogg'],
+                    'place.stone': ['dig/stone1.ogg','dig/stone2.ogg'],
+                    'place.wood': ['dig/wood1.ogg','dig/wood2.ogg'],
+                    'place.gravel': ['dig/gravel1.ogg','dig/gravel2.ogg'],
+                    'place.sand': ['dig/sand1.ogg','dig/sand2.ogg'],
+                    'place.snow': ['dig/snow1.ogg','dig/snow2.ogg'],
+                    'place.cloth': ['dig/cloth1.ogg','dig/cloth2.ogg'],
+                    'place.glass': ['dig/stone1.ogg','dig/stone2.ogg'],
+                    'step.grass': ['step/grass1.ogg','step/grass2.ogg','step/grass3.ogg','step/grass4.ogg'],
+                    'step.stone': ['step/stone1.ogg','step/stone2.ogg','step/stone3.ogg','step/stone4.ogg'],
+                    'step.wood': ['step/wood1.ogg','step/wood2.ogg','step/wood3.ogg','step/wood4.ogg'],
+                    'step.gravel': ['step/gravel1.ogg','step/gravel2.ogg','step/gravel3.ogg','step/gravel4.ogg'],
+                    'step.sand': ['step/sand1.ogg','step/sand2.ogg','step/sand3.ogg','step/sand4.ogg'],
+                    'step.snow': ['step/snow1.ogg','step/snow2.ogg','step/snow3.ogg','step/snow4.ogg'],
+                    'step.cloth': ['step/cloth1.ogg','step/cloth2.ogg','step/cloth3.ogg','step/cloth4.ogg'],
+                    'step.glass': ['step/stone1.ogg','step/stone2.ogg','step/stone3.ogg']
+                };
+            }
+            _soundGroupForBlock(blockId) {
+                if (blockId == null || blockId === 0) return 'stone';
+                const reg = (typeof BlockRegistry !== 'undefined') ? BlockRegistry[blockId] : null;
+                const t = (reg && reg.type) || '';
+                if (t === 'dirt' || blockId === 1) return 'grass';
+                if (t === 'wood' || t === 'leaves' || t === 'plant') return 'wood';
+                if (t === 'glass') return 'glass';
+                if (t === 'wool' || t === 'cloth') return 'cloth';
+                if (blockId === 8 || t === 'sand') return 'sand'; // sand
+                if (blockId === 20 || t === 'gravel') return 'gravel';
+                if (blockId === 21 || blockId === 22) return 'snow'; // snow/ice
+                if (t === 'stone' || t === 'metal') return 'stone';
+                if (t === 'dirt') return 'grass';
+                return 'stone';
+            }
+            async _loadMcBuffer(path) {
+                this._ensureMcMap();
+                if (this._mcBuffers.has(path)) return this._mcBuffers.get(path);
+                if (this._mcFailed[path]) {
+                    const at = this._mcFailAt[path] || 0;
+                    if (Date.now() - at < 30000) return null;
+                    delete this._mcFailed[path];
                 }
-                const list = this._mcMap[type];
-                if (!list || !list.length) return false;
-                const opts = list.filter(p => !this._mcFailed[p]);
-                if (!opts.length) return false;
-                const path = opts[Math.floor(Math.random() * opts.length)];
-                const url = this._mcBase + path;
-                try {
-                    const a = new Audio();
-                    a.preload = 'auto';
-                    a.volume = Math.min(1, 0.55 * (this.volumes && this.volumes.sfx != null ? this.volumes.sfx : 1));
-                    let settled = false;
-                    a.addEventListener('error', () => {
+                if (this._mcLoading.has(path)) return this._mcLoading.get(path);
+                const p = (async () => {
+                    try {
+                        const url = this._mcBase + path;
+                        const res = await fetch(url);
+                        if (!res.ok) throw new Error('HTTP ' + res.status);
+                        const arr = await res.arrayBuffer();
+                        if (!this.ready) this.init();
+                        if (!this.ctx) throw new Error('no audio ctx');
+                        const buf = await this.ctx.decodeAudioData(arr.slice(0));
+                        this._mcBuffers.set(path, buf);
+                        return buf;
+                    } catch (e) {
                         this._mcFailed[path] = true;
-                        if (!settled) { settled = true; }
-                    });
-                    a.src = url;
-                    const p = a.play();
-                    if (p && p.catch) {
-                        p.catch(() => { this._mcFailed[path] = true; });
+                        this._mcFailAt[path] = Date.now();
+                        return null;
+                    } finally {
+                        this._mcLoading.delete(path);
                     }
-                    // Optimistic play — if it errors, procedural will run next times
+                })();
+                this._mcLoading.set(path, p);
+                return p;
+            }
+            _playBuffer(buf, volScale = 1) {
+                if (!buf || !this.ready) return false;
+                try {
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    const src = this.ctx.createBufferSource();
+                    src.buffer = buf;
+                    src.playbackRate.value = 0.92 + Math.random() * 0.16;
+                    const g = this.ctx.createGain();
+                    const master = (this.volumes.master != null ? this.volumes.master : 1);
+                    const sfx = (this.volumes.sfx != null ? this.volumes.sfx : 1);
+                    const v = Math.max(0, Math.min(1, 0.85 * sfx * master * volScale));
+                    g.gain.value = v;
+                    src.connect(g);
+                    g.connect(this.masterGain);
+                    src.start();
                     return true;
                 } catch (e) {
-                    this._mcFailed[path] = true;
                     return false;
                 }
             }
+            /** @returns {boolean} true if a cached buffer was started immediately */
+            _playMcAsset(type) {
+                this._ensureMcMap();
+                const list = this._mcMap[type];
+                if (!list || !list.length) return false;
+                const now = Date.now();
+                const cd = (type.startsWith('step')) ? 120 : (type.startsWith('break') || type.startsWith('place') ? 40 : 0);
+                if (cd && this._mcCooldown[type] && now - this._mcCooldown[type] < cd) return true;
+                const opts = list.filter(p => {
+                    if (!this._mcFailed[p]) return true;
+                    const at = this._mcFailAt[p] || 0;
+                    return (now - at) >= 30000;
+                });
+                if (!opts.length) return false;
+                const path = opts[Math.floor(Math.random() * opts.length)];
+                const cached = this._mcBuffers.get(path);
+                if (cached) {
+                    this._mcCooldown[type] = now;
+                    return this._playBuffer(cached);
+                }
+                // Kick off load; caller should fall through to procedural for this call
+                this._loadMcBuffer(path).then((buf) => {
+                    if (buf) this._mcBuffers.set(path, buf);
+                }).catch(() => {});
+                return false;
+            }
             preloadMcSounds() {
                 try {
-                    if (!this._mcBase) this._playMcAsset('__init__'); // force map init
-                    this._mcBase = this._mcBase || 'https://cdn.jsdelivr.net/gh/InventivetalentDev/minecraft-assets@26.2/assets/minecraft/sounds/';
-                    if (!this._mcMap) this._playMcAsset('__init__');
-                    for (const k of ['break','place','step','click','hurt']) {
-                        const list = (this._mcMap && this._mcMap[k]) || [];
-                        if (!list[0]) continue;
-                        const a = new Audio(this._mcBase + list[0]);
-                        a.preload = 'auto';
-                        a.volume = 0;
+                    if (!this.ready) this.init();
+                    this._ensureMcMap();
+                    const keys = ['break','place','step','click','hurt','break.grass','break.stone','break.wood','step.grass','step.stone','step.wood'];
+                    for (const k of keys) {
+                        const list = this._mcMap[k] || [];
+                        for (const p of list.slice(0, 2)) {
+                            this._loadMcBuffer(p).catch(() => {});
+                        }
                     }
                 } catch (e) {}
             }
-                        playSound(type) {
+            playSound(type, blockId) {
                 if (!this.ready) return;
                 if (this.ctx.state === 'suspended') this.ctx.resume();
-                // Mod pack sounds (.wav/.mp3/.ogg data URLs)
+                // Mod pack sounds (.wav/.mp3/.ogg data URLs) still win
                 try {
                     if (typeof ModAPI !== 'undefined' && ModAPI.sounds && ModAPI.sounds[type]) {
                         const a = new Audio(ModAPI.sounds[type]);
-                        a.volume = Math.min(1, 0.85 * (this.volumes.sfx || 1));
+                        const master = (this.volumes.master != null ? this.volumes.master : 1);
+                        const sfx = (this.volumes.sfx != null ? this.volumes.sfx : 1);
+                        a.volume = Math.min(1, 0.85 * sfx * master);
                         a.play().catch(() => {});
                         return;
                     }
                 } catch (e) {}
-                // Minecraft assets from github.com/InventivetalentDev/minecraft-assets (26.2)
-                // Try MC asset; on failure fall through to procedural
+                // Material-aware group for step/break/place
+                let playType = type;
+                if ((type === 'step' || type === 'break' || type === 'place') && blockId != null) {
+                    const grp = this._soundGroupForBlock(blockId);
+                    const keyed = type + '.' + grp;
+                    if (this._mcMap && this._mcMap[keyed]) playType = keyed;
+                }
                 let mcOk = false;
                 try {
-                    mcOk = !!(this._playMcAsset && this._playMcAsset(type));
+                    mcOk = !!(this._playMcAsset && this._playMcAsset(playType));
                 } catch (e) { mcOk = false; }
                 if (mcOk) return;
-                // Procedural SFX fallback
+                // Procedural fallback (also while MC buffer is still loading)
                 switch (type) {
                     case 'break':
                         this._noise(0.12, 800, 'bandpass', 0.9);
                         this._noise(0.08, 400, 'lowpass', 0.5);
                         break;
                     case 'place':
-                        this._tone(220, 'triangle', 0.06, 0.7);
                         this._noise(0.05, 500, 'lowpass', 0.35);
                         break;
                     case 'step':
                         this._noise(0.06, 280 + Math.random() * 80, 'lowpass', 0.35);
                         break;
                     case 'click':
-                        this._tone(900, 'square', 0.03, 0.25);
+                        this._tone(800, 'square', 0.04, 0.25);
                         break;
                     case 'hurt':
-                        this._tone(160, 'sawtooth', 0.18, 0.7, -80);
-                        this._noise(0.1, 600, 'bandpass', 0.4);
+                        this._tone(200, 'sawtooth', 0.12, 0.4, -80);
                         break;
                     case 'splash':
+                        this._noise(0.1, 600, 'bandpass', 0.4);
+                        break;
+                    case 'swim':
+                        this._noise(0.08, 400, 'lowpass', 0.25);
+                        break;
+                    case 'explode':
                         this._noise(0.2, 900, 'bandpass', 0.6);
                         this._noise(0.15, 300, 'lowpass', 0.4);
                         break;
-                    case 'swim':
+                    case 'eat':
                         this._noise(0.1, 500, 'bandpass', 0.3);
                         break;
-                    case 'explode':
-                        this._noise(0.4, 120, 'lowpass', 1.2);
-                        this._noise(0.25, 400, 'bandpass', 0.8);
-                        this._tone(60, 'sawtooth', 0.3, 0.5, -40);
+                    case 'door':
+                        this._tone(300, 'triangle', 0.08, 0.3);
                         break;
                     case 'pop':
-                        this._tone(600 + Math.random() * 200, 'sine', 0.08, 0.4, 200);
+                        this._tone(600, 'sine', 0.05, 0.3);
                         break;
-                    case 'eat':
-                        this._noise(0.08, 700, 'bandpass', 0.35);
-                        this._tone(300, 'triangle', 0.05, 0.2);
-                        break;
-                    case 'door':
-                        this._tone(180, 'square', 0.1, 0.3, -50);
+                    case 'bow':
+                        this._tone(400, 'triangle', 0.1, 0.3, -50);
                         this._noise(0.08, 200, 'lowpass', 0.3);
                         break;
                     case 'levelup':
@@ -3507,11 +3613,23 @@
             }
 
             self.onmessage = function(e) {
-                const { cx, cz, seed, dim } = e.data;
+                const { cx, cz, seed, dim, ores } = e.data;
                 seedNoise(seed + (dim === 'nether' ? 99991 : 0));
                 const size = 16, height = 64;
-                const data = new Uint8Array(size * height * size);
+                // Uint16Array so mod block ids > 255 survive generation
+                const data = new Uint16Array(size * height * size);
                 const isNether = dim === 'nether';
+                const modOres = Array.isArray(ores) ? ores : [];
+                function placeVein(ox, oy, oz, oreId, sizeN) {
+                    for (let i = 0; i < sizeN; i++) {
+                        const jx = ox + (hashRand(ox+i, oy, oz+i*3) * 3 | 0) - 1;
+                        const jy = oy + (hashRand(ox+i*2, oy+i, oz) * 3 | 0) - 1;
+                        const jz = oz + (hashRand(ox, oy+i*2, oz+i) * 3 | 0) - 1;
+                        if (jx < 0 || jx >= size || jz < 0 || jz >= size || jy < 1 || jy >= height - 1) continue;
+                        const idx = jx + jy * size + jz * size * height;
+                        if (data[idx] === 3) data[idx] = oreId;
+                    }
+                }
                 
                 for(let x = 0; x < size; x++) {
                     for(let z = 0; z < size; z++) {
@@ -3567,79 +3685,251 @@
                         let groundY = Math.floor(28 + n);
                         if (groundY > 62) groundY = 62;
                         if (groundY < 8) groundY = 8;
-                        // Biomes: desert, plains, forest, snow, swamp, mesa-ish
-                        const bio = noise(worldX * 0.004, 3, worldZ * 0.004);
-                        const bio2 = noise(worldX * 0.008, 9, worldZ * 0.008);
+                        // ===== EXPANDED BIOMES (v1.13) =====
+                        // Temperature + humidity style climate noise for variety
+                        const temp = noise(worldX * 0.0035, 3, worldZ * 0.0035);
+                        const humid = noise(worldX * 0.0042, 11, worldZ * 0.0042);
+                        const weird = noise(worldX * 0.007, 19, worldZ * 0.007);
+                        const bio3 = noise(worldX * 0.011, 27, worldZ * 0.011);
                         let biome = 'plains';
-                        if (groundY > 48) biome = 'snow';
-                        else if (bio > 0.45) biome = 'desert';
-                        else if (bio < -0.4) biome = 'swamp';
-                        else if (bio2 > 0.35) biome = 'forest';
-                        else if (bio2 < -0.45 && groundY < 40) biome = 'mesa';
-                        const isSand = biome === 'desert' || groundY <= 28;
-                        const isSnow = biome === 'snow';
-                        const isSwamp = biome === 'swamp';
-                        const isForest = biome === 'forest';
+                        if (groundY <= 28) {
+                            biome = (groundY <= 24) ? 'ocean' : 'beach';
+                        } else if (groundY > 50) {
+                            biome = (temp < -0.15) ? 'snowy_taiga' : 'snow';
+                        } else if (temp > 0.55 && humid < -0.2) {
+                            biome = (weird > 0.25 && groundY < 42) ? 'mesa' : 'desert';
+                        } else if (temp > 0.35 && humid > 0.4) {
+                            biome = 'jungle';
+                        } else if (temp > 0.25 && humid < -0.35) {
+                            biome = 'savanna';
+                        } else if (temp < -0.35) {
+                            biome = (humid > 0.1) ? 'taiga' : 'snow';
+                        } else if (humid < -0.45) {
+                            biome = 'swamp';
+                        } else if (humid > 0.5 && temp > -0.1 && temp < 0.35) {
+                            biome = (bio3 > 0.4) ? 'birch_forest' : (bio3 < -0.35 ? 'cherry' : 'forest');
+                        } else if (weird > 0.55 && humid > 0.2 && temp > -0.2) {
+                            biome = 'mushroom';
+                        } else if (humid > 0.55 && temp < 0.15) {
+                            biome = 'mangrove';
+                        } else if (weird < -0.5 && humid > 0.15) {
+                            biome = 'dark_forest';
+                        } else if (bio3 > 0.45) {
+                            biome = 'forest';
+                        } else {
+                            biome = 'plains';
+                        }
+                        // Soft height overrides
+                        if (groundY > 48 && biome !== 'snow' && biome !== 'snowy_taiga') biome = (temp < 0) ? 'snowy_taiga' : 'snow';
+                        if (groundY <= 28 && biome !== 'ocean') biome = (groundY <= 24) ? 'ocean' : 'beach';
+
+                        const isSand = biome === 'desert' || biome === 'beach' || groundY <= 28;
+                        const isSnow = biome === 'snow' || biome === 'snowy_taiga';
+                        const isSwamp = biome === 'swamp' || biome === 'mangrove';
+                        const isForest = biome === 'forest' || biome === 'dark_forest' || biome === 'birch_forest' || biome === 'cherry';
                         const isMesa = biome === 'mesa';
+                        const isJungle = biome === 'jungle';
+                        const isTaiga = biome === 'taiga' || biome === 'snowy_taiga';
+                        const isSavanna = biome === 'savanna';
+                        const isMushroom = biome === 'mushroom';
+                        const isBirch = biome === 'birch_forest';
+                        const isCherry = biome === 'cherry';
+                        const isMangrove = biome === 'mangrove';
+                        const isDark = biome === 'dark_forest';
                         
                         for(let y = 0; y < height; y++) {
                             const index = x + y * size + z * size * height;
                             if (y === 0) data[index] = 12;
                             else if (y < groundY - 3) {
+                                // Stone + variant stones by depth / biome
                                 data[index] = 3; // stone
-                                if (y > 5 && y < 40 && hashRand(worldX, y, worldZ) < 0.025) data[index] = 14;
-                                else if (y > 5 && y < 32 && hashRand(worldX, y+11, worldZ) < 0.012) data[index] = 15;
-                                else if (y > 5 && y < 20 && hashRand(worldX, y+22, worldZ) < 0.006) data[index] = 16;
-                                else if (y > 5 && y < 16 && hashRand(worldX, y+33, worldZ) < 0.003) data[index] = 17;
+                                if (y > 5 && y < 40 && hashRand(worldX, y, worldZ) < 0.025) data[index] = 14; // coal
+                                else if (y > 5 && y < 32 && hashRand(worldX, y+11, worldZ) < 0.012) data[index] = 15; // iron
+                                else if (y > 5 && y < 20 && hashRand(worldX, y+22, worldZ) < 0.006) data[index] = 16; // gold
+                                else if (y > 5 && y < 16 && hashRand(worldX, y+33, worldZ) < 0.003) data[index] = 17; // diamond
+                                else if (y > 8 && y < 28 && hashRand(worldX, y+44, worldZ) < 0.018) {
+                                    // granite / diorite / andesite patches
+                                    const st = hashRand(worldX, y+55, worldZ);
+                                    data[index] = st < 0.33 ? 81 : (st < 0.66 ? 82 : 83);
+                                }
+                                else if (isMesa && y > groundY - 12 && y < groundY - 3 && hashRand(worldX, y+66, worldZ) < 0.4) data[index] = 94;
                             }
                             else if (y < groundY) {
-                                if (isSand) data[index] = 8;
-                                else if (isSnow) data[index] = 21;
+                                // Sub-surface layer
+                                if (isSand || biome === 'desert' || biome === 'beach') data[index] = 8; // sand
+                                else if (isSnow) data[index] = 2; // dirt under snow
                                 else if (isMesa) data[index] = 94; // terracotta
-                                else if (isSwamp) data[index] = 33; // clay under
-                                else data[index] = 2;
+                                else if (isSwamp) data[index] = 33; // clay
+                                else if (isMushroom) data[index] = 2;
+                                else if (isTaiga && hashRand(worldX, y, worldZ) < 0.35) data[index] = 80; // podzol under
+                                else data[index] = 2; // dirt
                             }
                             else if (y === groundY) {
-                                if (isSand) data[index] = (groundY <= 28) ? 8 : 8;
-                                else if (isSnow) data[index] = 21;
-                                else if (isMesa) data[index] = 94;
-                                else if (isSwamp) data[index] = (hashRand(worldX,y,worldZ)<0.3 ? 33 : 1);
+                                // Top surface block by biome
+                                if (biome === 'ocean') data[index] = (hashRand(worldX,y,worldZ) < 0.15) ? 20 : 8; // gravel/sand seabed
+                                else if (biome === 'beach' || biome === 'desert') data[index] = 8;
+                                else if (isSnow) data[index] = 21; // snow
+                                else if (isMesa) {
+                                    // Banded terracotta look
+                                    const band = Math.floor((groundY + worldX * 0.1) % 4);
+                                    data[index] = band === 0 ? 94 : (band === 1 ? 55 : 94);
+                                }
+                                else if (isSwamp) data[index] = (hashRand(worldX,y,worldZ) < 0.35) ? 33 : 1;
+                                else if (isMushroom) data[index] = 79; // mycelium
+                                else if (isTaiga) data[index] = (hashRand(worldX,y,worldZ) < 0.4) ? 80 : 1; // podzol / grass
+                                else if (isSavanna) data[index] = 1;
+                                else if (isJungle) data[index] = 1;
                                 else data[index] = 1; // grass
                             }
-                            else if (y <= 28) data[index] = 10;
+                            else if (y <= 28) data[index] = 10; // water
                             else data[index] = 0;
                         }
-                        // Surface flora
-                        if (!isSand && groundY > 28 && groundY < height-2) {
-                            if (isForest && hashRand(worldX, 50, worldZ) < 0.04) {
-                                // denser trees handled below
-                            } else if (!isSnow && hashRand(worldX, 51, worldZ) < 0.03) {
-                                const fi = x + (groundY+1) * size + z * size * height;
-                                data[fi] = 19; // flower
-                            } else if (isSwamp && hashRand(worldX, 52, worldZ) < 0.05) {
-                                const fi = x + (groundY+1) * size + z * size * height;
-                                data[fi] = 31; // vines marker / tall grass substitute
+
+                        // ===== Surface flora & features =====
+                        if (groundY > 28 && groundY < height - 3) {
+                            // Desert cactus
+                            if (biome === 'desert' && hashRand(worldX, 60, worldZ) < 0.04 && x > 1 && x < 14 && z > 1 && z < 14) {
+                                const ch = 1 + Math.floor(hashRand(worldX, 61, worldZ) * 3);
+                                for (let cy = 1; cy <= ch; cy++) {
+                                    if (groundY + cy < height) data[x + (groundY + cy) * size + z * size * height] = 47; // cactus
+                                }
+                            }
+                            // Flowers / mushrooms / vines
+                            if (!isSand && biome !== 'desert' && biome !== 'mesa') {
+                                if (isMushroom && hashRand(worldX, 51, worldZ) < 0.08) {
+                                    const fi = x + (groundY+1) * size + z * size * height;
+                                    data[fi] = hashRand(worldX, 52, worldZ) < 0.5 ? 40 : 41;
+                                } else if (isSwamp && hashRand(worldX, 52, worldZ) < 0.06) {
+                                    const fi = x + (groundY+1) * size + z * size * height;
+                                    data[fi] = 31; // vines / tall grass
+                                } else if (!isSnow && hashRand(worldX, 51, worldZ) < (isJungle ? 0.05 : 0.03)) {
+                                    const fi = x + (groundY+1) * size + z * size * height;
+                                    data[fi] = 19; // flower
+                                } else if (isSavanna && hashRand(worldX, 53, worldZ) < 0.02) {
+                                    const fi = x + (groundY+1) * size + z * size * height;
+                                    data[fi] = 19;
+                                }
+                            }
+                            // Sugar cane near water in swamp/beach
+                            if ((isSwamp || biome === 'beach') && hashRand(worldX, 70, worldZ) < 0.03) {
+                                let nearWater = false;
+                                for (let oy = groundY; oy >= Math.max(1, groundY-2); oy--) {
+                                    const bi = x + oy * size + z * size * height;
+                                    // check neighbors for water later — simple height near sea
+                                    if (groundY <= 30) nearWater = true;
+                                }
+                                if (nearWater || isSwamp) {
+                                    const sh = 1 + Math.floor(hashRand(worldX, 71, worldZ) * 3);
+                                    for (let sy = 1; sy <= sh; sy++) {
+                                        if (groundY + sy < height) {
+                                            const si = x + (groundY + sy) * size + z * size * height;
+                                            if (data[si] === 0) data[si] = 48; // sugar cane
+                                        }
+                                    }
+                                }
                             }
                         }
 
-                        if(!isSand && !isSnow && groundY > 28 && hashRand(worldX, 99, worldZ) < (isForest ? 0.035 : 0.012) && x > 2 && x < 13 && z > 2 && z < 13) {
-                            for(let ty = 1; ty <= 4; ty++) {
+                        // ===== Trees by biome =====
+                        // treeChance, trunkH, leaf radius, logId, leafId
+                        let treeChance = 0;
+                        let trunkH = 4, leafR = 2, logId = 5, leafId = 7, leafH0 = 3, leafH1 = 5;
+                        if (biome === 'forest') { treeChance = 0.038; trunkH = 4; logId = 5; leafId = 7; }
+                        else if (biome === 'dark_forest') { treeChance = 0.055; trunkH = 5; logId = 5; leafId = 7; leafR = 3; leafH0 = 3; leafH1 = 6; }
+                        else if (biome === 'birch_forest') { treeChance = 0.04; trunkH = 5; logId = 70; leafId = 72; leafR = 2; }
+                        else if (biome === 'cherry') { treeChance = 0.035; trunkH = 4; logId = 182; leafId = 184; leafR = 3; leafH0 = 2; leafH1 = 5; }
+                        else if (biome === 'taiga' || biome === 'snowy_taiga') { treeChance = 0.045; trunkH = 6; logId = 73; leafId = 75; leafR = 2; leafH0 = 2; leafH1 = 6; }
+                        else if (biome === 'jungle') { treeChance = 0.06; trunkH = 7; logId = 5; leafId = 7; leafR = 3; leafH0 = 4; leafH1 = 8; }
+                        else if (biome === 'savanna') { treeChance = 0.012; trunkH = 4; logId = 5; leafId = 7; leafR = 2; leafH0 = 3; leafH1 = 4; }
+                        else if (biome === 'mangrove') { treeChance = 0.04; trunkH = 4; logId = 185; leafId = 7; leafR = 2; }
+                        else if (biome === 'swamp') { treeChance = 0.02; trunkH = 4; logId = 5; leafId = 7; leafR = 2; }
+                        else if (biome === 'plains') { treeChance = 0.008; trunkH = 4; logId = 5; leafId = 7; }
+                        else if (biome === 'mushroom') { treeChance = 0; }
+                        else if (biome === 'snow') { treeChance = 0.006; trunkH = 5; logId = 73; leafId = 75; }
+
+                        if (treeChance > 0 && !isSand && biome !== 'desert' && biome !== 'mesa' && biome !== 'beach' && biome !== 'ocean'
+                            && groundY > 28 && hashRand(worldX, 99, worldZ) < treeChance
+                            && x > 2 && x < 13 && z > 2 && z < 13) {
+                            // Vary height a bit
+                            const th = trunkH + Math.floor(hashRand(worldX, 100, worldZ) * 2);
+                            for (let ty = 1; ty <= th; ty++) {
                                 if (groundY + ty < height) {
-                                    data[x + (groundY + ty) * size + z * size * height] = 5;
+                                    data[x + (groundY + ty) * size + z * size * height] = logId;
                                 }
                             }
-                            for(let lx = -2; lx <= 2; lx++) {
-                                for(let lz = -2; lz <= 2; lz++) {
-                                    for(let ly = 3; ly <= 5; ly++) {
-                                        if (Math.abs(lx) + Math.abs(lz) <= 3) {
-                                            let treeX = x + lx;
-                                            let treeY = groundY + ly;
-                                            let treeZ = z + lz;
-                                            if (treeX >= 0 && treeX < size && treeZ >= 0 && treeZ < size && treeY >= 0 && treeY < height) {
-                                                let lidx = treeX + treeY * size + treeZ * size * height;
-                                                if(data[lidx] === 0) data[lidx] = 7;
+                            // Leaf canopy
+                            const top = groundY + th;
+                            for (let lx = -leafR; lx <= leafR; lx++) {
+                                for (let lz = -leafR; lz <= leafR; lz++) {
+                                    for (let ly = leafH0; ly <= leafH1; ly++) {
+                                        // Spherical-ish canopy; spruce is more conical
+                                        let ok = false;
+                                        if (isTaiga || biome === 'snowy_taiga') {
+                                            // Conical: narrower near top
+                                            const layer = ly - leafH0;
+                                            const maxR = Math.max(1, leafR - Math.floor(layer / 2));
+                                            ok = (Math.abs(lx) <= maxR && Math.abs(lz) <= maxR) && (Math.abs(lx) + Math.abs(lz) <= maxR + 1);
+                                        } else {
+                                            ok = (Math.abs(lx) + Math.abs(lz) <= leafR + 1) && !(Math.abs(lx) === leafR && Math.abs(lz) === leafR);
+                                        }
+                                        if (!ok) continue;
+                                        let treeX = x + lx;
+                                        let treeY = groundY + ly;
+                                        // For tall jungle, shift leaves toward top of trunk
+                                        if (isJungle) treeY = top - (leafH1 - ly);
+                                        else if (isTaiga || biome === 'snowy_taiga') treeY = top - (leafH1 - ly);
+                                        let treeZ = z + lz;
+                                        if (treeX >= 0 && treeX < size && treeZ >= 0 && treeZ < size && treeY >= 0 && treeY < height) {
+                                            let lidx = treeX + treeY * size + treeZ * size * height;
+                                            if (data[lidx] === 0) data[lidx] = leafId;
+                                        }
+                                    }
+                                }
+                            }
+                            // Snow on taiga leaves
+                            if (biome === 'snowy_taiga' || biome === 'snow') {
+                                for (let lx = -leafR; lx <= leafR; lx++) {
+                                    for (let lz = -leafR; lz <= leafR; lz++) {
+                                        let treeX = x + lx, treeZ = z + lz;
+                                        if (treeX < 0 || treeX >= size || treeZ < 0 || treeZ >= size) continue;
+                                        for (let yy = top + 1; yy >= top - 2; yy--) {
+                                            if (yy < 0 || yy >= height) continue;
+                                            const li = treeX + yy * size + treeZ * size * height;
+                                            if (data[li] === leafId && yy + 1 < height) {
+                                                const above = treeX + (yy+1) * size + treeZ * size * height;
+                                                if (data[above] === 0 && hashRand(treeX, yy, treeZ) < 0.5) {
+                                                    // leave leaves; snow is surface only — skip placing snow on leaves to avoid weird mid-air snow blocks without support
+                                                }
+                                                break;
                                             }
                                         }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Giant mushroom "trees" in mushroom biome
+                        if (isMushroom && groundY > 28 && hashRand(worldX, 110, worldZ) < 0.025 && x > 2 && x < 13 && z > 2 && z < 13) {
+                            const mh = 3 + Math.floor(hashRand(worldX, 111, worldZ) * 3);
+                            const red = hashRand(worldX, 112, worldZ) < 0.5;
+                            for (let ty = 1; ty <= mh; ty++) {
+                                if (groundY + ty < height) data[x + (groundY + ty) * size + z * size * height] = 35; // bookshelf as stem substitute — use brown mushroom block style via log
+                                // Use oak log as stem
+                                data[x + (groundY + ty) * size + z * size * height] = 5;
+                            }
+                            const capY = groundY + mh;
+                            for (let lx = -2; lx <= 2; lx++) {
+                                for (let lz = -2; lz <= 2; lz++) {
+                                    if (Math.abs(lx) === 2 && Math.abs(lz) === 2) continue;
+                                    let tx = x + lx, tz = z + lz;
+                                    if (tx < 0 || tx >= size || tz < 0 || tz >= size) continue;
+                                    if (capY < height) {
+                                        const ci = tx + capY * size + tz * size * height;
+                                        if (data[ci] === 0) data[ci] = red ? 40 : 41;
+                                    }
+                                    if (capY + 1 < height && Math.abs(lx) <= 1 && Math.abs(lz) <= 1) {
+                                        const ci2 = tx + (capY+1) * size + tz * size * height;
+                                        if (data[ci2] === 0) data[ci2] = red ? 40 : 41;
                                     }
                                 }
                             }
@@ -3753,16 +4043,6 @@
                 // Ore veins (overworld only) — numeric IDs match BLOCKS
                 // COAL=14 IRON=15 GOLD=16 DIAMOND=17 LAPIS=43 REDSTONE=45 EMERALD=63
                 if (!isNether) {
-                    function placeVein(ox, oy, oz, oreId, sizeN) {
-                        for (let i = 0; i < sizeN; i++) {
-                            const jx = ox + (hashRand(ox+i, oy, oz+i*3) * 3 | 0) - 1;
-                            const jy = oy + (hashRand(ox+i*2, oy+i, oz) * 3 | 0) - 1;
-                            const jz = oz + (hashRand(ox, oy+i*2, oz+i) * 3 | 0) - 1;
-                            if (jx < 0 || jx >= size || jz < 0 || jz >= size || jy < 1 || jy >= height - 1) continue;
-                            const idx = jx + jy * size + jz * size * height;
-                            if (data[idx] === 3) data[idx] = oreId; // replace stone only
-                        }
-                    }
                     for (let x = 0; x < size; x++) {
                         for (let z = 0; z < size; z++) {
                             const worldX = cx * size + x;
@@ -3820,6 +4100,36 @@
                                 const below = data[x + (y-1)*size + z*size*height];
                                 if (below !== 0 && below !== 10 && below !== 11) {
                                     data[index] = hashRand(worldX, y+70, worldZ) < 0.5 ? 40 : 41;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Mod worldgen ores (from ModAPI.worldgen / mod.ores) — declarative veins
+                if (!isNether && modOres.length) {
+                    for (let oi = 0; oi < modOres.length; oi++) {
+                        const o = modOres[oi];
+                        if (!o || o.blockId == null) continue;
+                        const oreId = o.blockId | 0;
+                        if (oreId < 1 || oreId > 65535) continue;
+                        const yMin = o.yMin != null ? o.yMin|0 : 1;
+                        const yMax = o.yMax != null ? o.yMax|0 : 48;
+                        const veinSize = Math.max(1, (o.size != null ? o.size : 4) | 0);
+                        const attempts = Math.max(1, (o.count != null ? o.count : 6) | 0);
+                        const chance = o.chance != null ? +o.chance : 0.002;
+                        for (let a = 0; a < attempts; a++) {
+                            for (let x = 0; x < size; x++) {
+                                for (let z = 0; z < size; z++) {
+                                    const worldX = cx * size + x;
+                                    const worldZ = cz * size + z;
+                                    for (let y = yMin; y <= yMax && y < height - 1; y++) {
+                                        if (y < 1) continue;
+                                        const idx = x + y * size + z * size * height;
+                                        if (data[idx] !== 3) continue;
+                                        if (hashRand(worldX + oi * 17, y + 900 + a, worldZ + oi * 31) >= chance) continue;
+                                        placeVein(x, y, z, oreId, veinSize);
+                                    }
                                 }
                             }
                         }
@@ -3994,10 +4304,14 @@
             constructor() { this.db = null; }
             init() {
                 return new Promise((resolve) => {
-                    const req = indexedDB.open("VoxelGameDB", 2);
+                    const req = indexedDB.open("VoxelGameDB", 4);
                     req.onupgradeneeded = (e) => {
                         let db = e.target.result;
                         if(!db.objectStoreNames.contains('worlds')) db.createObjectStore('worlds', { keyPath: 'name' });
+                        if(!db.objectStoreNames.contains('mods')) db.createObjectStore('mods', { keyPath: 'id' });
+                        if(!db.objectStoreNames.contains('replays')) {
+                            try { db.createObjectStore('replays', { keyPath: 'id' }); } catch (eR) {}
+                        }
                         if(!db.objectStoreNames.contains('replays')) db.createObjectStore('replays', { keyPath: 'id' });
                     };
                     req.onsuccess = (e) => {
@@ -4005,11 +4319,12 @@
                         // Ensure replays store exists even if version already advanced without it
                         if (this.db && !this.db.objectStoreNames.contains('replays')) {
                             this.db.close();
-                            const req2 = indexedDB.open("VoxelGameDB", 3);
+                            const req2 = indexedDB.open("VoxelGameDB", 4);
                             req2.onupgradeneeded = (ev) => {
                                 const db2 = ev.target.result;
                                 if(!db2.objectStoreNames.contains('worlds')) db2.createObjectStore('worlds', { keyPath: 'name' });
                                 if(!db2.objectStoreNames.contains('replays')) db2.createObjectStore('replays', { keyPath: 'id' });
+                                if(!db2.objectStoreNames.contains('mods')) db2.createObjectStore('mods', { keyPath: 'id' });
                             };
                             req2.onsuccess = (ev) => { this.db = ev.target.result; resolve(); };
                             req2.onerror = () => resolve();
@@ -4108,13 +4423,59 @@
                     tx.onerror = res;
                 });
             }
+            async saveMod(mod) {
+                if (!this.db || !mod) return;
+                const id = String(mod.id || mod.name || 'mod');
+                return new Promise(res => {
+                    try {
+                        const tx = this.db.transaction('mods', 'readwrite');
+                        tx.objectStore('mods').put({ id, mod, savedAt: Date.now() });
+                        tx.oncomplete = () => res();
+                        tx.onerror = () => res();
+                    } catch (e) { res(); }
+                });
+            }
+            async loadAllMods() {
+                if (!this.db) return [];
+                return new Promise(res => {
+                    try {
+                        const tx = this.db.transaction('mods', 'readonly');
+                        const req = tx.objectStore('mods').getAll();
+                        req.onsuccess = () => res((req.result || []).map(r => r.mod).filter(Boolean));
+                        req.onerror = () => res([]);
+                    } catch (e) { res([]); }
+                });
+            }
+            async deleteMod(id) {
+                if (!this.db) return;
+                return new Promise(res => {
+                    try {
+                        const tx = this.db.transaction('mods', 'readwrite');
+                        tx.objectStore('mods').delete(String(id));
+                        tx.oncomplete = () => res();
+                        tx.onerror = () => res();
+                    } catch (e) { res(); }
+                });
+            }
+            async clearMods() {
+                if (!this.db) return;
+                return new Promise(res => {
+                    try {
+                        const tx = this.db.transaction('mods', 'readwrite');
+                        tx.objectStore('mods').clear();
+                        tx.oncomplete = () => res();
+                        tx.onerror = () => res();
+                    } catch (e) { res(); }
+                });
+            }
         }
         const saveSys = new SaveSystem();
 
         class Chunk {
             constructor(cx, cz, world) {
                 this.cx = cx; this.cz = cz; this.world = world;
-                this.data = new Uint8Array(CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE);
+                // Uint16: block ids 0..65535 (mod blocks no longer wrap at 255)
+                this.data = new Uint16Array(CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE);
                 this.mesh = null; this.waterMesh = null;
                 this.loaded = false; this.dirty = false;
             }
@@ -4385,7 +4746,24 @@
                         const key = this.getChunkKey(cx, cz);
                         const chunk = this.chunks.get(key);
                         if (chunk) {
-                            chunk.data.set(new Uint8Array(data));
+                            // Migrate: old workers may still send Uint8 buffers
+                            const u8 = data instanceof ArrayBuffer ? new Uint8Array(data) : (data && data.buffer ? new Uint8Array(data.buffer) : new Uint8Array(data));
+                            const expected16 = CHUNK_SIZE * CHUNK_HEIGHT * CHUNK_SIZE;
+                            if (u8.byteLength === expected16 * 2) {
+                                chunk.data.set(new Uint16Array(u8.buffer, u8.byteOffset, expected16));
+                            } else if (u8.byteLength === expected16) {
+                                const wide = new Uint16Array(expected16);
+                                for (let i = 0; i < expected16; i++) wide[i] = u8[i];
+                                chunk.data = wide;
+                            } else {
+                                try {
+                                    chunk.data.set(new Uint16Array(u8.buffer, u8.byteOffset, Math.min(expected16, (u8.byteLength / 2) | 0)));
+                                } catch (errU) {
+                                    const wide = new Uint16Array(expected16);
+                                    for (let i = 0; i < Math.min(expected16, u8.length); i++) wide[i] = u8[i];
+                                    chunk.data = wide;
+                                }
+                            }
                             if(this.modifications[key]) {
                                 for(let m in this.modifications[key]) {
                                     let [x,y,z] = m.split(',').map(Number);
@@ -4489,7 +4867,30 @@
                 this.chunks.set(key, chunk);
 
                 const worker = this.workers[this.workerIdx++ % this.workers.length];
-                worker.postMessage({ cx, cz, seed: this.seed, dim: this.dimension || 'overworld', genId: this.genId });
+                let orePayload = [];
+                try {
+                    if (typeof ModAPI !== 'undefined' && Array.isArray(ModAPI.worldgen)) {
+                        for (const o of ModAPI.worldgen) {
+                            if (!o) continue;
+                            let bid = o.blockId;
+                            if (bid == null && (o.block || o.id || o.ore)) {
+                                bid = (typeof ModAPI.resolveId === 'function')
+                                    ? ModAPI.resolveId(o.block || o.id || o.ore)
+                                    : null;
+                            }
+                            if (bid == null) continue;
+                            orePayload.push({
+                                blockId: bid | 0,
+                                size: o.size != null ? o.size : (o.veinSize != null ? o.veinSize : 4),
+                                count: o.count != null ? o.count : (o.attempts != null ? o.attempts : 6),
+                                yMin: o.yMin != null ? o.yMin : (o.minY != null ? o.minY : 1),
+                                yMax: o.yMax != null ? o.yMax : (o.maxY != null ? o.maxY : 48),
+                                chance: o.chance != null ? o.chance : 0.002
+                            });
+                        }
+                    }
+                } catch (eOre) { orePayload = []; }
+                worker.postMessage({ cx, cz, seed: this.seed, dim: this.dimension || 'overworld', genId: this.genId, ores: orePayload });
             }
 
             update(playerPos) {
@@ -5249,14 +5650,14 @@ for (let chunk of this.chunks.values()) {
                         const wn = document.getElementById('world-name');
                         if (jn) { jn.value = this.user.name; jn.readOnly = true; }
                         // host name if exists
-                        const hn = document.getElementById('host-name-input');
+                        const hn = document.getElementById('host-name');
                         if (hn) { hn.value = this.user.name; hn.readOnly = true; }
                     } else {
                         if (btn) btn.textContent = 'Sign In';
                         if (chip) chip.style.display = 'none';
                         const jn = document.getElementById('join-name-input');
                         if (jn) jn.readOnly = false;
-                        const hn = document.getElementById('host-name-input');
+                        const hn = document.getElementById('host-name');
                         if (hn) hn.readOnly = false;
                     }
                 } catch (e) {}
@@ -5414,105 +5815,247 @@ const BLOCK_DROP_COLORS = {
                 this.game = game || null;
                 this.walkPhase = 0;
                 this.swing = 0;
+                this.equipT = 0;
+                this.eatT = 0;
+                this.mineShake = 0;
                 this.heldId = null;
+                this.heldKind = 'empty'; // empty | block | tool | item | shield
+                this._baseArmRX = -0.35;
+                this._baseArmRY = -0.15;
+                this._baseArmRZ = -0.25;
+                this._baseArmPos = new THREE.Vector3(0.28, -0.55, -0.42);
 
-                // First-person arms (children of camera)
+                // First-person root (child of camera)
                 this.fpRoot = new THREE.Group();
+                this.fpRoot.renderOrder = 999;
                 this.camera.add(this.fpRoot);
 
-                // Right arm FP — Minecraft-style lowered (not raised into face)
-                this.armR = makePlayerLimb(0.20, 0.52, 0.20, 0xffcc80);
-                this.armR.position.set(0.42, -1.05, -0.35);
-                this.armR.rotation.x = -0.55;
-                this.armR.rotation.y = 0.05;
-                this.armR.rotation.z = -0.12;
+                // ===== RIGHT ARM (primary Minecraft-style FP hand) =====
+                this.armR = new THREE.Group();
+                this.armR.position.copy(this._baseArmPos);
+                this.armR.rotation.set(this._baseArmRX, this._baseArmRY, this._baseArmRZ);
                 this.fpRoot.add(this.armR);
 
-                // Left arm FP
-                this.armL = makePlayerLimb(0.18, 0.48, 0.18, 0xffcc80);
-                this.armL.position.set(-0.38, -1.10, -0.30);
-                this.armL.rotation.x = -0.50;
-                this.armL.rotation.y = -0.05;
-                this.armL.rotation.z = 0.10;
+                // Upper arm (skin)
+                this.armRUpper = makePlayerLimb(0.22, 0.48, 0.22, 0xffcc80);
+                this.armRUpper.position.set(0, 0.0, 0);
+                this.armR.add(this.armRUpper);
+
+                // Sleeve
+                this.sleeveR = makePlayerLimb(0.26, 0.20, 0.26, 0x3f51b5);
+                this.sleeveR.position.set(0, 0.18, 0);
+                this.sleeveR.userData.isSleeve = true;
+                this.armRUpper.add(this.sleeveR);
+
+                // Forearm / hand group (angled slightly)
+                this.handR = new THREE.Group();
+                this.handR.position.set(0, -0.28, 0.02);
+                this.armRUpper.add(this.handR);
+
+                // Palm
+                this.palmR = makePlayerLimb(0.20, 0.14, 0.10, 0xffcc80);
+                this.palmR.position.set(0, -0.08, 0.04);
+                this.handR.add(this.palmR);
+
+                // Simple fingers (visible empty hand)
+                this.fingers = new THREE.Group();
+                this.fingers.position.set(0, -0.16, 0.06);
+                this.handR.add(this.fingers);
+                const fingerCol = 0xf5d0a9;
+                for (let i = 0; i < 4; i++) {
+                    const f = makePlayerLimb(0.04, 0.10, 0.04, fingerCol);
+                    f.position.set(-0.06 + i * 0.04, -0.04, 0.01);
+                    f.rotation.x = 0.35;
+                    this.fingers.add(f);
+                }
+                // Thumb
+                const thumb = makePlayerLimb(0.04, 0.08, 0.04, fingerCol);
+                thumb.position.set(-0.11, -0.02, 0.02);
+                thumb.rotation.z = 0.6;
+                thumb.rotation.x = 0.2;
+                this.fingers.add(thumb);
+
+                // Held item root (in palm area)
+                this.heldRoot = new THREE.Group();
+                this.heldRoot.position.set(0.02, -0.12, 0.10);
+                this.heldRoot.rotation.set(0.35, 0.55, 0.15);
+                this.heldRoot.scale.setScalar(1.0);
+                this.handR.add(this.heldRoot);
+
+                // ===== LEFT ARM (shield / dual / idle) =====
+                this.armL = new THREE.Group();
+                this.armL.position.set(-0.32, -0.70, -0.38);
+                this.armL.rotation.set(-0.40, 0.20, 0.30);
                 this.fpRoot.add(this.armL);
 
-                // Sleeve tops (shirt color — updated by skin system)
-                const sleeveR = makePlayerLimb(0.24, 0.18, 0.24, 0x3f51b5);
-                sleeveR.position.y = 0.20;
-                sleeveR.userData.isSleeve = true;
-                this.armR.add(sleeveR);
-                const sleeveL = makePlayerLimb(0.22, 0.16, 0.22, 0x3f51b5);
-                sleeveL.position.y = 0.18;
-                sleeveL.userData.isSleeve = true;
-                this.armL.add(sleeveL);
+                this.armLUpper = makePlayerLimb(0.20, 0.44, 0.20, 0xffcc80);
+                this.armL.add(this.armLUpper);
+                this.sleeveL = makePlayerLimb(0.24, 0.18, 0.24, 0x3f51b5);
+                this.sleeveL.position.set(0, 0.16, 0);
+                this.sleeveL.userData.isSleeve = true;
+                this.armLUpper.add(this.sleeveL);
 
-                // Held item sits in the right hand (true inventory item)
-                this.heldRoot = new THREE.Group();
-                this.heldRoot.position.set(0.02, -0.30, 0.05);
-                this.heldRoot.rotation.x = 0.6;
-                this.heldRoot.rotation.z = 0.1;
-                this.heldRoot.scale.setScalar(1.15);
-                this.armR.add(this.heldRoot);
+                this.handL = new THREE.Group();
+                this.handL.position.set(0, -0.26, 0);
+                this.armLUpper.add(this.handL);
+                this.palmL = makePlayerLimb(0.18, 0.12, 0.09, 0xffcc80);
+                this.palmL.position.set(0, -0.06, 0.03);
+                this.handL.add(this.palmL);
 
-                // Apply player skin to FP arms when available
+                // Left starts slightly less visible (classic FP is right-hand dominant)
+                this.armL.visible = true;
+
+                // Apply skin textures to FP arms
                 const applyFp = (img) => {
                     if (!img) return;
-                    const armMap = cropSkinMap(img, 44, 20, 4, 12);
-                    if (armMap) {
-                        for (const a of [this.armR, this.armL]) {
-                            if (a && a.material) {
-                                if (a.material.map) try { a.material.map.dispose(); } catch (e) {}
-                                a.material.map = armMap.clone();
-                                a.material.color.setHex(0xffffff);
-                                a.material.needsUpdate = true;
+                    try {
+                        const armMap = cropSkinMap(img, 44, 20, 4, 12);
+                        if (armMap) {
+                            for (const a of [this.armRUpper, this.armLUpper, this.palmR, this.palmL]) {
+                                if (a && a.material) {
+                                    if (a.material.map) try { a.material.map.dispose(); } catch (e) {}
+                                    a.material.map = armMap.clone();
+                                    a.material.color.setHex(0xffffff);
+                                    a.material.needsUpdate = true;
+                                }
                             }
-                        }
-                    }
-                    const bodyMap = cropSkinMap(img, 20, 20, 8, 12);
-                    if (bodyMap) {
-                        for (const a of [this.armR, this.armL]) {
-                            if (!a) continue;
-                            a.traverse(c => {
-                                if (c.userData && c.userData.isSleeve && c.material) {
-                                    if (c.material.map) try { c.material.map.dispose(); } catch (e) {}
-                                    c.material.map = bodyMap.clone();
-                                    c.material.color.setHex(0xffffff);
-                                    c.material.needsUpdate = true;
+                            // Fingers keep a slightly lighter skin tint
+                            this.fingers.traverse(c => {
+                                if (c.isMesh && c.material) {
+                                    c.material.color.setHex(0xffe0b2);
                                 }
                             });
                         }
-                    }
+                        const bodyMap = cropSkinMap(img, 20, 20, 8, 12);
+                        if (bodyMap) {
+                            for (const s of [this.sleeveR, this.sleeveL]) {
+                                if (s && s.material) {
+                                    if (s.material.map) try { s.material.map.dispose(); } catch (e) {}
+                                    s.material.map = bodyMap.clone();
+                                    s.material.color.setHex(0xffffff);
+                                    s.material.needsUpdate = true;
+                                }
+                            }
+                        }
+                    } catch (e) { console.warn('FP skin', e); }
                 };
-                if (PlayerSkin.img || _playerSkinImg) applyFp(PlayerSkin.img || _playerSkinImg);
-                else PlayerSkin.loadSaved().then(applyFp);
+                if (typeof PlayerSkin !== 'undefined' && (PlayerSkin.img || (typeof _playerSkinImg !== 'undefined' && _playerSkinImg))) {
+                    applyFp(PlayerSkin.img || _playerSkinImg);
+                } else if (typeof PlayerSkin !== 'undefined' && PlayerSkin.loadSaved) {
+                    PlayerSkin.loadSaved().then(applyFp).catch(() => {});
+                }
+
+                // Default empty-hand pose
+                this._applyPoseForKind('empty');
+            }
+
+            _classifyHeld(itemId) {
+                if (itemId == null || itemId === 0) return 'empty';
+                const blockDef = BlockRegistry[itemId];
+                const itemDef = ItemRegistry[itemId];
+                if (itemDef && itemDef.toolType === 'shield') return 'shield';
+                if (itemDef && itemDef.toolType) return 'tool';
+                if (itemDef && itemDef.type === 'food') return 'item';
+                if (blockDef && blockDef.tex && itemId !== BLOCKS.AIR) return 'block';
+                if (itemDef) return 'item';
+                return 'item';
+            }
+
+            _applyPoseForKind(kind) {
+                this.heldKind = kind;
+                // Base right-arm pose differs by what you hold
+                if (kind === 'block') {
+                    this._baseArmRX = -0.28;
+                    this._baseArmRY = -0.10;
+                    this._baseArmRZ = -0.22;
+                    this._baseArmPos.set(0.30, -0.52, -0.40);
+                    this.heldRoot.position.set(0.04, -0.10, 0.12);
+                    this.heldRoot.rotation.set(0.25, 0.65, 0.10);
+                    this.heldRoot.scale.setScalar(1.15);
+                    this.fingers.visible = false;
+                } else if (kind === 'tool') {
+                    this._baseArmRX = -0.42;
+                    this._baseArmRY = -0.05;
+                    this._baseArmRZ = -0.18;
+                    this._baseArmPos.set(0.32, -0.48, -0.45);
+                    this.heldRoot.position.set(0.0, -0.14, 0.08);
+                    this.heldRoot.rotation.set(0.9, 0.15, 0.35);
+                    this.heldRoot.scale.setScalar(1.35);
+                    this.fingers.visible = false;
+                } else if (kind === 'shield') {
+                    this._baseArmRX = -0.20;
+                    this._baseArmRY = 0.35;
+                    this._baseArmRZ = -0.05;
+                    this._baseArmPos.set(0.20, -0.45, -0.50);
+                    this.heldRoot.position.set(0.0, -0.05, 0.15);
+                    this.heldRoot.rotation.set(0.1, 0.0, 0.0);
+                    this.heldRoot.scale.setScalar(1.4);
+                    this.fingers.visible = false;
+                } else if (kind === 'item') {
+                    this._baseArmRX = -0.32;
+                    this._baseArmRY = -0.12;
+                    this._baseArmRZ = -0.20;
+                    this._baseArmPos.set(0.28, -0.55, -0.42);
+                    this.heldRoot.position.set(0.02, -0.12, 0.12);
+                    this.heldRoot.rotation.set(0.4, 0.5, 0.2);
+                    this.heldRoot.scale.setScalar(1.2);
+                    this.fingers.visible = false;
+                } else {
+                    // Empty hand — fingers visible, classic punch pose
+                    this._baseArmRX = -0.38;
+                    this._baseArmRY = -0.18;
+                    this._baseArmRZ = -0.28;
+                    this._baseArmPos.set(0.26, -0.58, -0.40);
+                    this.heldRoot.position.set(0.02, -0.12, 0.10);
+                    this.heldRoot.scale.setScalar(1.0);
+                    this.fingers.visible = true;
+                }
             }
 
             setHeldItem(itemId, force) {
                 if (!force && itemId === this.heldId) return;
+                const prev = this.heldId;
                 this.heldId = itemId;
                 while (this.heldRoot.children.length) {
                     const c = this.heldRoot.children[0];
                     this.heldRoot.remove(c);
-                    if (c.geometry) c.geometry.dispose();
-                    if (c.material) {
-                        if (Array.isArray(c.material)) c.material.forEach(m => m.dispose && m.dispose());
-                        else if (c.material.dispose) c.material.dispose();
-                    }
+                    try {
+                        if (c.geometry) c.geometry.dispose();
+                        if (c.material) {
+                            if (Array.isArray(c.material)) c.material.forEach(m => m.dispose && m.dispose());
+                            else if (c.material.dispose) c.material.dispose();
+                        }
+                    } catch (e) {}
                 }
+                const kind = this._classifyHeld(itemId);
+                this._applyPoseForKind(kind);
                 if (itemId != null && itemId !== 0) {
-                    const icons = (this.game && this.game.itemIcons) || (window._gameItemIcons) || null;
-                    const item = createHeldItemMesh(itemId, this.texAtlas, icons);
-                    // Slightly larger for first-person readability
-                    item.scale.setScalar(1.25);
+                    const item = createHeldItemMesh(itemId, this.texAtlas, (this.game && this.game.itemIcons) || window._gameItemIcons);
+                    // Slight scale bump for visibility in FP
+                    if (kind === 'block') item.scale.setScalar(1.3);
+                    else if (kind === 'tool') item.scale.setScalar(1.15);
+                    else item.scale.setScalar(1.2);
                     this.heldRoot.add(item);
                     this.heldRoot.visible = true;
                 } else {
                     this.heldRoot.visible = false;
                 }
+                // Equip animation when switching items
+                if (prev !== itemId) this.equipT = 1.0;
             }
 
             triggerSwing() {
                 this.swing = 1.0;
+            }
+
+            triggerEat() {
+                this.eatT = 1.0;
+            }
+
+            setMining(active, progress) {
+                // progress 0..1 while holding break
+                if (active) this.mineShake = Math.max(this.mineShake, 0.35 + (progress || 0) * 0.5);
+                else this.mineShake *= 0.85;
             }
 
             update(dt, moving, onGround) {
@@ -5520,29 +6063,99 @@ const BLOCK_DROP_COLORS = {
                 if (moving && onGround && bobOn) this.walkPhase += dt * 11;
                 else this.walkPhase *= 0.88;
 
-                const bob = bobOn ? Math.sin(this.walkPhase) * 0.1 : 0;
-                const swingX = this.swing > 0 ? -Math.sin(this.swing * Math.PI) * 1.4 : 0;
-                const swingZ = this.swing > 0 ? Math.sin(this.swing * Math.PI) * 0.5 : 0;
+                // Decay timers
+                if (this.swing > 0) this.swing = Math.max(0, this.swing - dt * 4.2);
+                if (this.equipT > 0) this.equipT = Math.max(0, this.equipT - dt * 3.5);
+                if (this.eatT > 0) this.eatT = Math.max(0, this.eatT - dt * 2.2);
+                this.mineShake *= Math.max(0, 1 - dt * 6);
 
-                // Natural FP arms: hanging down-forward (not up)
-                this.armR.rotation.x = -0.55 + bob * 0.25 + swingX;
-                this.armR.rotation.z = -0.12 + swingZ;
-                this.armL.rotation.x = -0.50 - bob * 0.2;
-                this.armL.rotation.z = 0.10;
+                const bob = bobOn ? Math.sin(this.walkPhase) * 0.08 : 0;
+                const bobY = bobOn ? Math.abs(Math.sin(this.walkPhase)) * 0.025 : 0;
 
-                this.armR.position.set(0.42, -1.05 + Math.abs(Math.sin(this.walkPhase)) * 0.02, -0.35);
-                this.armL.position.set(-0.38, -1.10 + Math.abs(Math.cos(this.walkPhase)) * 0.02, -0.30);
+                // Swing: big Minecraft-like arc (down + across)
+                let swingX = 0, swingY = 0, swingZ = 0;
+                if (this.swing > 0) {
+                    const t = this.swing;
+                    // Ease: fast out
+                    const e = Math.sin(t * Math.PI);
+                    swingX = -e * 1.55;
+                    swingY = e * 0.45;
+                    swingZ = e * 0.75;
+                }
 
-                if (this.swing > 0) this.swing = Math.max(0, this.swing - dt * 3.5);
+                // Equip: item rises into view from below
+                let equipY = 0, equipX = 0;
+                if (this.equipT > 0) {
+                    const e = this.equipT;
+                    equipY = -e * 0.35;
+                    equipX = e * 0.25;
+                }
 
-                // Idle + walk camera-relative bob
-                this.fpRoot.position.x = Math.sin(this.walkPhase * 0.5) * 0.012;
-                this.fpRoot.position.y = (moving && onGround ? Math.sin(this.walkPhase) * 0.02 : Math.sin(performance.now() * 0.002) * 0.006);
+                // Eat: hand moves toward camera/mouth
+                let eatX = 0, eatY = 0, eatZ = 0;
+                if (this.eatT > 0) {
+                    const e = Math.sin(this.eatT * Math.PI);
+                    eatX = -e * 0.35;
+                    eatY = e * 0.25;
+                    eatZ = e * 0.20;
+                }
+
+                // Mining vibration
+                const sh = this.mineShake;
+                const shakeX = sh ? (Math.sin(performance.now() * 0.06) * 0.04 * sh) : 0;
+                const shakeY = sh ? (Math.cos(performance.now() * 0.08) * 0.03 * sh) : 0;
+
+                // Blocking with shield: left arm forward
+                let blocking = false;
+                try {
+                    blocking = !!(this.game && this.game.player && this.game.player.blocking);
+                } catch (e) {}
+
+                // Apply right arm
+                this.armR.rotation.x = this._baseArmRX + bob * 0.2 + swingX + eatX + equipX * 0.3;
+                this.armR.rotation.y = this._baseArmRY + swingY * 0.3;
+                this.armR.rotation.z = this._baseArmRZ + swingZ + shakeX;
+                this.armR.position.set(
+                    this._baseArmPos.x + shakeX * 0.5,
+                    this._baseArmPos.y + bobY + equipY + eatY + shakeY,
+                    this._baseArmPos.z + eatZ
+                );
+
+                // Left arm idle bob / block pose
+                if (blocking || this.heldKind === 'shield') {
+                    this.armL.position.set(-0.18, -0.42, -0.55);
+                    this.armL.rotation.set(-0.15, 0.55, 0.10);
+                    this.armL.visible = true;
+                } else {
+                    this.armL.position.set(
+                        -0.32,
+                        -0.70 + bobY * 0.8,
+                        -0.38
+                    );
+                    this.armL.rotation.set(
+                        -0.40 - bob * 0.15,
+                        0.20,
+                        0.30
+                    );
+                    // Keep left arm visible but quieter
+                    this.armL.visible = true;
+                }
+
+                // Whole FP root micro-bob
+                this.fpRoot.position.x = Math.sin(this.walkPhase * 0.5) * 0.01;
+                this.fpRoot.position.y = (moving && onGround && bobOn)
+                    ? Math.sin(this.walkPhase) * 0.018
+                    : Math.sin(performance.now() * 0.002) * 0.005;
                 this.fpRoot.position.z = 0;
+
+                // Held item subtle idle spin for tools
+                if (this.heldRoot && this.heldKind === 'tool' && this.swing <= 0) {
+                    this.heldRoot.rotation.z = 0.35 + Math.sin(performance.now() * 0.0015) * 0.03;
+                }
             }
 
             setVisible(v) {
-                this.fpRoot.visible = v;
+                this.fpRoot.visible = !!v;
             }
         }
 
@@ -7380,7 +7993,7 @@ const BLOCK_DROP_COLORS = {
         // Spec: a .vxm file is JSON (optionally wrapped). See loadExampleVxm().
         // ========== Voxel Mod System (.vxm JSON v2) ==========
         const ModAPI = {
-            formatVersion: 10, // v10: players/MP API, SurfaceGui, ImageButton, Label hierarchy, richer UI
+            formatVersion: 10, // v10: Uint16 chunks, IndexedDB mods, namespaced ids + world remap, worldgen ores
             nextBlockId: 220,
             nextItemId: 500,
             nextMobKey: 0,
@@ -7392,6 +8005,48 @@ const BLOCK_DROP_COLORS = {
             ui: {},
             errors: [],
             keyToId: {}, // "namespace:name" or KEY -> numeric id
+            idToKey: {}, // numeric id -> "modid:name"
+            worldgen: [], // ore/vein defs consumed by terrain worker
+            worldRemap: null,
+            exportRemap() {
+                const out = {};
+                for (const [k, id] of Object.entries(this.keyToId)) {
+                    if (typeof id === 'number' && k.includes(':')) out[k] = id;
+                }
+                return out;
+            },
+            applyWorldRemap(remap) {
+                this.worldRemap = remap && typeof remap === 'object' ? { ...remap } : null;
+            },
+            allocateId(kind, modId, key, preferred) {
+                const ns = String(modId || 'mod').toLowerCase().replace(/[^a-z0-9_]/g, '_');
+                const short = String(key || '').toUpperCase();
+                const full = ns + ':' + short.toLowerCase();
+                if (this.worldRemap && this.worldRemap[full] != null) {
+                    const id = this.worldRemap[full] | 0;
+                    this.keyToId[full] = id;
+                    this.keyToId[short] = id;
+                    this.idToKey[id] = full;
+                    return id;
+                }
+                if (preferred != null && preferred >= 1 && preferred <= 65535) {
+                    this.keyToId[full] = preferred;
+                    this.keyToId[short] = preferred;
+                    this.idToKey[preferred] = full;
+                    if (kind === 'block' && preferred >= this.nextBlockId) this.nextBlockId = preferred + 1;
+                    if (kind === 'item' && preferred >= this.nextItemId) this.nextItemId = preferred + 1;
+                    return preferred;
+                }
+                if (this.keyToId[full] != null) return this.keyToId[full];
+                let id;
+                if (kind === 'item') id = this.nextItemId++;
+                else id = this.nextBlockId++;
+                if (id > 65535) throw new Error(kind + ' id overflow (>65535): ' + full);
+                this.keyToId[full] = id;
+                this.keyToId[short] = id;
+                this.idToKey[id] = full;
+                return id;
+            },
             _pendingIcons: [],
             _uiHandles: [],
             gameRef: null,
@@ -7663,12 +8318,13 @@ const BLOCK_DROP_COLORS = {
             },
 
             registerBlock(def, modId) {
-                const id = def.id != null ? def.id : (this.nextBlockId++);
-                if (id < 1 || id > 4095) throw new Error('block id out of range: ' + id);
-                const key = (def.key || ('MOD_BLOCK_' + id)).toUpperCase();
+                const key = (def.key || ('MOD_BLOCK_' + (def.id != null ? def.id : this.nextBlockId))).toUpperCase();
+                const id = this.allocateId('block', modId, key, def.id != null ? def.id : null);
+                if (id < 1 || id > 65535) throw new Error('block id out of range: ' + id);
                 BLOCKS[key] = id;
                 this.keyToId[key] = id;
                 this.keyToId[(modId || 'mod') + ':' + key.toLowerCase()] = id;
+                this.idToKey[id] = (modId || 'mod') + ':' + key.toLowerCase();
                 if (def.name) this.keyToId[def.name] = id;
 
                 let tex = def.tex || [3, 3, 3, 3, 3, 3];
@@ -7712,11 +8368,13 @@ const BLOCK_DROP_COLORS = {
             },
 
             registerItem(def, modId) {
-                const id = def.id != null ? def.id : (this.nextItemId++);
-                const key = (def.key || ('MOD_ITEM_' + id)).toUpperCase();
+                const key = (def.key || ('MOD_ITEM_' + (def.id != null ? def.id : this.nextItemId))).toUpperCase();
+                const id = this.allocateId('item', modId, key, def.id != null ? def.id : null);
+                if (id < 1 || id > 65535) throw new Error('item id out of range: ' + id);
                 ITEMS[key] = id;
                 this.keyToId[key] = id;
                 this.keyToId[(modId || 'mod') + ':' + key.toLowerCase()] = id;
+                this.idToKey[id] = (modId || 'mod') + ':' + key.toLowerCase();
                 ItemRegistry[id] = {
                     name: def.name || key,
                     maxStack: def.maxStack || 64,
@@ -7922,215 +8580,6 @@ const BLOCK_DROP_COLORS = {
 
 
         /* ==============================================================================
-           SurfaceGui — Roblox-style world-attached UI (formatVersion 10)
-        ============================================================================== */
-        const SurfaceGuiSystem = {
-            list: [],
-            root: null,
-            getRoot() {
-                if (!this.root) this.root = document.getElementById('mod-surfacegui-root');
-                return this.root;
-            },
-            create(props, game, ctx) {
-                props = props || {};
-                const root = this.getRoot();
-                if (!root) throw new Error('SurfaceGui root missing');
-                const panel = document.createElement('div');
-                panel.className = 'mc-sg-panel';
-                const w = props.width || props.Width || props.sizeX || 180;
-                const h = props.height || props.Height || props.sizeY || 120;
-                panel.style.width = (typeof w === 'number' ? w + 'px' : w);
-                panel.style.height = (typeof h === 'number' ? h + 'px' : h);
-                if (props.background || props.Background) panel.style.background = props.background || props.Background;
-                if (props.borderColor) panel.style.borderColor = props.borderColor;
-                if (props.opacity != null) panel.style.opacity = props.opacity;
-                if (props.zIndex != null) panel.style.zIndex = String(props.zIndex);
-
-                // World attachment
-                let wx = props.x != null ? props.x : (props.X != null ? props.X : 0);
-                let wy = props.y != null ? props.y : (props.Y != null ? props.Y : 0);
-                let wz = props.z != null ? props.z : (props.Z != null ? props.Z : 0);
-                if (props.position && typeof props.position === 'object') {
-                    wx = props.position.x != null ? props.position.x : wx;
-                    wy = props.position.y != null ? props.position.y : wy;
-                    wz = props.position.z != null ? props.position.z : wz;
-                }
-                // Face: front(+z), back(-z), left(-x), right(+x), top(+y), bottom(-y)
-                const face = String(props.face || props.Face || props.side || 'front').toLowerCase();
-                const offset = props.offset != null ? Number(props.offset) : 0.52;
-                const faceOff = {
-                    front:  [0, 0, offset], back: [0, 0, -offset],
-                    left:   [-offset, 0, 0], right: [offset, 0, 0],
-                    top:    [0, offset, 0], bottom: [0, -offset, 0],
-                    north:  [0, 0, -offset], south: [0, 0, offset],
-                    west:   [-offset, 0, 0], east: [offset, 0, 0]
-                };
-                const fo = faceOff[face] || faceOff.front;
-                // If Adornee-style block coords (integer), center on block
-                if (props.block || props.Block || props.adornee || props.Adornee) {
-                    const b = props.block || props.Block || props.adornee || props.Adornee;
-                    if (typeof b === 'object') {
-                        wx = (b.x != null ? b.x : wx) + 0.5 + fo[0];
-                        wy = (b.y != null ? b.y : wy) + 0.5 + fo[1];
-                        wz = (b.z != null ? b.z : wz) + 0.5 + fo[2];
-                    }
-                } else if (props.snapBlock) {
-                    wx = Math.floor(wx) + 0.5 + fo[0];
-                    wy = Math.floor(wy) + 0.5 + fo[1];
-                    wz = Math.floor(wz) + 0.5 + fo[2];
-                }
-
-                const maxDist = props.maxDistance != null ? props.maxDistance : (props.MaxDistance != null ? props.MaxDistance : 24);
-                const alwaysOnTop = !!(props.alwaysOnTop || props.AlwaysOnTop);
-                const billboard = props.billboard !== false; // default face camera
-                const enabled = props.enabled !== false && props.Enabled !== false;
-
-                root.appendChild(panel);
-
-                const handle = {
-                    _el: panel,
-                    _game: game,
-                    _worldPos: { x: wx, y: wy, z: wz },
-                    _face: face,
-                    _maxDist: maxDist,
-                    _alwaysOnTop: alwaysOnTop,
-                    _billboard: billboard,
-                    _enabled: enabled,
-                    _visible: true,
-                    _children: [],
-                    _modId: ctx && ctx.modId,
-                    // Roblox-like API
-                    get Enabled() { return this._enabled; },
-                    set Enabled(v) { this._enabled = !!v; this._syncVis(); },
-                    get Adornee() { return this._worldPos; },
-                    setPosition(x, y, z) {
-                        if (typeof x === 'object') { this._worldPos = { x: x.x, y: x.y, z: x.z }; }
-                        else this._worldPos = { x: +x, y: +y, z: +z };
-                    },
-                    setFace(f) { this._face = String(f || 'front').toLowerCase(); },
-                    setMaxDistance(d) { this._maxDist = Number(d) || 24; },
-                    _syncVis() {
-                        if (!this._enabled || !this._visible) panel.classList.add('mc-sg-hidden');
-                        else panel.classList.remove('mc-sg-hidden');
-                    },
-                    // Child factories (same as screen UI, parented under panel)
-                    Frame(p) { return this._add('frame', p); },
-                    frame(p) { return this._add('frame', p); },
-                    Label(p) { return this._add('text', p); },
-                    label(p) { return this._add('text', p); },
-                    TextLabel(p) { return this._add('text', p); },
-                    textLabel(p) { return this._add('text', p); },
-                    Button(p) { return this._add('button', p); },
-                    button(p) { return this._add('button', p); },
-                    TextButton(p) { return this._add('textbutton', p); },
-                    textButton(p) { return this._add('textbutton', p); },
-                    ImageButton(p) { return this._add('imagebutton', p); },
-                    imageButton(p) { return this._add('imagebutton', p); },
-                    ImageLabel(p) { return this._add('image', p); },
-                    imageLabel(p) { return this._add('image', p); },
-                    Image(p) { return this._add('image', p); },
-                    ScrollingFrame(p) { return this._add('scrollframe', p); },
-                    scrollingFrame(p) { return this._add('scrollframe', p); },
-                    ProgressBar(p) { return this._add('progress', p); },
-                    Input(p) { return this._add('input', p); },
-                    _add(type, p) {
-                        const pr = Object.assign({}, p || {}, { parent: { el: panel } });
-                        const child = ModUI.create(type, pr, this._game);
-                        if (child && child.el) {
-                            if (child.el.parentElement !== panel) panel.appendChild(child.el);
-                            this._children.push(child);
-                        }
-                        return child;
-                    },
-                    append(childHandle) {
-                        if (childHandle && childHandle.el) {
-                            panel.appendChild(childHandle.el);
-                            this._children.push(childHandle);
-                        }
-                        return childHandle;
-                    },
-                    clear() {
-                        while (panel.firstChild) panel.removeChild(panel.firstChild);
-                        this._children = [];
-                    },
-                    destroy() {
-                        try { if (panel.parentNode) panel.parentNode.removeChild(panel); } catch (e) {}
-                        const i = SurfaceGuiSystem.list.indexOf(this);
-                        if (i >= 0) SurfaceGuiSystem.list.splice(i, 1);
-                    },
-                    onClick(fn) {
-                        if (typeof fn === 'function') panel.addEventListener('click', fn);
-                        return this;
-                    }
-                };
-                handle._syncVis();
-                this.list.push(handle);
-                return handle;
-            },
-            update(game) {
-                if (!game || !game.camera || !game.renderer) return;
-                const cam = game.camera;
-                const canvas = game.renderer.domElement;
-                if (!canvas) return;
-                const rect = canvas.getBoundingClientRect();
-                const w = rect.width || window.innerWidth;
-                const h = rect.height || window.innerHeight;
-                const playerPos = game.player && game.player.pos;
-                const v = new THREE.Vector3();
-                for (const sg of this.list) {
-                    if (!sg || !sg._el) continue;
-                    if (!sg._enabled) {
-                        sg._el.classList.add('mc-sg-hidden');
-                        continue;
-                    }
-                    const p = sg._worldPos;
-                    let dist = 0;
-                    if (playerPos) {
-                        const dx = p.x - playerPos.x, dy = p.y - playerPos.y, dz = p.z - playerPos.z;
-                        dist = Math.sqrt(dx*dx + dy*dy + dz*dz);
-                        if (dist > sg._maxDist) {
-                            sg._visible = false;
-                            sg._el.classList.add('mc-sg-hidden');
-                            continue;
-                        }
-                    }
-                    v.set(p.x, p.y, p.z);
-                    v.project(cam);
-                    // behind camera
-                    if (v.z > 1) {
-                        sg._visible = false;
-                        sg._el.classList.add('mc-sg-hidden');
-                        continue;
-                    }
-                    const sx = (v.x * 0.5 + 0.5) * w + rect.left;
-                    const sy = (-v.y * 0.5 + 0.5) * h + rect.top;
-                    sg._visible = true;
-                    sg._el.classList.remove('mc-sg-hidden');
-                    // scale by distance (perspective feel)
-                    let scale = 1;
-                    if (playerPos && dist > 0.1) {
-                        scale = Math.max(0.35, Math.min(1.4, 8 / dist));
-                    }
-                    if (sg._alwaysOnTop) sg._el.style.zIndex = '200';
-                    sg._el.style.left = sx + 'px';
-                    sg._el.style.top = sy + 'px';
-                    sg._el.style.transform = 'translate(-50%, -50%) scale(' + scale.toFixed(3) + ')';
-                }
-            },
-            clearAll() {
-                for (const sg of this.list.slice()) {
-                    try { sg.destroy(); } catch (e) {}
-                }
-                this.list = [];
-            },
-            clearMod(modId) {
-                for (const sg of this.list.slice()) {
-                    if (sg._modId === modId) try { sg.destroy(); } catch (e) {}
-                }
-            }
-        };
-
-        /* ==============================================================================
            ModUI — Minecraft-styled UI builder for .vxm Make.makeUI / Make.ui
         ============================================================================== */
         const ModUI = {
@@ -8139,8 +8588,7 @@ const BLOCK_DROP_COLORS = {
                 // Normalize type aliases (textDisplay, itemDisplay, modImageDisplay, webImgDisplay, ...)
                 let t = String(type || 'frame').toLowerCase().replace(/[^a-z0-9]/g, '');
                 const aliases = {
-                    textdisplay: 'text', textlabel: 'text', label: 'text', textlabel2: 'text',
-                    imagelabel: 'image', imagebutton: 'imagebutton', imgbutton: 'imagebutton',
+                    textdisplay: 'text', textlabel: 'text', label: 'text',
                     itemdisplay: 'item', itemicon: 'item', slotdisplay: 'item',
                     modimagedisplay: 'modimage', modimage: 'modimage', packimage: 'modimage',
                     webimgdisplay: 'webimage', webimage: 'webimage', urlimage: 'webimage', remoteimage: 'webimage',
@@ -8149,8 +8597,7 @@ const BLOCK_DROP_COLORS = {
                     frame: 'frame', panel: 'frame', scrollingframe: 'scrollframe', scrollframe: 'scrollframe',
                     progressbar: 'progress', bar: 'progress',
                     input: 'input', textbox: 'input',
-                    list: 'list', spacer: 'spacer',
-                    surfacegui: 'surfacegui', surface: 'surfacegui', billboardgui: 'surfacegui'
+                    list: 'list', spacer: 'spacer'
                 };
                 t = aliases[t] || t;
                 let el;
@@ -8176,23 +8623,6 @@ const BLOCK_DROP_COLORS = {
                     el.type = 'button';
                     el.className = 'mc-ui-textbtn';
                     el.textContent = props.text || props.Text || 'OK';
-                } else if (t === 'imagebutton') {
-                    el = document.createElement('button');
-                    el.type = 'button';
-                    el.className = 'mc-ui-imagebtn';
-                    const img = document.createElement('img');
-                    img.src = this.resolveSrc(props.src || props.Src || props.image || props.Image || props.icon || props.Icon || '');
-                    img.alt = props.alt || props.text || props.Text || 'btn';
-                    img.style.imageRendering = 'pixelated';
-                    if (props.width) img.style.width = (typeof props.width === 'number' ? props.width + 'px' : props.width);
-                    if (props.height) img.style.height = (typeof props.height === 'number' ? props.height + 'px' : props.height);
-                    el.appendChild(img);
-                    if (props.text || props.Text) {
-                        const sp = document.createElement('span');
-                        sp.textContent = props.text || props.Text;
-                        sp.style.marginLeft = '6px';
-                        el.appendChild(sp);
-                    }
                 } else if (t === 'image') {
                     el = document.createElement('img');
                     el.className = 'mc-ui-image';
@@ -8301,10 +8731,10 @@ const BLOCK_DROP_COLORS = {
                     el.className = 'mc-ui-frame';
                 }
                 this.applyProps(el, props, game);
-                if ((t === 'button' || t === 'textbutton' || t === 'imagebutton') && typeof props.onClick === 'function') {
+                if ((t === 'button' || t === 'textbutton') && typeof props.onClick === 'function') {
                     el.addEventListener('click', (ev) => { try { props.onClick(ev, el); } catch (e) { console.error(e); } });
                 }
-                if ((t === 'button' || t === 'textbutton' || t === 'imagebutton') && typeof props.onclick === 'function') {
+                if ((t === 'button' || t === 'textbutton') && typeof props.onclick === 'function') {
                     el.addEventListener('click', (ev) => { try { props.onclick(ev, el); } catch (e) { console.error(e); } });
                 }
                 const handle = {
@@ -8482,12 +8912,18 @@ const BLOCK_DROP_COLORS = {
                     return k;
                 },
                 sound(name, file) {
-                    const path = String(file).replace(/^.\//, '');
-                    const url = ctx.packAssets[path] || ctx.packAssets[path.split('/').pop()];
-                    if (!url) throw new Error('Sound file not in pack: ' + file);
-                    ModAPI.sounds = ModAPI.sounds || {};
-                    ModAPI.sounds[name] = url;
-                    return name;
+                    // Register pack sound when file given; otherwise play by name
+                    if (file != null && file !== '') {
+                        const path = String(file).replace(/^.\//, '');
+                        const url = ctx.packAssets[path] || ctx.packAssets[path.split('/').pop()];
+                        if (!url) throw new Error('Sound file not in pack: ' + file);
+                        ModAPI.sounds = ModAPI.sounds || {};
+                        ModAPI.sounds[name] = url;
+                        return name;
+                    }
+                    try {
+                        if (typeof audio !== 'undefined' && audio.playSound) audio.playSound(String(name));
+                    } catch (e) {}
                 },
                 texture(name, file) {
                     const path = String(file).replace(/^.\//, '');
@@ -8497,7 +8933,7 @@ const BLOCK_DROP_COLORS = {
                     ModAPI.assetCache[path] = url;
                     return name;
                 },
-                log(...args) { console.log('[VXM]', ...args); },
+
 
                 // ===== UI (Minecraft-styled) =====
                 makeUI(type, props) {
@@ -8507,21 +8943,11 @@ const BLOCK_DROP_COLORS = {
                     frame(p) { return ModUI.create('frame', p, ctx.game); },
                     scrollingFrame(p) { return ModUI.create('scrollingFrame', p, ctx.game); },
                     text(p) { return ModUI.create('text', p, ctx.game); },
-                    label(p) { return ModUI.create('text', p, ctx.game); },
-                    textLabel(p) { return ModUI.create('text', p, ctx.game); },
                     button(p) { return ModUI.create('button', p, ctx.game); },
                     textButton(p) { return ModUI.create('textButton', p, ctx.game); },
                     image(p) { return ModUI.create('image', p, ctx.game); },
-                    imageLabel(p) { return ModUI.create('image', p, ctx.game); },
-                    imageButton(p) { return ModUI.create('imagebutton', p, ctx.game); },
-                    textImage(p) { return ModUI.create('textImage', p, ctx.game); },
-                    surfaceGui(p) { return SurfaceGuiSystem.create(p || {}, ctx.game, ctx); },
-                    SurfaceGui(p) { return SurfaceGuiSystem.create(p || {}, ctx.game, ctx); }
+                    textImage(p) { return ModUI.create('textImage', p, ctx.game); }
                 },
-                // Roblox-style SurfaceGui (world-attached HUD)
-                SurfaceGui(props) { return SurfaceGuiSystem.create(props || {}, ctx.game, ctx); },
-                surfaceGui(props) { return SurfaceGuiSystem.create(props || {}, ctx.game, ctx); },
-                clearSurfaceGuis() { SurfaceGuiSystem.clearMod(ctx.modId); },
 
                 // ===== World time =====
                 setTime(v) {
@@ -8562,10 +8988,28 @@ const BLOCK_DROP_COLORS = {
                 notify(msg) {
                     const g = ctx.game || ModAPI.gameRef;
                     if (g && g.notify) g.notify(String(msg));
+                    else this.chat(String(msg));
                 },
                 title(text, seconds, color) {
                     const g = ctx.game || ModAPI.gameRef;
-                    if (g && g.showTitleText) g.showTitleText(String(text), seconds, color);
+                    if (g && g.showTitleText) {
+                        g.showTitleText(String(text), seconds, color);
+                        return;
+                    }
+                    try {
+                        let el = document.getElementById('mod-title-overlay');
+                        if (!el) {
+                            el = document.createElement('div');
+                            el.id = 'mod-title-overlay';
+                            el.style.cssText = 'position:fixed;top:22%;left:50%;transform:translateX(-50%);z-index:200;font-family:monospace;font-size:28px;text-shadow:2px 2px #000;pointer-events:none;';
+                            document.body.appendChild(el);
+                        }
+                        el.textContent = text || '';
+                        el.style.color = color || '#fff';
+                        el.style.display = 'block';
+                        clearTimeout(el._t);
+                        el._t = setTimeout(() => { el.style.display = 'none'; }, (seconds || 2) * 1000);
+                    } catch (e) {}
                 },
 
                 // ===== Menu / mainmod helpers =====
@@ -8609,94 +9053,6 @@ const BLOCK_DROP_COLORS = {
                 pos() {
                     const p = this.player();
                     return p ? { x: p.pos.x, y: p.pos.y, z: p.pos.z } : null;
-                },
-                // ===== Players & Multiplayer (formatVersion 10) =====
-                isMultiplayer() {
-                    const g = ctx.game || ModAPI.gameRef;
-                    return !!(g && g.mp && g.mp.enabled);
-                },
-                isHost() {
-                    const g = ctx.game || ModAPI.gameRef;
-                    return !!(g && g.mp && g.mp.enabled && g.mp.isHost);
-                },
-                getLocalPlayer() {
-                    const g = ctx.game || ModAPI.gameRef;
-                    if (!g || !g.player) return null;
-                    const p = g.player;
-                    return {
-                        id: (g.mp && g.mp.peerId) || 'local',
-                        name: (g.mp && g.mp.playerName) || 'Player',
-                        isLocal: true,
-                        isHost: this.isHost(),
-                        x: p.pos.x, y: p.pos.y, z: p.pos.z,
-                        pos: { x: p.pos.x, y: p.pos.y, z: p.pos.z },
-                        health: p.health, hunger: p.hunger,
-                        gamemode: g.gameMode || 'survival'
-                    };
-                },
-                listPlayers() {
-                    const g = ctx.game || ModAPI.gameRef;
-                    const out = [];
-                    const local = this.getLocalPlayer();
-                    if (local) out.push(local);
-                    if (g && g.mp && g.mp.remotePlayers) {
-                        for (const id of Object.keys(g.mp.remotePlayers)) {
-                            const rp = g.mp.remotePlayers[id];
-                            if (!rp || !rp.pos) continue;
-                            out.push({
-                                id,
-                                name: rp.name || 'Player',
-                                isLocal: false,
-                                isHost: false,
-                                x: rp.pos.x, y: rp.pos.y, z: rp.pos.z,
-                                pos: { x: rp.pos.x, y: rp.pos.y, z: rp.pos.z },
-                                health: rp.health != null ? rp.health : null,
-                                gamemode: rp.gamemode || null
-                            });
-                        }
-                    }
-                    return out;
-                },
-                players() { return this.listPlayers(); },
-                getPlayer(idOrName) {
-                    if (idOrName == null || idOrName === '') return this.getLocalPlayer();
-                    const key = String(idOrName).toLowerCase();
-                    const all = this.listPlayers();
-                    for (const pl of all) {
-                        if (String(pl.id).toLowerCase() === key) return pl;
-                        if (String(pl.name || '').toLowerCase() === key) return pl;
-                    }
-                    if (key === 'local' || key === 'me' || key === 'self') return this.getLocalPlayer();
-                    return null;
-                },
-                getPlayerPos(idOrName) {
-                    const pl = this.getPlayer(idOrName);
-                    return pl ? { x: pl.x, y: pl.y, z: pl.z } : null;
-                },
-                getPlayersPos() {
-                    return this.listPlayers().map(pl => ({
-                        id: pl.id, name: pl.name, isLocal: pl.isLocal,
-                        x: pl.x, y: pl.y, z: pl.z
-                    }));
-                },
-                distanceToPlayer(idOrName) {
-                    const a = this.getLocalPlayer();
-                    const b = this.getPlayer(idOrName);
-                    if (!a || !b || b.isLocal) return 0;
-                    const dx = a.x - b.x, dy = a.y - b.y, dz = a.z - b.z;
-                    return Math.sqrt(dx*dx + dy*dy + dz*dz);
-                },
-                mpSend(data) {
-                    const g = ctx.game || ModAPI.gameRef;
-                    if (g && g.mp && g.mp.enabled && g.mp.send) {
-                        try { g.mp.send(typeof data === 'object' ? data : { type: 'mod', data }); } catch (e) {}
-                    }
-                },
-                onPlayerJoin(fn) {
-                    return this.on('playerJoin', fn);
-                },
-                onPlayerLeave(fn) {
-                    return this.on('playerLeave', fn);
                 },
                 getBlock(x, y, z) {
                     const w = this.world();
@@ -8749,11 +9105,6 @@ const BLOCK_DROP_COLORS = {
                     if (g && g.particles && g.particles.burst) {
                         g.particles.burst(x, y, z, color || 0xffffff, count || 8);
                     }
-                },
-                sound(name) {
-                    try {
-                        if (typeof audio !== 'undefined' && audio.playSound) audio.playSound(String(name));
-                    } catch (e) {}
                 },
                 raycast() {
                     const g = ctx.game || ModAPI.gameRef;
@@ -8860,27 +9211,6 @@ const BLOCK_DROP_COLORS = {
                 dimension() {
                     const g = ctx.game || ModAPI.gameRef;
                     return g && g.world ? g.world.dimension : 'overworld';
-                },
-                notify(msg) {
-                    const g = ctx.game || ModAPI.gameRef;
-                    if (g && g.notify) g.notify(String(msg));
-                    else this.chat(String(msg));
-                },
-                title(text, sec, color) {
-                    try {
-                        let el = document.getElementById('mod-title-overlay');
-                        if (!el) {
-                            el = document.createElement('div');
-                            el.id = 'mod-title-overlay';
-                            el.style.cssText = 'position:fixed;top:22%;left:50%;transform:translateX(-50%);z-index:200;font-family:monospace;font-size:28px;text-shadow:2px 2px #000;pointer-events:none;';
-                            document.body.appendChild(el);
-                        }
-                        el.textContent = text || '';
-                        el.style.color = color || '#fff';
-                        el.style.display = 'block';
-                        clearTimeout(el._t);
-                        el._t = setTimeout(() => { el.style.display = 'none'; }, (sec || 2) * 1000);
-                    } catch (e) {}
                 },
                 storage: {
                     get(key, def) {
@@ -9120,7 +9450,16 @@ const BLOCK_DROP_COLORS = {
 
             if (Array.isArray(mod.worldgen) || Array.isArray(mod.ores)) {
                 ModAPI.worldgen = ModAPI.worldgen || [];
-                ModAPI.worldgen.push(...(mod.worldgen || mod.ores || []));
+                const raw = (mod.worldgen || mod.ores || []);
+                for (const o of raw) {
+                    if (!o) continue;
+                    const copy = { ...o };
+                    if (copy.blockId == null) {
+                        const ref = copy.block || copy.id || copy.ore || copy.key;
+                        if (ref != null) copy.blockId = ModAPI.resolveId(ref);
+                    }
+                    ModAPI.worldgen.push(copy);
+                }
             }
 
             // Avoid duplicate list entries when called from ZIP after script
@@ -9166,36 +9505,50 @@ const BLOCK_DROP_COLORS = {
             }
 
             try {
-                const store = JSON.parse(localStorage.getItem('voxel_mods_v2') || '[]');
-                // Don't store huge data-URLs packs fully — store metadata-only flag
-                const slim = { ...mod };
-                if (slim.assets) {
-                    const slimAssets = {};
-                    for (const [k, v] of Object.entries(slim.assets)) {
-                        if (typeof v === 'string' && v.startsWith('data:') && v.length > 50000) continue;
-                        slimAssets[k] = v;
-                    }
-                    slim.assets = slimAssets;
-                }
-                const filtered = store.filter(m => (m.id || m.name) !== (mod.id || mod.name));
-                filtered.push(slim);
-                localStorage.setItem('voxel_mods_v2', JSON.stringify(filtered.slice(-15)));
-                localStorage.setItem('voxel_mods', JSON.stringify(filtered.slice(-15)));
+                // Full pack to IndexedDB (no 15-mod cap, assets kept)
+                const persist = async () => {
+                    try {
+                        await saveSys.init();
+                        await saveSys.saveMod(mod);
+                    } catch (e) { console.warn('[VXM] IDB save mod', e); }
+                    try {
+                        const store = JSON.parse(localStorage.getItem('voxel_mods_v2') || '[]');
+                        const slim = {
+                            voxelMod: true,
+                            formatVersion: mod.formatVersion || 1,
+                            id: mod.id, name: mod.name, version: mod.version,
+                            author: mod.author, description: mod.description,
+                            _idb: true
+                        };
+                        const filtered = store.filter(m => (m.id || m.name) !== (mod.id || mod.name));
+                        filtered.push(slim);
+                        localStorage.setItem('voxel_mods_v2', JSON.stringify(filtered.slice(-15)));
+                        localStorage.setItem('voxel_mods', JSON.stringify(filtered.slice(-15)));
+                    } catch (e2) {}
+                };
+                persist();
             } catch (e) {}
             return reg;
         }
 
-        function loadModsFromStorage(game) {
+        async function loadModsFromStorage(game) {
             try {
-                let store = JSON.parse(localStorage.getItem('voxel_mods_v2') || 'null');
-                if (!store) store = JSON.parse(localStorage.getItem('voxel_mods') || '[]');
-                if (!Array.isArray(store)) return;
+                await saveSys.init();
+                let list = [];
+                try { list = await saveSys.loadAllMods(); } catch (e) { list = []; }
+                if (!list.length) {
+                    try {
+                        let store = JSON.parse(localStorage.getItem('voxel_mods_v2') || 'null');
+                        if (!store) store = JSON.parse(localStorage.getItem('voxel_mods') || '[]');
+                        list = Array.isArray(store) ? store.filter(m => m && !m._idb) : [];
+                    } catch (e) { list = []; }
+                }
                 let flags = {};
                 try { flags = JSON.parse(localStorage.getItem('voxel_mod_enabled') || '{}') || {}; } catch (e) {}
-                for (const m of store) {
+                for (const m of list) {
+                    if (!m) continue;
                     const key = m.id || m.name;
                     if (flags[key] === false) {
-                        // Keep in list as disabled without registering content
                         ModAPI.loaded.push({
                             name: m.name || key, title: m.name || key, ver: m.version || m.ver || '1',
                             modId: key, enabled: false, logo: m.logo || m.icon || null,
@@ -9211,6 +9564,62 @@ const BLOCK_DROP_COLORS = {
                 }
             } catch (e) {}
         }
+
+        (function registerVxmCommands() {
+            try {
+                ModAPI.registerCommand('vxm', (args, ctx) => {
+                    const game = (ctx && ctx.game) || ModAPI.gameRef || window.game;
+                    const chat = (msg) => {
+                        if (game && game.addChat) game.addChat(msg);
+                        else if (game && game.notify) game.notify(msg);
+                        else console.log('[vxm]', msg);
+                    };
+                    const parts = Array.isArray(args) ? args : String(args || '').trim().split(/\s+/);
+                    const sub = (parts[0] || 'list').toLowerCase();
+                    if (sub === 'list') {
+                        const lines = (ModAPI.loaded || []).map(m =>
+                            (m.enabled === false ? '[OFF] ' : '') + (m.modId || m.name) + ' v' + (m.ver || '?') +
+                            ' B:' + ((m.blocks && m.blocks.length) || 0) +
+                            ' I:' + ((m.items && m.items.length) || 0)
+                        );
+                        chat(lines.length ? lines.join(' | ') : 'No mods loaded');
+                        return true;
+                    }
+                    if (sub === 'errors') {
+                        const errs = ModAPI.errors || [];
+                        chat(errs.length ? errs.slice(-20).join(' || ') : 'No mod errors');
+                        return true;
+                    }
+                    if (sub === 'ids') {
+                        const pairs = [];
+                        for (const [k, id] of Object.entries(ModAPI.keyToId || {})) {
+                            if (k.includes(':') && typeof id === 'number') pairs.push(k + '=' + id);
+                        }
+                        pairs.sort();
+                        chat(pairs.length ? pairs.slice(0, 40).join(', ') + (pairs.length > 40 ? ' …' : '') : 'No namespaced ids');
+                        return true;
+                    }
+                    if (sub === 'reload') {
+                        const id = parts[1];
+                        if (!id) { chat('Usage: /vxm reload <modId>'); return true; }
+                        chat('Re-applying ' + id + ' from storage…');
+                        (async () => {
+                            try {
+                                await saveSys.init();
+                                const all = await saveSys.loadAllMods();
+                                const m = all.find(x => (x.id || x.name) === id);
+                                if (!m) { chat('Mod not in storage: ' + id); return; }
+                                applyVxmMod(m, game);
+                                chat('Re-applied ' + id + ' (registry only; existing chunks not rebuilt)');
+                            } catch (e) { chat('Reload failed: ' + (e.message || e)); }
+                        })();
+                        return true;
+                    }
+                    chat('Usage: /vxm list|errors|ids|reload <id>');
+                    return true;
+                }, { help: '/vxm list|errors|ids|reload <id>', allowClient: true });
+            } catch (e) { console.warn('[VXM] command register', e); }
+        })();
 
         function loadExampleVxm() {
             return {
@@ -9232,6 +9641,9 @@ const BLOCK_DROP_COLORS = {
                 recipes: [
                     { shape: ['RUBY','RUBY','RUBY','RUBY','RUBY','RUBY','RUBY','RUBY','RUBY'], out: 'RUBY_BLOCK', count: 1 },
                     { in: ['RUBY_BLOCK'], out: 'RUBY', count: 9 }
+                ],
+                ores: [
+                    { block: 'RUBY_ORE', size: 5, count: 10, yMin: 4, yMax: 40, chance: 0.004 }
                 ]
             };
         }
@@ -9239,7 +9651,26 @@ const BLOCK_DROP_COLORS = {
         const GAME_CHANGELOG = `
 Voxel Survival — Changelog
 =========================
-v1.11 (latest) — Agriculture & Skies
+v1.14 (latest) — First-Person Hands
+• Full Minecraft-style FP arms: right hand + fingers, left arm, sleeves
+• Held blocks, tools, items & shield with different hand poses
+• Swing on mine / place / punch · equip bob when switching items
+• Eat animation · mining arm vibration · shield block pose
+• Skin textures on FP arms & sleeves
+
+v1.13 — Expanded Biomes
+• 15+ overworld biomes driven by temperature & humidity climate noise
+• New: birch forest, taiga, snowy taiga, jungle, savanna, cherry grove
+• New: mushroom fields, mangrove swamp, dark forest, beach & ocean
+• Biome-specific trees (oak, birch, spruce, cherry, mangrove) + canopies
+• Desert cacti, sugar cane near water, giant mushrooms on mycelium
+• Podzol in taiga, mycelium islands, banded mesa terracotta
+• Granite / diorite / andesite underground patches
+
+v1.12
+• Menu polish, agriculture continuation
+
+v1.11 — Agriculture & Skies
 • Farming: farmland, hoes, wheat crops (8 stages), carrots, potatoes
 • Bone meal accelerates crop growth
 • Weather: rain, thunder storms, wet farmland hydration
@@ -9251,7 +9682,7 @@ v1.11 (latest) — Agriculture & Skies
 v1.10
 • FP hand holds any inventory item/block
 • Place blocks with id >= 100
-• .vxm formatVersion 10 (players/MP, SurfaceGui, ImageButton)
+• .vxm formatVersion 9 (events, takeItem, title)
 
 v1.9
 • Android TV / remote D-pad support
@@ -9279,7 +9710,7 @@ WASD · Space · Shift · Ctrl · Arrows look · Alt mouse
 F5 camera · F3 debug · F4 gamemode · E inv · T chat
 `;
 
-const VXM_GUIDE = `HOW TO MAKE A .vxm MOD — ULTIMATE GUIDE (formatVersion 10)
+const VXM_GUIDE = `HOW TO MAKE A .vxm MOD — ULTIMATE GUIDE (formatVersion 9)
 ================================================================
 .vxm = ZIP renamed to .vxm
 
@@ -9296,7 +9727,7 @@ mod.json
 --------
 {
   "voxelMod": true,
-  "formatVersion": 10,
+  "formatVersion": 9,
   "name": "Ultimate Demo",
   "id": "ultimate_demo",
   "version": "1.0.0",
@@ -9330,7 +9761,7 @@ Make.command("hello", (args, ctx) => {
 }, { help: "Say hello", allowClient: true });
 
 // WORLD / PLAYER
-Make.pos();                          // local {x,y,z}
+Make.pos();                          // {x,y,z}
 Make.getBlock(x,y,z);
 Make.setBlock(x,y,z, id);
 Make.give(103, 5);                   // apples
@@ -9345,36 +9776,6 @@ Make.getItem(slot);                  // one slot
 Make.setHotbar(0..8);
 Make.countItem(itemId); Make.hasItem(itemId, n);
 Make.takeItem(itemId, n); Make.clearSlot(slot);
-
-// PLAYERS & MULTIPLAYER (v10)
-Make.isMultiplayer();                // true if P2P session active
-Make.isHost();
-Make.getLocalPlayer();               // {id,name,isLocal,x,y,z,pos,health,...}
-Make.listPlayers();                  // local + all remotes
-Make.players();                      // alias of listPlayers
-Make.getPlayer(idOrName);            // by peer id or display name ("me"/"local")
-Make.getPlayerPos(idOrName);         // {x,y,z} or null
-Make.getPlayersPos();                // [{id,name,isLocal,x,y,z}, ...]
-Make.distanceToPlayer(idOrName);     // meters from local
-Make.onPlayerJoin(({id,name}) => {});
-Make.onPlayerLeave(({id,name}) => {});
-Make.mpSend({ type: 'mod', hello: 1 }); // raw P2P payload (host/client)
-
-// SURFACE GUI (v10 — Roblox-like world UI)
-// Attaches an HTML panel to a world/block position; children = Frame/Label/Button/...
-const sg = Make.SurfaceGui({
-  block: { x: 10, y: 64, z: -3 },   // center of block + face offset
-  face: 'front',                     // front|back|left|right|top|bottom|north|south|east|west
-  width: 200, height: 120,
-  maxDistance: 20,
-  alwaysOnTop: false
-});
-sg.Label({ text: 'Shop', x: 8, y: 8, color: '#ff0' });
-sg.TextButton({ text: 'Buy', x: 8, y: 40 });
-sg.ImageButton({ src: 'icon.png', text: 'Go', x: 8, y: 70 });
-sg.Button({ text: 'Close' }).el.onclick = () => sg.destroy();
-// Also: Make.ui.surfaceGui({...}), Make.ui.imageButton({...}), Make.ui.label({...})
-// Screen UI still: Make.makeUI / Make.ui.frame / text / button / textButton / image
 
 // EVENTS
 Make.onBreak(({x,y,z,id}) => {});
@@ -9860,13 +10261,6 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                     this.game.scene.add(g);
                     rp = { mesh: g, name: d.name || 'Player', lastPos: new THREE.Vector3(), pos: new THREE.Vector3(), nameSpr: spr, nameCanvas: canvas };
                     this.remotePlayers[id] = rp;
-                    try {
-                        if (typeof ModAPI !== 'undefined' && this.game && this.game._modEvents && this.game._modEvents.playerJoin) {
-                            for (const fn of this.game._modEvents.playerJoin.slice()) {
-                                try { fn({ id, name: rp.name, isLocal: false }); } catch (e) {}
-                            }
-                        }
-                    } catch (e) {}
                 } else if (d.name && d.name !== rp.name) {
                     rp.name = d.name;
                     if (rp.nameCanvas) {
@@ -9896,16 +10290,8 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
             _removeRemote(id) {
                 const rp = this.remotePlayers[id];
                 if (rp) {
-                    const leaveName = rp.name || 'Player';
                     this.game.scene.remove(rp.mesh);
                     delete this.remotePlayers[id];
-                    try {
-                        if (typeof ModAPI !== 'undefined' && this.game && this.game._modEvents && this.game._modEvents.playerLeave) {
-                            for (const fn of this.game._modEvents.playerLeave.slice()) {
-                                try { fn({ id, name: leaveName, isLocal: false }); } catch (e) {}
-                            }
-                        }
-                    } catch (e) {}
                 }
             }
             _broadcast(data, except) {
@@ -13699,6 +14085,9 @@ Save as PNG and upload in-game.`;
                 this.worldName = name;
                 this.world = new World(this.scene, this.texAtlas, Number(data.seed) || 0);
                 if(data.mods) this.world.modifications = data.mods;
+                if (data.blockRemap && typeof ModAPI !== 'undefined' && ModAPI.applyWorldRemap) {
+                    ModAPI.applyWorldRemap(data.blockRemap);
+                }
 
                 this.player = new Player(this.camera, this.world, this);
                 if (this.playerView) {
@@ -13735,7 +14124,9 @@ Save as PNG and upload in-game.`;
                     pos: {x: this.player.pos.x, y: this.player.pos.y, z: this.player.pos.z},
                     inv: this.player.inventory,
                     armor: this.player.armor || { helmet:null, chest:null, legs:null, boots:null },
-                    mods: this.world.modifications
+                    mods: this.world.modifications,
+                    blockRemap: (typeof ModAPI !== 'undefined' && ModAPI.exportRemap) ? ModAPI.exportRemap() : {},
+                    chunkFormat: 16
                 }).then(()=> this.notify("World Progress Saved"));
             }
 
@@ -15660,6 +16051,7 @@ Save as PNG and upload in-game.`;
                 if (this._mine) this._mine.progress = 0;
                 const wrap = document.getElementById('mine-bar-wrap');
                 if (wrap) wrap.style.display = 'none';
+                if (this.playerView && this.playerView.setMining) this.playerView.setMining(false, 0);
             }
 
             finishBreakBlock(x, y, z, id) {
@@ -15692,7 +16084,7 @@ Save as PNG and upload in-game.`;
                         }
                     }
                 }
-                audio.playSound('break');
+                audio.playSound('break', id);
                 const col = id === BLOCKS.GRASS ? 0x4caf50
                     : id === BLOCKS.STONE || id === BLOCKS.COBBLESTONE ? 0x9e9e9e
                     : id === BLOCKS.SAND ? 0xf5e6b3
@@ -15781,11 +16173,14 @@ Save as PNG and upload in-game.`;
                     wrap.style.display = 'block';
                     bar.style.width = Math.min(100, this._mine.progress * 100) + '%';
                 }
-                // Swing periodically
+                // Swing periodically + hand shake while mining
                 this._mineSwingT = (this._mineSwingT || 0) + dt;
                 if (this._mineSwingT > 0.35) {
                     this._mineSwingT = 0;
                     if (this.playerView) this.playerView.triggerSwing();
+                }
+                if (this.playerView && this.playerView.setMining) {
+                    this.playerView.setMining(true, this._mine.progress || 0);
                 }
                 if (this._mine.progress >= 1) {
                     this.finishBreakBlock(x, y, z, id);
@@ -15876,6 +16271,7 @@ Save as PNG and upload in-game.`;
                     // Survival: start / continue mining this block (progress in updateMining)
                     this.beginMining(target.hit.x, target.hit.y, target.hit.z);
                 } else if(action === 'place') {
+                    if (this.playerView) this.playerView.triggerSwing();
                     // Bow shoots on right-click
                     const heldBow = this.player.inventory[this.player.hotbarSelect];
                     if (heldBow && heldBow.id === ITEMS.BOW) {
@@ -16086,6 +16482,7 @@ Save as PNG and upload in-game.`;
                             item.count--;
                             if (item.count <= 0) this.player.inventory[this.player.hotbarSelect] = null;
                             audio.playSound('eat');
+                            if (this.playerView && this.playerView.triggerEat) this.playerView.triggerEat();
                             this.updateHUD();
                         }
                         return;
@@ -16126,7 +16523,7 @@ Save as PNG and upload in-game.`;
                             }
                         }
                         if (this.mp && this.mp.enabled) this.mp.sendBlock(target.prev.x, target.prev.y, target.prev.z, item.id);
-                        audio.playSound('place');
+                        audio.playSound('place', item.id);
                         this.particles.spawn(target.prev.x + 0.5, target.prev.y + 0.5, target.prev.z + 0.5, 0xffffff, 4, 1.2, 0.35);
                         if (this.gameMode !== 'creative') {
                             item.count--;
@@ -16994,11 +17391,6 @@ Save as PNG and upload in-game.`;
                         if (m.modRaw && m.modRaw.ui) ModAPI.applyUI(m.modRaw.ui);
                     } catch (e) { console.warn('mainmod UI', e); }
                 }
-            }
-
-            clearChat() {
-                const log = document.getElementById('chat-log');
-                if (log) log.innerHTML = '';
             }
 
             animate() {
