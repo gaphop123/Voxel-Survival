@@ -951,6 +951,88 @@
         .replay-card:hover { background: #9e9e9e; }
         .replay-card .rp-meta { font-size: 9px; color: #333; margin-top: 4px; opacity: 0.9; }
 
+
+        /* ===== Halloween Event ===== */
+        /* Keep main-menu transparent so #menu-world-bg spinning world stays visible */
+        body.halloween-event #main-menu {
+            background: transparent !important;
+        }
+        body.halloween-event #main-menu::before {
+            opacity: 0.42 !important;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -5%, rgba(255,120,40,0.45), transparent 55%),
+                radial-gradient(ellipse 50% 40% at 15% 80%, rgba(80,0,120,0.35), transparent 50%),
+                linear-gradient(180deg, rgba(26,10,24,0.35) 0%, rgba(42,21,32,0.25) 40%, rgba(26,42,18,0.2) 100%) !important;
+            background-image: none !important;
+            background:
+                radial-gradient(ellipse 70% 45% at 50% -5%, rgba(255,120,40,0.45), transparent 55%),
+                radial-gradient(ellipse 50% 40% at 15% 80%, rgba(80,0,120,0.35), transparent 50%),
+                linear-gradient(180deg, rgba(26,10,24,0.35) 0%, rgba(42,21,32,0.25) 40%, rgba(26,42,18,0.2) 100%) !important;
+            z-index: 0;
+        }
+        body.halloween-event #menu-world-bg {
+            display: block !important;
+            z-index: 0;
+            filter: saturate(1.15) hue-rotate(-8deg) brightness(0.92);
+        }
+        body.halloween-event #menu-world-bg canvas {
+            display: block !important;
+        }
+        body.halloween-event .mc-title {
+            color: #ff9800 !important;
+            text-shadow: 3px 3px 0 #3f1a00, 0 0 18px rgba(255,140,0,0.45) !important;
+            -webkit-text-fill-color: #ff9800 !important;
+        }
+        body.halloween-event .mc-splash {
+            color: #a5ff55 !important;
+            text-shadow: 2px 2px 0 #1a3f00 !important;
+        }
+        body.halloween-event .mc-btn:hover {
+            background: #c47a2a !important;
+            color: #fff8e1 !important;
+        }
+        #halloween-banner {
+            display: none;
+            width: min(400px, 92vw);
+            margin: 0 0 12px;
+            padding: 10px 12px;
+            background: linear-gradient(180deg, #3d1a4a, #1a0a20);
+            border: 3px solid #ff9800;
+            border-top-color: #ffcc80;
+            border-left-color: #ffcc80;
+            color: #ffcc80;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            text-align: center;
+            line-height: 1.55;
+            box-shadow: 0 0 24px rgba(255,120,0,0.35);
+            position: relative; z-index: 2;
+        }
+        body.halloween-event #halloween-banner { display: block; }
+        #halloween-banner .hw-title {
+            color: #ff9800; font-size: 12px; margin-bottom: 4px;
+            text-shadow: 1px 1px 0 #000;
+        }
+        #halloween-banner .hw-sub { color: #cfc; font-size: 9px; opacity: 0.95; }
+        #halloween-hud-badge {
+            display: none;
+            position: absolute; top: 12px; left: 12px; z-index: 95;
+            background: rgba(40,10,50,0.75); border: 2px solid #ff9800;
+            color: #ffcc80; font-family: 'Press Start 2P', monospace;
+            font-size: 9px; padding: 5px 8px; pointer-events: none;
+            text-shadow: 1px 1px 0 #000;
+        }
+        body.halloween-event #hud #halloween-hud-badge.show { display: block; }
+        .hw-bat {
+            position: absolute; pointer-events: none; z-index: 1;
+            font-size: 18px; opacity: 0.55; animation: hwBatFly 14s linear infinite;
+        }
+        @keyframes hwBatFly {
+            0% { transform: translate(-10vw, 20vh) rotate(-8deg); }
+            50% { transform: translate(60vw, 8vh) rotate(8deg); }
+            100% { transform: translate(110vw, 25vh) rotate(-4deg); }
+        }
+
         /* ===== Boot loading screen ===== */
         #boot-loading {
             position: fixed; inset: 0; z-index: 100000;
@@ -1012,10 +1094,12 @@
             position: fixed; inset: 0; z-index: 0;
             pointer-events: none;
             background: #87CEEB;
+            display: block;
         }
         #menu-world-bg canvas {
             width: 100% !important; height: 100% !important;
-            display: block;
+            display: block !important;
+            position: absolute; inset: 0;
         }
         #main-menu {
             z-index: 100;
@@ -1023,6 +1107,12 @@
         }
         #main-menu::before {
             opacity: 0.12 !important;
+            z-index: 0;
+        }
+        /* Menu panels stay above the spinning world */
+        #main-menu .menu-panel {
+            position: relative;
+            z-index: 2;
         }
         /* Pixel HUD icons */
         .stat-bar svg.mc-icon, .hunger-bar svg.mc-icon, .oxygen-bar svg.mc-icon {
@@ -1198,6 +1288,10 @@
         <div id="menu-main" class="menu-panel mc-main-menu" style="display: flex;">
             <div class="menu-title mc-title">VOXEL SURVIVAL</div>
             <div class="mc-splash" id="mc-splash">First-Person Hands!</div>
+            <div id="halloween-banner" aria-live="polite">
+                <div class="hw-title">🎃 HALLOWEEN EVENT 🎃</div>
+                <div class="hw-sub">Pumpkin patches · Jack-o'-Lanterns · Candy Corn<br>Spooky nights until early November</div>
+            </div>
             <div class="menu-subtitle mc-subtitle">A blocky survival sandbox</div>
             <button class="menu-btn mc-btn" id="btn-new-world">Singleplayer</button>
             <button class="menu-btn mc-btn" id="btn-join-mp">Multiplayer</button>
@@ -1226,7 +1320,7 @@
                 </select>
             </div>
             <div class="mc-footer">
-                <span class="mc-ver">Voxel Survival 1.14</span>
+                <span class="mc-ver">Voxel Survival 1.15</span>
                 <span class="mc-copy"></span>
             </div>
         </div>
@@ -1327,7 +1421,7 @@
             <div id="mod-list" style="width:100%;max-height:180px;overflow:auto;margin:8px 0;font-size:13px;"></div>
             <div id="mod-errors" style="width:100%;max-width:480px;color:#f88;font-size:11px;margin:4px 0;"></div>
             <button class="menu-btn" id="btn-mod-example">LOAD EXAMPLE RUBY MOD</button>
-            <button class="menu-btn" id="btn-mod-clear">UNLOAD ALL (reload page to reset IDs)</button>
+            <button class="menu-btn" id="btn-mod-clear">UNLOAD ALL & WIPE STORAGE</button>
             <button class="menu-btn" id="btn-mod-guide">HOW TO MAKE A MOD</button>
             <button class="menu-btn" id="btn-mod-copy-guide">COPY GUIDE</button>
             <button class="menu-btn" id="btn-back-mods">BACK</button>
@@ -1555,6 +1649,7 @@
 
     <!-- Game HUD -->
     <div id="hud">
+        <div id="halloween-hud-badge">🎃 HALLOWEEN</div>
         <div id="gamemode-hud">SURVIVAL</div>
         <div id="compass-hud">
             <div id="compass-dir">N</div>
@@ -1754,6 +1849,17 @@
         /* ==============================================================================
            1. CONSTANTS & UTILS
         ============================================================================== */
+        
+        /* Halloween seasonal event (mid-Oct → early Nov, local time) */
+        function isHalloweenEvent(d) {
+            d = d || new Date();
+            const m = d.getMonth(); // 0-based
+            const day = d.getDate();
+            if (m === 9 && day >= 15) return true;  // Oct 15+
+            if (m === 10 && day <= 5) return true;  // Nov 1–5
+            return false;
+        }
+
         const CHUNK_SIZE = 16;
         const CHUNK_HEIGHT = 64;
         const RENDER_DISTANCE = 4;
@@ -1809,7 +1915,9 @@
             FARMLAND: 202, FARMLAND_DRY: 203,
             WHEAT_0: 204, WHEAT_1: 205, WHEAT_2: 206, WHEAT_3: 207,
             WHEAT_4: 208, WHEAT_5: 209, WHEAT_6: 210, WHEAT_7: 211,
-            CARROTS: 212, POTATOES: 213
+            CARROTS: 212, POTATOES: 213,
+            // Halloween
+            JACK_O_LANTERN: 220, CARVED_PUMPKIN: 221
         };
 
         const BlockRegistry = {
@@ -1851,6 +1959,8 @@
             [BLOCKS.BOOKSHELF]: { name: "Bookshelf", solid: true, tex: [36, 36, 7, 7, 36, 36], type: 'wood' },
             [BLOCKS.MOSSY_COBBLE]: { name: "Mossy Cobblestone", solid: true, tex: [37, 37, 37, 37, 37, 37], type: 'stone' },
             [BLOCKS.PUMPKIN]: { name: "Pumpkin", solid: true, tex: [38, 38, 39, 39, 38, 38], type: 'plant' },
+            [BLOCKS.CARVED_PUMPKIN]: { name: "Carved Pumpkin", solid: true, tex: [38, 38, 39, 39, 38, 38], type: 'plant' },
+            [BLOCKS.JACK_O_LANTERN]: { name: "Jack o'Lantern", solid: true, tex: [38, 38, 39, 39, 38, 38], type: 'plant', light: 14 },
             [BLOCKS.NETHERRACK]: { name: "Netherrack", solid: true, tex: [40, 40, 40, 40, 40, 40], type: 'stone' },
             [BLOCKS.GLOWSTONE]: { name: "Glowstone", solid: true, tex: [41, 41, 41, 41, 41, 41], type: 'glass' },
             [BLOCKS.RED_MUSHROOM]: { name: "Red Mushroom", solid: false, transparent: true, tex: [42, 42, 42, 42, 42, 42], type: 'plant', shape: 'cross' },
@@ -1982,7 +2092,9 @@
             WOODEN_HOE: 214, STONE_HOE: 215, IRON_HOE: 216, GOLD_HOE: 217, DIAMOND_HOE: 218,
             WHEAT_SEEDS: 220, WHEAT: 221, CARROT: 222, POTATO: 223, BAKED_POTATO: 224,
             BONE_MEAL: 225, SHIELD: 226,
-            SLIME_BALL: 227, MAGMA_CREAM: 228, GHAST_TEAR: 229, GOLD_NUGGET: 230
+            SLIME_BALL: 227, MAGMA_CREAM: 228, GHAST_TEAR: 229, GOLD_NUGGET: 230,
+            // Halloween
+            CANDY_CORN: 240, SPOOKY_CANDY: 241
         };
 
 
@@ -2133,7 +2245,10 @@
             [ITEMS.POTATO]: { name: "Potato", maxStack: 64, type: 'food', heal: 1, plant: BLOCKS.POTATOES },
             [ITEMS.BAKED_POTATO]: { name: "Baked Potato", maxStack: 64, type: 'food', heal: 3 },
             [ITEMS.BONE_MEAL]: { name: "Bone Meal", maxStack: 64, type: 'item', boneMeal: true },
-            [ITEMS.SHIELD]: { name: "Shield", maxStack: 1, type: 'tool', toolType: 'shield' }
+            [ITEMS.SHIELD]: { name: "Shield", maxStack: 1, type: 'tool', toolType: 'shield' },
+            [ITEMS.CANDY_CORN]: { name: "Candy Corn", maxStack: 64, type: 'food', heal: 2 },
+            [ITEMS.SPOOKY_CANDY]: { name: "Spooky Candy", maxStack: 16, type: 'food', heal: 4 },
+            [ITEMS.GOLD_NUGGET]: { name: "Gold Nugget", maxStack: 64, type: 'item' },
         };
 
         // Recipes
@@ -2171,6 +2286,13 @@
             { shape: [ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD, ITEMS.EMERALD], out: BLOCKS.EMERALD_BLOCK, count: 1 },
             { shape: [BLOCKS.EMERALD_BLOCK, null, null, null, null, null, null, null, null], out: ITEMS.EMERALD, count: 9 },
             { shape: [BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND, ITEMS.GUNPOWDER, BLOCKS.SAND], out: BLOCKS.TNT, count: 1 },
+            // Halloween
+            { in: [BLOCKS.PUMPKIN], out: BLOCKS.CARVED_PUMPKIN, count: 1 },
+            { shape: [BLOCKS.CARVED_PUMPKIN, null, null, BLOCKS.TORCH, null, null, null, null, null], out: BLOCKS.JACK_O_LANTERN, count: 1 },
+            { shape: [BLOCKS.PUMPKIN, null, null, BLOCKS.TORCH, null, null, null, null, null], out: BLOCKS.JACK_O_LANTERN, count: 1 },
+            { in: [ITEMS.SUGAR, ITEMS.WHEAT], out: ITEMS.CANDY_CORN, count: 3 },
+            { shape: [ITEMS.CANDY_CORN, ITEMS.CANDY_CORN, null, ITEMS.CANDY_CORN, ITEMS.GOLD_NUGGET, null, null, null, null], out: ITEMS.SPOOKY_CANDY, count: 1 },
+
 
             { in: [BLOCKS.WOOD], out: BLOCKS.PLANKS, count: 4 },
             { in: [BLOCKS.BIRCH_LOG], out: BLOCKS.BIRCH_PLANKS, count: 4 },
@@ -2899,6 +3021,8 @@
             [BLOCKS.BOOKSHELF]: 'bookshelf',
             [BLOCKS.MELON]: 'melon',
             [BLOCKS.PUMPKIN]: 'pumpkin',
+            [BLOCKS.CARVED_PUMPKIN]: 'pumpkin',
+            [BLOCKS.JACK_O_LANTERN]: 'pumpkin',
             [BLOCKS.CLAY]: 'clay',
             [BLOCKS.WOOL]: 'white_wool',
             [BLOCKS.WOOL_RED]: 'red_wool',
@@ -3809,6 +3933,13 @@
                                     const fi = x + (groundY+1) * size + z * size * height;
                                     data[fi] = 19;
                                 }
+                            // Halloween / autumn pumpkin patches (plains-like)
+                            if (!isSand && !isSnow && biome !== 'desert' && biome !== 'ocean' && biome !== 'mesa'
+                                && hashRand(worldX, 88, worldZ) < ((typeof isHalloweenEvent === 'function' && isHalloweenEvent()) ? 0.035 : 0.008)
+                                && x > 0 && x < size-1 && z > 0 && z < size-1) {
+                                const fi = x + (groundY+1) * size + z * size * height;
+                                if (!data[fi]) data[fi] = 37; // PUMPKIN
+                            }
                             }
                             // Sugar cane near water in swamp/beach
                             if ((isSwamp || biome === 'beach') && hashRand(worldX, 70, worldZ) < 0.03) {
@@ -9651,7 +9782,15 @@ const BLOCK_DROP_COLORS = {
         const GAME_CHANGELOG = `
 Voxel Survival — Changelog
 =========================
-v1.14 (latest) — First-Person Hands
+v1.15 (latest) — Halloween Event
+• Seasonal Halloween event (Oct 15 – Nov 5): themed menu, bats, orange UI
+• Pumpkin patches spawn more often during the event
+• New blocks: Carved Pumpkin, Jack o'Lantern (craft with Torch)
+• New items: Candy Corn, Spooky Candy (food)
+• Mod UNLOAD ALL now wipes IndexedDB + localStorage so mods stay gone after reload
+• Individual mod DELETE removes the pack from IndexedDB storage
+
+v1.14 — First-Person Hands
 • Full Minecraft-style FP arms: right hand + fingers, left arm, sleeves
 • Held blocks, tools, items & shield with different hand poses
 • Swing on mine / place / punch · equip bob when switching items
@@ -11566,8 +11705,8 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
             constructor(container) {
                 this.container = container;
                 this.running = true;
-                this.w = container.clientWidth || 280;
-                this.h = container.clientHeight || 280;
+                this.w = Math.max(container.clientWidth || 0, 200) || 280;
+                this.h = Math.max(container.clientHeight || 0, 200) || 280;
                 this.scene = new THREE.Scene();
                 this.scene.background = new THREE.Color(0x87CEEB);
                 this.camera = new THREE.PerspectiveCamera(42, this.w / this.h, 0.1, 200);
@@ -11701,13 +11840,14 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                 hostEl.appendChild(this.renderer.domElement);
                 hostEl.style.display = 'block';
 
-                this.scene.background = new THREE.Color(0x87CEEB);
-                this.scene.fog = new THREE.Fog(0x9ec8e8, 50, 140);
-                this.scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-                const sun = new THREE.DirectionalLight(0xfff5d6, 1.1);
+                const hw = (typeof isHalloweenEvent === 'function' && isHalloweenEvent());
+                this.scene.background = new THREE.Color(hw ? 0x1a1028 : 0x87CEEB);
+                this.scene.fog = new THREE.Fog(hw ? 0x2a1838 : 0x9ec8e8, hw ? 40 : 50, hw ? 120 : 140);
+                this.scene.add(new THREE.AmbientLight(0xffffff, hw ? 0.55 : 0.72));
+                const sun = new THREE.DirectionalLight(hw ? 0xff9a40 : 0xfff5d6, hw ? 0.85 : 1.1);
                 sun.position.set(40, 80, 30);
                 this.scene.add(sun);
-                this.scene.add(new THREE.HemisphereLight(0x87CEEB, 0x4a7a32, 0.48));
+                this.scene.add(new THREE.HemisphereLight(hw ? 0xff6a20 : 0x87CEEB, hw ? 0x2a1a10 : 0x4a7a32, hw ? 0.4 : 0.48));
 
                 let texAtlas = null;
                 try { if (window.game && window.game.texAtlas) texAtlas = window.game.texAtlas; } catch (e) {}
@@ -12436,16 +12576,28 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                         this.notify('Example Ruby mod loaded');
                     } catch (e) { this.notify('Mod error: ' + e.message); console.error(e); }
                 });
-                document.getElementById('btn-mod-clear')?.addEventListener('click', () => {
+                document.getElementById('btn-mod-clear')?.addEventListener('click', async () => {
+                    if (!confirm('Unload ALL mods and wipe storage? Page will reload so block IDs reset.')) return;
                     ModAPI.loaded = [];
                     ModAPI.errors = [];
                     ModAPI.keyToId = {};
+                    ModAPI.mainMods = [];
+                    ModAPI.worldMods = [];
+                    ModAPI.worldgen = [];
+                    ModAPI.assetCache = {};
+                    ModAPI.sounds = {};
                     try {
                         localStorage.removeItem('voxel_mods');
                         localStorage.removeItem('voxel_mods_v2');
+                        localStorage.removeItem('voxel_mod_enabled');
                     } catch (e) {}
+                    try {
+                        await saveSys.init();
+                        await saveSys.clearMods();
+                    } catch (e) { console.warn('[VXM] clearMods IDB', e); }
                     this.refreshModList();
-                    this.notify('Mods cleared — reload page to fully reset block IDs');
+                    this.notify('Mods wiped from storage — reloading…');
+                    setTimeout(() => location.reload(), 400);
                 });
                 const loadModFiles = async (files) => {
                     if (!files || !files.length) return;
@@ -12518,6 +12670,7 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                 try {
                     const splashes = [
                         'Also try Minecraft!', 'Finite water!', 'Mods with AI!',
+                        '🎃 Happy Halloween!', 'Carve a pumpkin!', 'Candy corn season!', 'Jack o\'Lantern light!',
                         'As seen on the internet!', 'Singleplayer!', 'Multiplayer!',
                         'Press F5!', 'Not a bug, a feature!', 'Voxel!', 'Ultimate .vxm!',
                         'Made with Three.js!', '90% bug free!', 'Do not distribute!',
@@ -15576,19 +15729,29 @@ Save as PNG and upload in-game.`;
                             this.refreshModList();
                         }
                     });
-                    el.querySelectorAll('.btn-delete').forEach(b => b.onclick = () => {
+                    el.querySelectorAll('.btn-delete').forEach(b => b.onclick = async () => {
                         const i = +b.dataset.idx;
                         const mod = ModAPI.loaded[i];
                         if (!mod) return;
-                        if (!confirm('Delete mod "' + (mod.name || '') + '" from list? Reload page to reset IDs.')) return;
+                        if (!confirm('Delete mod "' + (mod.name || '') + '" from storage? Reload page to reset IDs.')) return;
+                        const mid = mod.modId || mod.name;
                         ModAPI.loaded.splice(i, 1);
                         try {
                             let store = JSON.parse(localStorage.getItem('voxel_mods_v2') || '[]');
-                            store = store.filter(m => (m.id || m.name) !== (mod.modId || mod.name));
+                            store = store.filter(m => (m.id || m.name) !== mid);
                             localStorage.setItem('voxel_mods_v2', JSON.stringify(store));
                             localStorage.setItem('voxel_mods', JSON.stringify(store));
                         } catch (e) {}
-                        this.notify('Mod removed from list');
+                        try {
+                            let flags = JSON.parse(localStorage.getItem('voxel_mod_enabled') || '{}') || {};
+                            delete flags[mid];
+                            localStorage.setItem('voxel_mod_enabled', JSON.stringify(flags));
+                        } catch (e) {}
+                        try {
+                            await saveSys.init();
+                            await saveSys.deleteMod(mid);
+                        } catch (e) { console.warn('[VXM] deleteMod IDB', e); }
+                        this.notify('Mod deleted from storage');
                         this.refreshModList();
                     });
                 }
@@ -18129,6 +18292,27 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
             await sleep(200);
             BootUI.set(20, 'Loading Three.js scene…');
 
+            try {
+                if (isHalloweenEvent()) {
+                    document.body.classList.add('halloween-event');
+                    document.documentElement.classList.add('halloween-event');
+                    const badge = document.getElementById('halloween-hud-badge');
+                    if (badge) badge.classList.add('show');
+                    // decorative bats on menu
+                    const menu = document.getElementById('main-menu');
+                    if (menu && !menu.querySelector('.hw-bat')) {
+                        for (let bi = 0; bi < 4; bi++) {
+                            const bat = document.createElement('div');
+                            bat.className = 'hw-bat';
+                            bat.textContent = '🦇';
+                            bat.style.top = (8 + bi * 12) + '%';
+                            bat.style.animationDelay = (bi * 3.2) + 's';
+                            bat.style.animationDuration = (12 + bi * 2) + 's';
+                            menu.appendChild(bat);
+                        }
+                    }
+                }
+            } catch (e) {}
             window.game = new Game();
             BootUI.set(40, 'Generating texture atlas…');
             await sleep(150);
@@ -18178,6 +18362,29 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
                 const mainPanel = document.getElementById('menu-main');
                 if (mainPanel) mainPanel.style.display = 'flex';
             } catch (e) {}
+
+            // Ensure full-screen spinning menu world is visible & animating
+            try {
+                const bg = document.getElementById('menu-world-bg');
+                if (bg) {
+                    bg.style.display = 'block';
+                    bg.style.visibility = 'visible';
+                    bg.style.opacity = '1';
+                    bg.style.zIndex = '0';
+                }
+                if (window.game && window.game.renderer && window.game.renderer.domElement) {
+                    window.game.renderer.domElement.style.display = 'none';
+                }
+                if (!window._menuBgWorld || !window._menuBgWorld.running) {
+                    if (bg) {
+                        try { if (window._menuBgWorld) window._menuBgWorld.dispose(); } catch (e) {}
+                        window._menuBgWorld = new MenuBackgroundWorld(bg);
+                    }
+                } else {
+                    // kick a resize so canvas fills the screen
+                    try { window._menuBgWorld.onResize(); } catch (e) {}
+                }
+            } catch (e) { console.warn('menu spin world restart', e); }
 
             requestAnimationFrame(() => {
                 try { window.game.fitMenuPanelsScale(); } catch (e) {}
