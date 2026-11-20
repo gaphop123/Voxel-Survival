@@ -15,6 +15,150 @@
             --slot-size: 44px;
             --text-color: #eee;
         }
+
+        /* ===== UI Theme system ===== */
+        :root {
+            --theme-bg: #1a1a1a;
+            --theme-panel: #c6c6c6;
+            --theme-panel-border: #373737;
+            --theme-panel-hilite: #ffffff;
+            --theme-btn: #8b8b8b;
+            --theme-btn-hover: #9e9e9e;
+            --theme-text: #222;
+            --theme-text-dim: #555;
+            --theme-accent: #4caf50;
+            --theme-accent-2: #8cf;
+            --theme-danger: #c62828;
+            --theme-menu-bg: #3a3a3a;
+            --theme-input-bg: #000;
+            --theme-input-border: #555;
+            --theme-slot: #8b8b8b;
+            --theme-hotbar: #c6c6c6;
+            --theme-title: #fff;
+            --theme-splash: #ffff55;
+            --theme-shadow: rgba(0,0,0,0.35);
+            --theme-glow: transparent;
+        }
+        body.theme-applied .mc-panel,
+        body.theme-applied .inv-container,
+        body.theme-applied .cb-panel,
+        body.theme-applied .menu-panel {
+            background: var(--theme-panel) !important;
+            border-color: var(--theme-panel-border) !important;
+            border-top-color: var(--theme-panel-hilite) !important;
+            border-left-color: var(--theme-panel-hilite) !important;
+            color: var(--theme-text) !important;
+            box-shadow: inset 1px 1px 0 var(--theme-panel-hilite), 3px 3px 0 var(--theme-shadow) !important;
+        }
+        body.theme-applied .menu-btn,
+        body.theme-applied #pause-screen .menu-btn,
+        body.theme-applied #settings-screen .menu-btn,
+        body.theme-applied .mc-btn,
+        body.theme-applied .inv-close-btn {
+            background: var(--theme-btn) !important;
+            color: var(--theme-text) !important;
+            border-color: var(--theme-panel-border) !important;
+            border-top-color: var(--theme-panel-hilite) !important;
+            border-left-color: var(--theme-panel-hilite) !important;
+            box-shadow: 0 0 12px var(--theme-glow) !important;
+        }
+        body.theme-applied .menu-btn:hover,
+        body.theme-applied .mc-btn:hover {
+            background: var(--theme-btn-hover) !important;
+        }
+        body.theme-applied .menu-panel .menu-title,
+        body.theme-applied #pause-screen .menu-title,
+        body.theme-applied #settings-screen .menu-title,
+        body.theme-applied .mc-title {
+            color: var(--theme-title) !important;
+            -webkit-text-fill-color: var(--theme-title) !important;
+            text-shadow: 2px 2px 0 var(--theme-panel-border), 0 0 12px var(--theme-glow) !important;
+        }
+        body.theme-applied .mc-splash { color: var(--theme-splash) !important; }
+        body.theme-applied .menu-subtitle,
+        body.theme-applied .mc-subtitle { color: var(--theme-text-dim) !important; }
+        body.theme-applied #hotbar {
+            background: var(--theme-hotbar) !important;
+            border-color: var(--theme-panel-border) !important;
+            border-top-color: var(--theme-panel-hilite) !important;
+            border-left-color: var(--theme-panel-hilite) !important;
+        }
+        body.theme-applied .slot,
+        body.theme-applied .slot-dark,
+        body.theme-applied .armor-slot {
+            background: var(--theme-slot) !important;
+            border-color: var(--theme-panel-border) !important;
+            border-right-color: var(--theme-panel-hilite) !important;
+            border-bottom-color: var(--theme-panel-hilite) !important;
+        }
+        body.theme-applied input[type="text"],
+        body.theme-applied input[type="password"],
+        body.theme-applied select,
+        body.theme-applied .cb-search {
+            background: var(--theme-input-bg) !important;
+            border-color: var(--theme-input-border) !important;
+            color: #fff !important;
+        }
+        body.theme-applied #main-menu {
+            background: var(--theme-menu-bg) !important;
+        }
+        body.theme-applied #boot-loading {
+            background: var(--theme-bg) !important;
+        }
+        body.theme-applied #boot-bar-inner {
+            background: linear-gradient(180deg, var(--theme-accent) 0%, var(--theme-accent-2) 100%) !important;
+        }
+        body.theme-applied #settings-screen,
+        body.theme-applied #pause-screen {
+            background: color-mix(in srgb, var(--theme-bg) 78%, transparent) !important;
+        }
+        body.theme-glassmorphism .menu-panel,
+        body.theme-glassmorphism .inv-container,
+        body.theme-liquid-glass .menu-panel {
+            background: rgba(255,255,255,0.12) !important;
+            backdrop-filter: blur(16px) saturate(1.4) !important;
+            -webkit-backdrop-filter: blur(16px) saturate(1.4) !important;
+            border: 1px solid rgba(255,255,255,0.28) !important;
+            border-radius: 14px !important;
+            color: #f5f5f5 !important;
+        }
+        body.theme-neumorphism .menu-btn {
+            border-radius: 12px !important;
+            box-shadow: 6px 6px 12px #1a1a1a, -4px -4px 10px #3a3a3a !important;
+            border: none !important;
+        }
+
+        /* Improved boot loading */
+        #boot-loading {
+            background: radial-gradient(ellipse at 50% 30%, #1a2740 0%, #0a0a12 70%) !important;
+        }
+        #boot-loading .boot-logo {
+            animation: bootLogoPulse 1.6s ease-in-out infinite alternate;
+        }
+        @keyframes bootLogoPulse {
+            from { transform: scale(1); filter: drop-shadow(0 0 8px rgba(100,180,255,0.3)); }
+            to { transform: scale(1.04); filter: drop-shadow(0 0 18px rgba(100,200,255,0.55)); }
+        }
+        #boot-bar-outer {
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(76,175,80,0.25);
+        }
+        #boot-bar-inner {
+            background: linear-gradient(90deg, #2e7d22, #7cfc6a, #2e7d22) !important;
+            background-size: 200% 100% !important;
+            animation: bootBarShine 1.2s linear infinite;
+        }
+        @keyframes bootBarShine {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        #boot-tips {
+            font-size: 9px; color: #6a8; margin-top: 14px; max-width: 90vw;
+            text-align: center; line-height: 1.5; min-height: 28px; opacity: 0.9;
+        }
+
+
         body {
             margin: 0; overflow: hidden; background: #000;
             font-family: 'Press Start 2P', 'Courier New', monospace;
@@ -1139,8 +1283,7 @@
     </style>
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="https://cdn.jsdelivr.net/gh/gaphop123/LumiaDetect.js@3cbc3174defd507a2b3ba0178e2025aa7b00910b/dist/LumiaDetect.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/gaphop123/LumiaDetect.js@3cbc3174defd507a2b3ba0178e2025aa7b00910b/dist/LumiaDetect.min.js"></script>
 </head>
 <body>
 
@@ -1152,6 +1295,7 @@
         <div id="boot-bar-outer"><div id="boot-bar-inner"></div></div>
         <div id="boot-pct">0%</div>
         <div id="boot-status">Initializing…</div>
+        <div id="boot-tips">Tip: Press E for inventory · F3 for debug · F5 camera</div>
     </div>
     <div id="menu-world-bg" aria-hidden="true"></div>
 
@@ -1298,7 +1442,7 @@
     <div id="main-menu" style="display:none;">
         <div id="menu-main" class="menu-panel mc-main-menu" style="display: flex;">
             <div class="menu-title mc-title">VOXEL SURVIVAL</div>
-            <div class="mc-splash" id="mc-splash">First-Person Hands!</div>
+            <div class="mc-splash" id="mc-splash">Now with UI Themes!</div>
             <div id="halloween-banner" aria-live="polite">
                 <div class="hw-title">🎃 HALLOWEEN EVENT 🎃</div>
                 <div class="hw-sub">Pumpkin patches · Jack-o'-Lanterns · Candy Corn<br>Spooky nights until early November</div>
@@ -1312,12 +1456,7 @@
                 <button class="menu-btn mc-btn mc-btn-half" id="btn-options-main">Options</button>
             </div>
             <div class="mc-btn-row">
-                <button class="menu-btn mc-btn mc-btn-half" id="btn-account-main">Sign In</button>
-                <button class="menu-btn mc-btn mc-btn-half" id="btn-skin-main">Player Skin</button>
-            </div>
-            <div id="account-chip" style="display:none;align-items:center;gap:8px;margin-top:10px;color:#fff;font-size:11px;font-family:monospace;">
-                <img id="account-chip-img" alt="" style="display:none;width:28px;height:28px;border-radius:50%;border:2px solid #fff;">
-                <span id="account-chip-name"></span>
+                <button class="menu-btn mc-btn" id="btn-skin-main" style="width:100%;">Player Skin</button>
             </div>
             <div class="mc-btn-row">
                 <button class="menu-btn mc-btn mc-btn-half" id="btn-replays">Replays</button>
@@ -1331,7 +1470,7 @@
                 </select>
             </div>
             <div class="mc-footer">
-                <span class="mc-ver">Voxel Survival 1.15</span>
+                <span class="mc-ver">Voxel Survival 1.16</span>
                 <span class="mc-copy"></span>
             </div>
         </div>
@@ -1507,6 +1646,60 @@
         <div class="settings-row"><span>Master sound</span><input type="checkbox" id="set-sound" checked></div>
         <div class="settings-row"><span>SFX volume</span><input type="range" id="set-sfx-vol" min="0" max="1" step="0.05" value="0.7"></div>
         <div class="settings-row"><span>Music volume</span><input type="range" id="set-music-vol" min="0" max="1" step="0.05" value="0.4"></div>
+        <div class="settings-section">UI THEME</div>
+        <div class="settings-row"><span>Theme</span>
+            <select id="set-ui-theme" style="background:#333;color:#fff;border:1px solid #666;padding:4px 8px;max-width:200px;font-size:11px;">
+                <option value="classic">Classic MC</option>
+                <option value="dark">Dark</option>
+                <option value="light">Light</option>
+                <option value="purple">Purple</option>
+                <option value="blue">Blue</option>
+                <option value="red">Red</option>
+                <option value="green">Green</option>
+                <option value="pink">Pink</option>
+                <option value="midnight">Midnight</option>
+                <option value="crimson">Crimson</option>
+                <option value="amethyst">Amethyst</option>
+                <option value="obsidian">Obsidian</option>
+                <option value="ocean">Ocean</option>
+                <option value="emerald">Emerald</option>
+                <option value="sapphire">Sapphire</option>
+                <option value="ruby">Ruby</option>
+                <option value="sunset">Sunset</option>
+                <option value="galaxy">Galaxy</option>
+                <option value="neon">Neon</option>
+                <option value="cyberpunk">Cyberpunk</option>
+                <option value="synthwave">Synthwave</option>
+                <option value="vaporwave">Vaporwave</option>
+                <option value="aurora">Aurora</option>
+                <option value="matrix">Matrix</option>
+                <option value="dracula">Dracula</option>
+                <option value="catppuccin">Catppuccin Mocha</option>
+                <option value="catppuccin-latte">Catppuccin Latte</option>
+                <option value="tokyo-night">Tokyo Night</option>
+                <option value="nord">Nord</option>
+                <option value="gruvbox">Gruvbox Dark</option>
+                <option value="gruvbox-light">Gruvbox Light</option>
+                <option value="monokai">Monokai</option>
+                <option value="solarized-dark">Solarized Dark</option>
+                <option value="solarized-light">Solarized Light</option>
+                <option value="one-dark">One Dark</option>
+                <option value="rose-pine">Rosé Pine</option>
+                <option value="kanagawa">Kanagawa</option>
+                <option value="everforest">Everforest</option>
+                <option value="amoled">AMOLED</option>
+                <option value="glassmorphism">Glassmorphism</option>
+                <option value="liquid-glass">Liquid Glass</option>
+                <option value="fluent">Fluent / Mica</option>
+                <option value="material-you">Material You</option>
+                <option value="neumorphism">Neumorphism</option>
+                <option value="night-owl">Night Owl</option>
+                <option value="synthwave84">SynthWave '84</option>
+                <option value="ayu-dark">Ayu Dark</option>
+                <option value="purple-dream">Purple Dream</option>
+                <option value="neon-matrix">Neon Matrix</option>
+            </select>
+        </div>
         <div class="settings-section">GAME</div>
         <div class="settings-row"><span>Difficulty</span>
             <select id="set-difficulty" style="background:#333;color:#fff;border:1px solid #666;padding:4px 8px;">
@@ -1558,60 +1751,6 @@
         <button class="menu-btn" id="btn-settings-close">BACK</button>
     </div>
 
-    <div id="account-screen" style="display:none;position:fixed;inset:0;z-index:410;background:rgba(0,0,0,0.88);overflow-y:auto;padding:20px 12px;box-sizing:border-box;">
-        <div class="menu-title" style="color:#fff;">VOXEL ACCOUNT</div>
-        <div id="account-signed-out" style="max-width:420px;margin:0 auto;text-align:center;">
-            <p style="color:#ccc;font-size:13px;line-height:1.5;">Create an account or log in. Multiplayer uses your Voxel name.</p>
-            <div id="google-btn-wrap" style="display:flex;justify-content:center;margin:12px 0;"></div>
-            <div style="color:#8cf;font-size:12px;margin:10px 0 4px;">SIGN UP</div>
-            <div style="color:#888;font-size:11px;margin-bottom:6px;">Name + password (email optional)</div>
-            <input type="text" id="acc-reg-name" placeholder="Player name" maxlength="16" autocomplete="username" style="width:90%;max-width:320px;padding:10px;margin:4px;font-size:14px;box-sizing:border-box;">
-            <input type="password" id="acc-reg-password" placeholder="Create password (min 4)" minlength="4" autocomplete="new-password" style="width:90%;max-width:320px;padding:10px;margin:4px;font-size:14px;box-sizing:border-box;">
-            <input type="email" id="acc-reg-email" placeholder="Email (optional)" autocomplete="email" style="width:90%;max-width:320px;padding:10px;margin:4px;font-size:14px;box-sizing:border-box;">
-            <button class="menu-btn" id="btn-acc-register" style="max-width:320px;">Sign Up</button>
-            <div id="acc-reg-status" style="color:#ffb74d;font-size:11px;margin:4px;"></div>
-            <div style="color:#8cf;font-size:12px;margin:14px 0 4px;">LOG IN</div>
-            <div style="color:#888;font-size:11px;margin-bottom:6px;">Email or name + password</div>
-            <input type="text" id="acc-login-id" placeholder="Email or player name" autocomplete="username" style="width:90%;max-width:320px;padding:10px;margin:4px;font-size:14px;box-sizing:border-box;">
-            <input type="password" id="acc-login-password" placeholder="Password" autocomplete="current-password" style="width:90%;max-width:320px;padding:10px;margin:4px;font-size:14px;box-sizing:border-box;">
-            <button class="menu-btn" id="btn-acc-login" style="max-width:320px;">Log In</button>
-            <div id="acc-login-status" style="color:#ffb74d;font-size:11px;margin:4px;"></div>
-            <div style="margin-top:14px;color:#aaa;font-size:11px;text-align:left;max-width:360px;margin-left:auto;margin-right:auto;">
-                <b>Google Sign-In:</b> paste your OAuth Client ID (optional)<br>
-                <input type="text" id="acc-google-client-id" placeholder="Google OAuth Client ID" style="width:100%;padding:8px;margin-top:6px;font-size:12px;box-sizing:border-box;">
-                <button class="menu-btn" id="btn-acc-save-gid" style="max-width:100%;font-size:11px;margin-top:6px;">Save Client ID &amp; Show Google Button</button>
-            </div>
-        </div>
-        <div id="account-signed-in" style="display:none;max-width:420px;margin:0 auto;text-align:center;">
-            <img id="acc-profile-img" alt="" style="width:72px;height:72px;border-radius:50%;border:3px solid #fff;object-fit:cover;background:#333;">
-            <div id="acc-profile-name" style="color:#fff;font-size:18px;margin-top:8px;font-family:monospace;"></div>
-            <div id="acc-profile-id" style="color:#8cf;font-size:12px;margin:4px 0;"></div>
-            <div id="acc-profile-email" style="color:#aaa;font-size:11px;"></div>
-            <div class="settings-section" style="color:#8cf;margin-top:16px;">PROFILE</div>
-            <div style="color:#ccc;font-size:12px;margin:6px 0;">Email (required to change name)</div>
-            <input type="email" id="acc-set-email" placeholder="your@email.com" style="width:90%;max-width:300px;padding:8px;margin:4px;box-sizing:border-box;">
-            <button class="menu-btn" id="btn-acc-set-email" style="max-width:300px;font-size:12px;">Save Email</button>
-            <div id="acc-email-status" style="color:#ffb74d;font-size:11px;margin:4px;"></div>
-            <div style="color:#ccc;font-size:12px;margin:10px 0 6px;">Change name (needs email · 3-day cooldown)</div>
-            <input type="text" id="acc-new-name" maxlength="16" placeholder="New name" style="width:90%;max-width:300px;padding:8px;margin:4px;box-sizing:border-box;">
-            <button class="menu-btn" id="btn-acc-rename" style="max-width:300px;font-size:12px;">Change Name</button>
-            <div id="acc-name-status" style="color:#ffb74d;font-size:11px;margin:4px;"></div>
-            <div style="color:#ccc;font-size:12px;margin-top:10px;">Profile image</div>
-            <input type="file" id="acc-pic-upload" accept="image/*" style="color:#fff;font-size:11px;margin:6px;">
-            <div class="settings-section" style="color:#8cf;margin-top:16px;">FRIENDS</div>
-            <input type="text" id="acc-friend-input" placeholder="Voxel ID or name" style="width:90%;max-width:300px;padding:8px;margin:4px;">
-            <button class="menu-btn" id="btn-acc-add-friend" style="max-width:300px;font-size:12px;">Add Friend</button>
-            <div id="acc-friends-list" style="text-align:left;max-width:320px;margin:8px auto;color:#ddd;font-size:12px;"></div>
-            <button class="menu-btn" id="btn-acc-signout" style="max-width:300px;margin-top:16px;">Sign Out</button>
-            <div style="margin-top:18px;padding-top:12px;border-top:1px solid #444;">
-                <div style="color:#f88;font-size:12px;margin-bottom:6px;">Danger zone</div>
-                <input type="password" id="acc-delete-password" placeholder="Password to confirm delete" style="width:90%;max-width:300px;padding:8px;margin:4px;font-size:13px;box-sizing:border-box;">
-                <button class="menu-btn" id="btn-acc-delete" style="max-width:300px;background:#8b0000;border-color:#c00;">Delete Account</button>
-                <div id="acc-delete-status" style="color:#ffb74d;font-size:11px;margin:4px;"></div>
-            </div>
-        </div>
-        <button class="menu-btn" id="btn-acc-close" style="max-width:240px;margin:20px auto;display:block;">BACK</button>
-    </div>
     <div id="skin-screen" style="display:none;position:fixed;inset:0;z-index:405;background:rgba(0,0,0,0.9);overflow-y:auto;padding:20px 12px;box-sizing:border-box;">
         <div class="menu-title" style="color:#fff;">PLAYER SKIN</div>
         <div style="max-width:400px;margin:0 auto;text-align:center;">
@@ -1954,6 +2093,10 @@
             // v1.16 expansion
             RUBY_ORE: 230, RUBY_BLOCK: 231, SAPPHIRE_ORE: 232, SAPPHIRE_BLOCK: 233,
             MARBLE: 234, LIMESTONE: 235, ASH_BLOCK: 236, CHARRED_PLANKS: 237,
+            // v1.16+ feature blocks
+            LANTERN: 238, CHAIN: 239, BARREL: 240, CAMPFIRE: 241,
+            HONEY_BLOCK: 242, TARGET_BLOCK: 243, LODESTONE: 244, CRYING_OBSIDIAN: 245,
+            BASALT_BRICKS: 246, CHISELED_STONE: 247, COPPER_LANTERN: 248, RUNIC_STONE: 249,
             ICE_BRICKS: 238, SNOW_BRICKS: 239,
             TINTED_GLASS: 243, GLOWING_MOSS: 244, CRYSTAL_BLOCK: 245,
             OBSIDIAN_BRICKS: 246, POLISHED_ANDESITE: 247, POLISHED_DIORITE: 248, POLISHED_GRANITE: 249,
@@ -2111,6 +2254,18 @@
             [BLOCKS.LIMESTONE]: { name: "Limestone", solid: true, tex: [55, 55, 55, 55, 55, 55], type: 'stone' },
             [BLOCKS.ASH_BLOCK]: { name: "Ash Block", solid: true, tex: [22, 22, 22, 22, 22, 22], type: 'dirt' },
             [BLOCKS.CHARRED_PLANKS]: { name: "Charred Planks", solid: true, tex: [7, 7, 7, 7, 7, 7], type: 'wood' },
+            [BLOCKS.LANTERN]: { name: "Lantern", solid: false, transparent: true, tex: [41, 41, 41, 41, 41, 41], type: 'metal', light: 12, shape: 'cross' },
+            [BLOCKS.CHAIN]: { name: "Chain", solid: false, transparent: true, tex: [27, 27, 27, 27, 27, 27], type: 'metal', shape: 'cross' },
+            [BLOCKS.BARREL]: { name: "Barrel", solid: true, tex: [5, 5, 7, 7, 5, 5], type: 'wood' },
+            [BLOCKS.CAMPFIRE]: { name: "Campfire", solid: true, transparent: true, tex: [49, 49, 41, 2, 49, 49], type: 'wood', light: 13 },
+            [BLOCKS.HONEY_BLOCK]: { name: "Honey Block", solid: true, transparent: true, tex: [39, 39, 39, 39, 39, 39], type: 'plant' },
+            [BLOCKS.TARGET_BLOCK]: { name: "Target", solid: true, tex: [52, 52, 52, 52, 52, 52], type: 'wood' },
+            [BLOCKS.LODESTONE]: { name: "Lodestone", solid: true, tex: [3, 3, 3, 3, 3, 3], type: 'stone' },
+            [BLOCKS.CRYING_OBSIDIAN]: { name: "Crying Obsidian", solid: true, tex: [35, 35, 35, 35, 35, 35], type: 'stone', light: 10 },
+            [BLOCKS.BASALT_BRICKS]: { name: "Basalt Bricks", solid: true, tex: [96, 96, 96, 96, 96, 96], type: 'stone' },
+            [BLOCKS.CHISELED_STONE]: { name: "Chiseled Stone", solid: true, tex: [24, 24, 24, 24, 24, 24], type: 'stone' },
+            [BLOCKS.COPPER_LANTERN]: { name: "Copper Lantern", solid: false, transparent: true, tex: [41, 41, 41, 41, 41, 41], type: 'metal', light: 11, shape: 'cross' },
+            [BLOCKS.RUNIC_STONE]: { name: "Runic Stone", solid: true, tex: [3, 3, 3, 3, 3, 3], type: 'stone', light: 4 },
             [BLOCKS.ICE_BRICKS]: { name: "Ice Bricks", solid: true, tex: [24, 24, 24, 24, 24, 24], type: 'stone' },
             [BLOCKS.SNOW_BRICKS]: { name: "Snow Bricks", solid: true, tex: [21, 21, 21, 21, 21, 21], type: 'stone' },
             [BLOCKS.TINTED_GLASS]: { name: "Tinted Glass", solid: true, transparent: true, tex: [10, 10, 10, 10, 10, 10], type: 'glass' },
@@ -2185,6 +2340,10 @@
             [BLOCKS.COAL_ORE]: 3.0, [BLOCKS.IRON_ORE]: 3.0, [BLOCKS.GOLD_ORE]: 3.0,
             [BLOCKS.DIAMOND_ORE]: 3.5, [BLOCKS.REDSTONE_ORE]: 3.0, [BLOCKS.LAPIS_ORE]: 3.0, [BLOCKS.EMERALD_ORE]: 3.5,
             [BLOCKS.OBSIDIAN]: 10, [BLOCKS.NETHERRACK]: 0.4, [BLOCKS.GLOWSTONE]: 0.3,
+            [BLOCKS.LANTERN]: 0.5, [BLOCKS.CHAIN]: 0.5, [BLOCKS.BARREL]: 2.5, [BLOCKS.CAMPFIRE]: 2.0,
+            [BLOCKS.HONEY_BLOCK]: 0.4, [BLOCKS.TARGET_BLOCK]: 0.5, [BLOCKS.LODESTONE]: 3.5,
+            [BLOCKS.CRYING_OBSIDIAN]: 10, [BLOCKS.BASALT_BRICKS]: 1.5, [BLOCKS.CHISELED_STONE]: 1.5,
+            [BLOCKS.COPPER_LANTERN]: 0.5, [BLOCKS.RUNIC_STONE]: 2.0,
             [BLOCKS.BRICK]: 2.0, [BLOCKS.GLASS]: 0.3, [BLOCKS.ICE]: 0.5, [BLOCKS.SNOW]: 0.2,
             [BLOCKS.CRAFTING_TABLE]: 2.5, [BLOCKS.DOOR_CLOSED]: 3.0, [BLOCKS.DOOR_OPEN]: 3.0,
             [BLOCKS.BED]: 0.2, [BLOCKS.TORCH]: 0.05, [BLOCKS.FENCE]: 2.0, [BLOCKS.FENCE_GATE]: 2.0,
@@ -2520,6 +2679,11 @@
             { shape: [null, ITEMS.IRON_INGOT, null, BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS, null, BLOCKS.PLANKS, null], out: ITEMS.SHIELD, count: 1 },
 
             { shape: [ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT, ITEMS.NETHERITE_INGOT], out: BLOCKS.NETHERITE_BLOCK, count: 1 },
+            { shape: [null, ITEMS.IRON_INGOT, null, null, ITEMS.IRON_INGOT, null, null, BLOCKS.TORCH, null], out: BLOCKS.LANTERN, count: 1 },
+            { shape: [BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS, null, BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS, BLOCKS.PLANKS], out: BLOCKS.BARREL, count: 1 },
+            { shape: [BLOCKS.STONE, BLOCKS.STONE, BLOCKS.STONE, BLOCKS.STONE, BLOCKS.STONE, BLOCKS.STONE, BLOCKS.STONE, BLOCKS.STONE, BLOCKS.STONE], out: BLOCKS.CHISELED_STONE, count: 4 },
+            { in: [BLOCKS.OBSIDIAN], out: BLOCKS.CRYING_OBSIDIAN, count: 1 },
+            { shape: [BLOCKS.BASALT, BLOCKS.BASALT, null, BLOCKS.BASALT, BLOCKS.BASALT, null, null, null, null], out: BLOCKS.BASALT_BRICKS, count: 4 },
             { shape: [BLOCKS.NETHER_BRICK, BLOCKS.NETHER_BRICK, null, BLOCKS.NETHER_BRICK, BLOCKS.NETHER_BRICK, null, null, null, null], out: BLOCKS.NETHER_BRICK_FENCE, count: 6 }
         ];
 
@@ -5019,6 +5183,98 @@
         /* ==============================================================================
            SHADERS — water animation + post-process (vignette / grade / soft bloom)
         ============================================================================== */
+
+        // ===== UI Themes =====
+        const UI_THEMES = {
+            classic: { bg:'#2a2a2a', panel:'#c6c6c6', border:'#373737', hilite:'#fff', btn:'#8b8b8b', btnHover:'#9e9e9e', text:'#222', dim:'#555', accent:'#4caf50', accent2:'#8cf', menu:'#3a3a3a', input:'#000', inputBorder:'#555', slot:'#8b8b8b', hotbar:'#c6c6c6', title:'#fff', splash:'#ffff55', glow:'transparent' },
+            dark: { bg:'#0d0d0d', panel:'#2a2a2a', border:'#111', hilite:'#444', btn:'#3a3a3a', btnHover:'#505050', text:'#e0e0e0', dim:'#888', accent:'#66bb6a', accent2:'#4fc3f7', menu:'#121212', input:'#000', inputBorder:'#444', slot:'#333', hotbar:'#2a2a2a', title:'#fff', splash:'#80cbc4', glow:'rgba(100,180,255,0.15)' },
+            light: { bg:'#e8e8e8', panel:'#f5f5f5', border:'#bbb', hilite:'#fff', btn:'#e0e0e0', btnHover:'#fff', text:'#222', dim:'#666', accent:'#43a047', accent2:'#1976d2', menu:'#d0d0d0', input:'#fff', inputBorder:'#aaa', slot:'#ddd', hotbar:'#eee', title:'#111', splash:'#f9a825', glow:'transparent' },
+            purple: { bg:'#1a1025', panel:'#3d2a5c', border:'#2a1a40', hilite:'#7b5ea7', btn:'#5a3d8a', btnHover:'#7b5ea7', text:'#f0e6ff', dim:'#b39ddb', accent:'#ce93d8', accent2:'#ba68c8', menu:'#160d22', input:'#12081c', inputBorder:'#5a3d8a', slot:'#4a3570', hotbar:'#3d2a5c', title:'#e1bee7', splash:'#ea80fc', glow:'rgba(186,104,200,0.35)' },
+            blue: { bg:'#0a1628', panel:'#1e3a5f', border:'#0d2137', hilite:'#4a90c8', btn:'#2a5a8a', btnHover:'#3d7ab0', text:'#e3f2fd', dim:'#90caf9', accent:'#42a5f5', accent2:'#29b6f6', menu:'#071018', input:'#061018', inputBorder:'#2a5a8a', slot:'#244a70', hotbar:'#1e3a5f', title:'#bbdefb', splash:'#81d4fa', glow:'rgba(66,165,245,0.3)' },
+            red: { bg:'#1a0808', panel:'#5c1a1a', border:'#3a0a0a', hilite:'#e57373', btn:'#8a2a2a', btnHover:'#b33a3a', text:'#ffebee', dim:'#ef9a9a', accent:'#ef5350', accent2:'#ff7043', menu:'#120505', input:'#100404', inputBorder:'#8a2a2a', slot:'#6a2222', hotbar:'#5c1a1a', title:'#ffcdd2', splash:'#ff8a80', glow:'rgba(239,83,80,0.3)' },
+            green: { bg:'#0a1a0c', panel:'#1b5e20', border:'#0d3d12', hilite:'#81c784', btn:'#2e7d32', btnHover:'#43a047', text:'#e8f5e9', dim:'#a5d6a7', accent:'#66bb6a', accent2:'#9ccc65', menu:'#061008', input:'#051006', inputBorder:'#2e7d32', slot:'#245528', hotbar:'#1b5e20', title:'#c8e6c9', splash:'#b9f6ca', glow:'rgba(102,187,106,0.3)' },
+            pink: { bg:'#1a0a14', panel:'#ad1457', border:'#6a0a35', hilite:'#f48fb1', btn:'#c2185b', btnHover:'#e91e63', text:'#fce4ec', dim:'#f8bbd0', accent:'#ec407a', accent2:'#f06292', menu:'#12060e', input:'#10050c', inputBorder:'#c2185b', slot:'#9a1248', hotbar:'#ad1457', title:'#f8bbd0', splash:'#ff80ab', glow:'rgba(236,64,122,0.35)' },
+            midnight: { bg:'#050510', panel:'#12122a', border:'#080818', hilite:'#3d3d6b', btn:'#1e1e3f', btnHover:'#2a2a55', text:'#c5cae9', dim:'#7986cb', accent:'#5c6bc0', accent2:'#7986cb', menu:'#030308', input:'#020208', inputBorder:'#1e1e3f', slot:'#181830', hotbar:'#12122a', title:'#9fa8da', splash:'#82b1ff', glow:'rgba(92,107,192,0.25)' },
+            crimson: { bg:'#140505', panel:'#7f1d1d', border:'#450a0a', hilite:'#f87171', btn:'#991b1b', btnHover:'#b91c1c', text:'#fee2e2', dim:'#fca5a5', accent:'#dc2626', accent2:'#ef4444', menu:'#0c0202', input:'#0a0101', inputBorder:'#991b1b', slot:'#6b1515', hotbar:'#7f1d1d', title:'#fecaca', splash:'#fca5a5', glow:'rgba(220,38,38,0.35)' },
+            amethyst: { bg:'#1a0f24', panel:'#6b21a8', border:'#3b0764', hilite:'#c084fc', btn:'#7e22ce', btnHover:'#9333ea', text:'#f3e8ff', dim:'#d8b4fe', accent:'#a855f7', accent2:'#c084fc', menu:'#120818', input:'#0f0614', inputBorder:'#7e22ce', slot:'#581c87', hotbar:'#6b21a8', title:'#e9d5ff', splash:'#e879f9', glow:'rgba(168,85,247,0.4)' },
+            obsidian: { bg:'#0a0a0c', panel:'#1c1917', border:'#0c0a09', hilite:'#57534e', btn:'#292524', btnHover:'#44403c', text:'#e7e5e4', dim:'#a8a29e', accent:'#78716c', accent2:'#a8a29e', menu:'#050505', input:'#000', inputBorder:'#292524', slot:'#1c1917', hotbar:'#1c1917', title:'#fafaf9', splash:'#d6d3d1', glow:'rgba(120,113,108,0.2)' },
+            ocean: { bg:'#021a24', panel:'#0e4d64', border:'#063040', hilite:'#22d3ee', btn:'#155e75', btnHover:'#0e7490', text:'#ecfeff', dim:'#67e8f9', accent:'#06b6d4', accent2:'#22d3ee', menu:'#011018', input:'#010c12', inputBorder:'#155e75', slot:'#0f3d4d', hotbar:'#0e4d64', title:'#a5f3fc', splash:'#67e8f9', glow:'rgba(6,182,212,0.35)' },
+            emerald: { bg:'#022c22', panel:'#065f46', border:'#064e3b', hilite:'#34d399', btn:'#047857', btnHover:'#059669', text:'#ecfdf5', dim:'#6ee7b7', accent:'#10b981', accent2:'#34d399', menu:'#011a14', input:'#01140f', inputBorder:'#047857', slot:'#054c37', hotbar:'#065f46', title:'#a7f3d0', splash:'#6ee7b7', glow:'rgba(16,185,129,0.35)' },
+            sapphire: { bg:'#0c1a3a', panel:'#1e3a8a', border:'#1e3a5f', hilite:'#60a5fa', btn:'#1d4ed8', btnHover:'#2563eb', text:'#eff6ff', dim:'#93c5fd', accent:'#3b82f6', accent2:'#60a5fa', menu:'#081028', input:'#060c1c', inputBorder:'#1d4ed8', slot:'#1e3a6a', hotbar:'#1e3a8a', title:'#bfdbfe', splash:'#93c5fd', glow:'rgba(59,130,246,0.35)' },
+            ruby: { bg:'#1c0508', panel:'#9f1239', border:'#4c0519', hilite:'#fb7185', btn:'#be123c', btnHover:'#e11d48', text:'#fff1f2', dim:'#fda4af', accent:'#f43f5e', accent2:'#fb7185', menu:'#120306', input:'#0e0204', inputBorder:'#be123c', slot:'#7f0f2c', hotbar:'#9f1239', title:'#fecdd3', splash:'#fb7185', glow:'rgba(244,63,94,0.35)' },
+            sunset: { bg:'#1a0a05', panel:'#9a3412', border:'#7c2d12', hilite:'#fb923c', btn:'#c2410c', btnHover:'#ea580c', text:'#fff7ed', dim:'#fdba74', accent:'#f97316', accent2:'#fb923c', menu:'#120805', input:'#0e0603', inputBorder:'#c2410c', slot:'#7c2d12', hotbar:'#9a3412', title:'#ffedd5', splash:'#fbbf24', glow:'rgba(249,115,22,0.35)' },
+            galaxy: { bg:'#0b0618', panel:'#2e1065', border:'#1e0a4a', hilite:'#a78bfa', btn:'#4c1d95', btnHover:'#6d28d9', text:'#ede9fe', dim:'#c4b5fd', accent:'#8b5cf6', accent2:'#a78bfa', menu:'#070312', input:'#050210', inputBorder:'#4c1d95', slot:'#3b0764', hotbar:'#2e1065', title:'#ddd6fe', splash:'#e879f9', glow:'rgba(139,92,246,0.4)' },
+            neon: { bg:'#050505', panel:'#111', border:'#0a0a0a', hilite:'#39ff14', btn:'#1a1a1a', btnHover:'#222', text:'#39ff14', dim:'#00ff9f', accent:'#39ff14', accent2:'#00f0ff', menu:'#000', input:'#000', inputBorder:'#39ff14', slot:'#151515', hotbar:'#111', title:'#39ff14', splash:'#00f0ff', glow:'rgba(57,255,20,0.45)' },
+            cyberpunk: { bg:'#0d0221', panel:'#2a0a4a', border:'#1a0530', hilite:'#ff00aa', btn:'#3d0a5c', btnHover:'#5a0a80', text:'#f0e6ff', dim:'#ff66cc', accent:'#ff00aa', accent2:'#00f0ff', menu:'#080118', input:'#050010', inputBorder:'#ff00aa', slot:'#2a0a4a', hotbar:'#2a0a4a', title:'#ff66cc', splash:'#00f0ff', glow:'rgba(255,0,170,0.4)' },
+            synthwave: { bg:'#1a0a2e', panel:'#2d1b4e', border:'#1a0a30', hilite:'#ff6ec7', btn:'#4a2080', btnHover:'#6b30b0', text:'#ffe6f7', dim:'#ff9de2', accent:'#ff6ec7', accent2:'#00d4ff', menu:'#12081f', input:'#0c0518', inputBorder:'#ff6ec7', slot:'#3a1860', hotbar:'#2d1b4e', title:'#ff9de2', splash:'#ffe66d', glow:'rgba(255,110,199,0.4)' },
+            vaporwave: { bg:'#1a1030', panel:'#5b2c6f', border:'#3d1a50', hilite:'#ff71ce', btn:'#7b3f8a', btnHover:'#9b5faa', text:'#fffbff', dim:'#b967ff', accent:'#ff71ce', accent2:'#01cdfe', menu:'#140c28', input:'#0e081c', inputBorder:'#ff71ce', slot:'#4a2460', hotbar:'#5b2c6f', title:'#ff71ce', splash:'#05ffa1', glow:'rgba(255,113,206,0.35)' },
+            aurora: { bg:'#0a1a18', panel:'#134e4a', border:'#0f3d3a', hilite:'#5eead4', btn:'#0f766e', btnHover:'#14b8a6', text:'#f0fdfa', dim:'#99f6e4', accent:'#2dd4bf', accent2:'#a78bfa', menu:'#061412', input:'#04100e', inputBorder:'#0f766e', slot:'#115e59', hotbar:'#134e4a', title:'#ccfbf1', splash:'#c4b5fd', glow:'rgba(45,212,191,0.35)' },
+            matrix: { bg:'#000a00', panel:'#001a00', border:'#003300', hilite:'#00ff41', btn:'#002200', btnHover:'#003300', text:'#00ff41', dim:'#00cc33', accent:'#00ff41', accent2:'#39ff14', menu:'#000500', input:'#000', inputBorder:'#00ff41', slot:'#001500', hotbar:'#001a00', title:'#00ff41', splash:'#39ff14', glow:'rgba(0,255,65,0.4)' },
+            dracula: { bg:'#282a36', panel:'#44475a', border:'#21222c', hilite:'#bd93f9', btn:'#6272a4', btnHover:'#bd93f9', text:'#f8f8f2', dim:'#6272a4', accent:'#50fa7b', accent2:'#ff79c6', menu:'#1e1f29', input:'#191a21', inputBorder:'#6272a4', slot:'#383a4a', hotbar:'#44475a', title:'#bd93f9', splash:'#ffb86c', glow:'rgba(189,147,249,0.3)' },
+            catppuccin: { bg:'#1e1e2e', panel:'#313244', border:'#181825', hilite:'#cba6f7', btn:'#45475a', btnHover:'#585b70', text:'#cdd6f4', dim:'#a6adc8', accent:'#a6e3a1', accent2:'#89b4fa', menu:'#11111b', input:'#11111b', inputBorder:'#45475a', slot:'#313244', hotbar:'#313244', title:'#cba6f7', splash:'#f5c2e7', glow:'rgba(203,166,247,0.3)' },
+            'catppuccin-latte': { bg:'#eff1f5', panel:'#e6e9ef', border:'#ccd0da', hilite:'#fff', btn:'#dce0e8', btnHover:'#eff1f5', text:'#4c4f69', dim:'#6c6f85', accent:'#40a02b', accent2:'#1e66f5', menu:'#dce0e8', input:'#fff', inputBorder:'#ccd0da', slot:'#e6e9ef', hotbar:'#e6e9ef', title:'#8839ef', splash:'#ea76cb', glow:'transparent' },
+            'tokyo-night': { bg:'#1a1b26', panel:'#24283b', border:'#16161e', hilite:'#7aa2f7', btn:'#414868', btnHover:'#565f89', text:'#c0caf5', dim:'#565f89', accent:'#9ece6a', accent2:'#7aa2f7', menu:'#16161e', input:'#11111b', inputBorder:'#414868', slot:'#24283b', hotbar:'#24283b', title:'#7aa2f7', splash:'#bb9af7', glow:'rgba(122,162,247,0.3)' },
+            nord: { bg:'#2e3440', panel:'#3b4252', border:'#2e3440', hilite:'#88c0d0', btn:'#434c5e', btnHover:'#4c566a', text:'#eceff4', dim:'#d8dee9', accent:'#a3be8c', accent2:'#81a1c1', menu:'#232831', input:'#2e3440', inputBorder:'#4c566a', slot:'#3b4252', hotbar:'#3b4252', title:'#88c0d0', splash:'#ebcb8b', glow:'rgba(136,192,208,0.25)' },
+            gruvbox: { bg:'#282828', panel:'#3c3836', border:'#1d2021', hilite:'#fabd2f', btn:'#504945', btnHover:'#665c54', text:'#ebdbb2', dim:'#a89984', accent:'#b8bb26', accent2:'#83a598', menu:'#1d2021', input:'#1d2021', inputBorder:'#504945', slot:'#3c3836', hotbar:'#3c3836', title:'#fabd2f', splash:'#fe8019', glow:'rgba(250,189,47,0.25)' },
+            'gruvbox-light': { bg:'#fbf1c7', panel:'#ebdbb2', border:'#d5c4a1', hilite:'#fff', btn:'#d5c4a1', btnHover:'#ebdbb2', text:'#3c3836', dim:'#7c6f64', accent:'#79740e', accent2:'#076678', menu:'#ebdbb2', input:'#fbf1c7', inputBorder:'#d5c4a1', slot:'#ebdbb2', hotbar:'#ebdbb2', title:'#af3a03', splash:'#b57614', glow:'transparent' },
+            monokai: { bg:'#272822', panel:'#3e3d32', border:'#1e1f1c', hilite:'#a6e22e', btn:'#49483e', btnHover:'#75715e', text:'#f8f8f2', dim:'#75715e', accent:'#a6e22e', accent2:'#66d9ef', menu:'#1e1f1c', input:'#1e1f1c', inputBorder:'#49483e', slot:'#3e3d32', hotbar:'#3e3d32', title:'#f92672', splash:'#e6db74', glow:'rgba(166,226,46,0.25)' },
+            'solarized-dark': { bg:'#002b36', panel:'#073642', border:'#002b36', hilite:'#268bd2', btn:'#586e75', btnHover:'#657b83', text:'#839496', dim:'#586e75', accent:'#859900', accent2:'#268bd2', menu:'#001e26', input:'#002b36', inputBorder:'#586e75', slot:'#073642', hotbar:'#073642', title:'#268bd2', splash:'#b58900', glow:'rgba(38,139,210,0.25)' },
+            'solarized-light': { bg:'#fdf6e3', panel:'#eee8d5', border:'#93a1a1', hilite:'#fff', btn:'#eee8d5', btnHover:'#fdf6e3', text:'#657b83', dim:'#93a1a1', accent:'#859900', accent2:'#268bd2', menu:'#eee8d5', input:'#fdf6e3', inputBorder:'#93a1a1', slot:'#eee8d5', hotbar:'#eee8d5', title:'#268bd2', splash:'#b58900', glow:'transparent' },
+            'one-dark': { bg:'#282c34', panel:'#3e4451', border:'#21252b', hilite:'#61afef', btn:'#4b5263', btnHover:'#5c6370', text:'#abb2bf', dim:'#5c6370', accent:'#98c379', accent2:'#61afef', menu:'#21252b', input:'#1c1f24', inputBorder:'#4b5263', slot:'#3e4451', hotbar:'#3e4451', title:'#61afef', splash:'#e5c07b', glow:'rgba(97,175,239,0.25)' },
+            'rose-pine': { bg:'#191724', panel:'#26233a', border:'#1f1d2e', hilite:'#c4a7e7', btn:'#403d52', btnHover:'#524f67', text:'#e0def4', dim:'#908caa', accent:'#9ccfd8', accent2:'#c4a7e7', menu:'#1f1d2e', input:'#16141f', inputBorder:'#403d52', slot:'#26233a', hotbar:'#26233a', title:'#c4a7e7', splash:'#ebbcba', glow:'rgba(196,167,231,0.3)' },
+            kanagawa: { bg:'#1f1f28', panel:'#2a2a37', border:'#16161d', hilite:'#7e9cd8', btn:'#363646', btnHover:'#54546d', text:'#dcd7ba', dim:'#727169', accent:'#98bb6c', accent2:'#7e9cd8', menu:'#16161d', input:'#121218', inputBorder:'#363646', slot:'#2a2a37', hotbar:'#2a2a37', title:'#7e9cd8', splash:'#e6c384', glow:'rgba(126,156,216,0.25)' },
+            everforest: { bg:'#2d353b', panel:'#3d484d', border:'#232a2e', hilite:'#a7c080', btn:'#475258', btnHover:'#5c6a72', text:'#d3c6aa', dim:'#859289', accent:'#a7c080', accent2:'#7fbbb3', menu:'#232a2e', input:'#1e2428', inputBorder:'#475258', slot:'#3d484d', hotbar:'#3d484d', title:'#a7c080', splash:'#e69875', glow:'rgba(167,192,128,0.25)' },
+            amoled: { bg:'#000000', panel:'#0a0a0a', border:'#000', hilite:'#333', btn:'#141414', btnHover:'#1f1f1f', text:'#f0f0f0', dim:'#888', accent:'#4caf50', accent2:'#64b5f6', menu:'#000', input:'#000', inputBorder:'#222', slot:'#111', hotbar:'#0a0a0a', title:'#fff', splash:'#81c784', glow:'transparent' },
+            glassmorphism: { bg:'#0f172a', panel:'rgba(255,255,255,0.08)', border:'rgba(255,255,255,0.2)', hilite:'rgba(255,255,255,0.35)', btn:'rgba(255,255,255,0.12)', btnHover:'rgba(255,255,255,0.2)', text:'#f8fafc', dim:'#94a3b8', accent:'#38bdf8', accent2:'#a78bfa', menu:'#0f172a', input:'rgba(0,0,0,0.4)', inputBorder:'rgba(255,255,255,0.2)', slot:'rgba(255,255,255,0.1)', hotbar:'rgba(255,255,255,0.08)', title:'#fff', splash:'#38bdf8', glow:'rgba(56,189,248,0.25)' },
+            'liquid-glass': { bg:'#0c1222', panel:'rgba(200,220,255,0.1)', border:'rgba(180,200,255,0.25)', hilite:'rgba(255,255,255,0.4)', btn:'rgba(150,180,255,0.15)', btnHover:'rgba(180,200,255,0.25)', text:'#e8f0ff', dim:'#a0b4d0', accent:'#7dd3fc', accent2:'#c4b5fd', menu:'#0c1222', input:'rgba(0,0,0,0.35)', inputBorder:'rgba(180,200,255,0.3)', slot:'rgba(150,180,255,0.12)', hotbar:'rgba(200,220,255,0.1)', title:'#fff', splash:'#a5b4fc', glow:'rgba(125,211,252,0.3)' },
+            fluent: { bg:'#202020', panel:'#2d2d2d', border:'#1a1a1a', hilite:'#60cdff', btn:'#3a3a3a', btnHover:'#454545', text:'#fff', dim:'#aaa', accent:'#60cdff', accent2:'#0078d4', menu:'#1a1a1a', input:'#1f1f1f', inputBorder:'#3a3a3a', slot:'#2d2d2d', hotbar:'#2d2d2d', title:'#60cdff', splash:'#0078d4', glow:'rgba(96,205,255,0.2)' },
+            'material-you': { bg:'#1c1b1f', panel:'#2b2930', border:'#1c1b1f', hilite:'#d0bcff', btn:'#4a4458', btnHover:'#5c5668', text:'#e6e1e5', dim:'#cac4d0', accent:'#d0bcff', accent2:'#ccc2dc', menu:'#141218', input:'#141218', inputBorder:'#4a4458', slot:'#2b2930', hotbar:'#2b2930', title:'#d0bcff', splash:'#e8def8', glow:'rgba(208,188,255,0.3)' },
+            neumorphism: { bg:'#2a2a2a', panel:'#2a2a2a', border:'#2a2a2a', hilite:'#3a3a3a', btn:'#2a2a2a', btnHover:'#333', text:'#eee', dim:'#999', accent:'#4caf50', accent2:'#64b5f6', menu:'#2a2a2a', input:'#222', inputBorder:'#3a3a3a', slot:'#2a2a2a', hotbar:'#2a2a2a', title:'#fff', splash:'#81c784', glow:'transparent' },
+            'night-owl': { bg:'#011627', panel:'#0b2942', border:'#01111d', hilite:'#82aaff', btn:'#1d3b53', btnHover:'#2a4d6e', text:'#d6deeb', dim:'#5f7e97', accent:'#addb67', accent2:'#82aaff', menu:'#01111d', input:'#01111d', inputBorder:'#1d3b53', slot:'#0b2942', hotbar:'#0b2942', title:'#82aaff', splash:'#c792ea', glow:'rgba(130,170,255,0.25)' },
+            synthwave84: { bg:'#262335', panel:'#2a2139', border:'#1e1a2a', hilite:'#ff7edb', btn:'#3b2e58', btnHover:'#4a3a6a', text:'#f8f8f2', dim:'#b6b1b1', accent:'#36f9f6', accent2:'#ff7edb', menu:'#1a1625', input:'#1a1625', inputBorder:'#3b2e58', slot:'#2a2139', hotbar:'#2a2139', title:'#ff7edb', splash:'#fede5d', glow:'rgba(255,126,219,0.35)' },
+            'ayu-dark': { bg:'#0b0e14', panel:'#0d1017', border:'#01060e', hilite:'#59c2ff', btn:'#1c212b', btnHover:'#2a303c', text:'#bfbdb6', dim:'#6c7380', accent:'#7fd962', accent2:'#59c2ff', menu:'#01060e', input:'#01060e', inputBorder:'#1c212b', slot:'#0d1017', hotbar:'#0d1017', title:'#59c2ff', splash:'#ff8f40', glow:'rgba(89,194,255,0.25)' },
+            'purple-dream': { bg:'#1a0a2e', panel:'#4a148c', border:'#2e0854', hilite:'#e040fb', btn:'#6a1b9a', btnHover:'#8e24aa', text:'#f3e5f5', dim:'#ce93d8', accent:'#ea80fc', accent2:'#b388ff', menu:'#12081f', input:'#0e0618', inputBorder:'#6a1b9a', slot:'#4a148c', hotbar:'#4a148c', title:'#e1bee7', splash:'#ff80ab', glow:'rgba(234,128,252,0.4)' },
+            'neon-matrix': { bg:'#000800', panel:'#001200', border:'#001a00', hilite:'#00ff9f', btn:'#001a00', btnHover:'#002800', text:'#00ff9f', dim:'#00cc77', accent:'#00ff9f', accent2:'#00f0ff', menu:'#000400', input:'#000', inputBorder:'#00ff9f', slot:'#001000', hotbar:'#001200', title:'#00ff9f', splash:'#00f0ff', glow:'rgba(0,255,159,0.45)' },
+        };
+
+        function applyUITheme(name) {
+            const t = UI_THEMES[name] || UI_THEMES.classic;
+            const r = document.documentElement.style;
+            r.setProperty('--theme-bg', t.bg);
+            r.setProperty('--theme-panel', t.panel);
+            r.setProperty('--theme-panel-border', t.border);
+            r.setProperty('--theme-panel-hilite', t.hilite);
+            r.setProperty('--theme-btn', t.btn);
+            r.setProperty('--theme-btn-hover', t.btnHover);
+            r.setProperty('--theme-text', t.text);
+            r.setProperty('--theme-text-dim', t.dim);
+            r.setProperty('--theme-accent', t.accent);
+            r.setProperty('--theme-accent-2', t.accent2);
+            r.setProperty('--theme-menu-bg', t.menu);
+            r.setProperty('--theme-input-bg', t.input);
+            r.setProperty('--theme-input-border', t.inputBorder);
+            r.setProperty('--theme-slot', t.slot);
+            r.setProperty('--theme-hotbar', t.hotbar);
+            r.setProperty('--theme-title', t.title);
+            r.setProperty('--theme-splash', t.splash);
+            r.setProperty('--theme-glow', t.glow);
+            document.body.classList.add('theme-applied');
+            // special effect classes
+            document.body.classList.remove('theme-glassmorphism', 'theme-liquid-glass', 'theme-neumorphism');
+            if (name === 'glassmorphism') document.body.classList.add('theme-glassmorphism');
+            if (name === 'liquid-glass') document.body.classList.add('theme-liquid-glass');
+            if (name === 'neumorphism') document.body.classList.add('theme-neumorphism');
+            try { localStorage.setItem('voxel_ui_theme', name); } catch (e) {}
+        }
+
+        // Apply saved theme early
+        try {
+            const savedTheme = localStorage.getItem('voxel_ui_theme') || 'classic';
+            if (document.body) applyUITheme(savedTheme);
+            else document.addEventListener('DOMContentLoaded', () => applyUITheme(savedTheme));
+        } catch (e) {}
+
+
         const VoxelShaders = {
             time: 0,
             enabled: true,
@@ -5205,14 +5461,42 @@
                                 col.rgb = mix(col.rgb, col.rgb * vec3(0.35, 0.55, 0.75), underWater * 0.7);
                                 col.rgb += vec3(0.0, 0.05, 0.08) * sin(uv.y * 40.0 + time * 2.0) * underWater * 0.15;
                             }
-                            // RTX-ish mild chromatic aberration at edges
+                            // Ray-traced style enhancements (screen-space approximation)
                             if (rtx > 0.5) {
                                 float edge = smoothstep(0.2, 0.7, length(vc));
-                                float ca = edge * 0.0025;
+                                float ca = edge * 0.0032;
                                 float r = texture2D(tDiffuse, uv + vec2(ca, 0.0)).r;
                                 float b = texture2D(tDiffuse, uv - vec2(ca, 0.0)).b;
-                                col.r = mix(col.r, r, edge * 0.5);
-                                col.b = mix(col.b, b, edge * 0.5);
+                                col.r = mix(col.r, r, edge * 0.55);
+                                col.b = mix(col.b, b, edge * 0.55);
+                                // Screen-space reflection-ish: sample upward neighbors for bright bounce
+                                vec2 px = 2.0 / resolution;
+                                vec3 bounce = vec3(0.0);
+                                for (int k = 1; k <= 4; k++) {
+                                    vec2 off = vec2(0.0, -float(k) * px.y * 1.8);
+                                    vec3 s = texture2D(tDiffuse, uv + off).rgb;
+                                    float br = max(s.r, max(s.g, s.b));
+                                    bounce += s * smoothstep(0.55, 0.95, br) / float(k);
+                                }
+                                col.rgb += bounce * 0.08;
+                                // Soft contact shadow darkening near bottom of screen (ground AO fake)
+                                float ao = smoothstep(0.0, 0.35, uv.y);
+                                col.rgb *= mix(0.82, 1.0, ao);
+                                // Specular sheen on bright pixels
+                                float lum = dot(col.rgb, vec3(0.299, 0.587, 0.114));
+                                col.rgb += vec3(0.04) * smoothstep(0.7, 1.0, lum);
+                                // Subtle god-ray / volumetric light from top center
+                                vec2 sunUV = vec2(0.5, 0.92);
+                                vec2 dir = normalize(uv - sunUV);
+                                float rays = 0.0;
+                                for (int i = 0; i < 6; i++) {
+                                    vec2 suv = sunUV + dir * (float(i) * 0.04);
+                                    float sb = max(texture2D(tDiffuse, clamp(suv, 0.0, 1.0)).r,
+                                        max(texture2D(tDiffuse, clamp(suv, 0.0, 1.0)).g,
+                                            texture2D(tDiffuse, clamp(suv, 0.0, 1.0)).b));
+                                    rays += sb * (1.0 - float(i) * 0.12);
+                                }
+                                col.rgb += vec3(1.0, 0.95, 0.8) * rays * 0.012 * (1.0 - edge * 0.5);
                             }
                             gl_FragColor = vec4(col.rgb, 1.0);
                         }
@@ -5911,343 +6195,31 @@ for (let chunk of this.chunks.values()) {
         };
 
         
-        // ===== Voxel Account (Google optional + local profile + friends) =====
+        // ===== Voxel Account removed — stub keeps call sites safe =====
         const VoxelAccount = {
-            user: null, // { voxelId, name, email, picture, googleId, lastNameChange, friends[], created }
-            NAME_COOLDOWN_MS: 3 * 24 * 60 * 60 * 1000, // 3 days
-            GOOGLE_CLIENT_ID_KEY: 'voxel_google_client_id',
-
-            load() {
-                try {
-                    const raw = localStorage.getItem('voxel_account');
-                    this.user = raw ? JSON.parse(raw) : null;
-                    if (this.user && !this.user.friends) this.user.friends = [];
-                } catch (e) { this.user = null; }
-                return this.user;
-            },
-            save() {
-                try {
-                    if (this.user) localStorage.setItem('voxel_account', JSON.stringify(this.user));
-                    else localStorage.removeItem('voxel_account');
-                } catch (e) {}
-                this._syncUI();
-            },
-            isLoggedIn() { return !!(this.user && this.user.voxelId); },
-            displayName() {
-                if (this.isLoggedIn() && this.user.name) return this.user.name;
-                return null;
-            },
-            genVoxelId() {
-                const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-                let id = 'VX';
-                for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
-                return id;
-            },
-            // Simple client-side password hash (not for real servers — local only)
-            async hashPassword(password, salt) {
-                const data = new TextEncoder().encode(String(salt || '') + '|' + String(password || ''));
-                if (window.crypto && crypto.subtle) {
-                    const buf = await crypto.subtle.digest('SHA-256', data);
-                    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-                }
-                // fallback
-                let h = 0;
-                const s = String(salt || '') + '|' + String(password || '');
-                for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0;
-                return 'fb_' + Math.abs(h).toString(16);
-            },
-            _loadRegistry() {
-                try {
-                    return JSON.parse(localStorage.getItem('voxel_accounts_registry') || '{}') || {};
-                } catch (e) { return {}; }
-            },
-            _saveRegistry(reg) {
-                try { localStorage.setItem('voxel_accounts_registry', JSON.stringify(reg)); } catch (e) {}
-            },
-            /** Sign up: name + password, email optional */
-            async register(name, password, email) {
-                const n = (name || '').trim().slice(0, 16);
-                const pw = String(password || '');
-                const em = (email || '').trim().toLowerCase().slice(0, 80);
-                if (n.length < 2) return { ok: false, error: 'Name must be 2–16 characters' };
-                if (pw.length < 4) return { ok: false, error: 'Password must be at least 4 characters' };
-                const reg = this._loadRegistry();
-                // unique name
-                for (const id of Object.keys(reg)) {
-                    if ((reg[id].name || '').toLowerCase() === n.toLowerCase()) {
-                        return { ok: false, error: 'Name already taken — try login' };
-                    }
-                    if (em && reg[id].email && reg[id].email === em) {
-                        return { ok: false, error: 'Email already registered — try login' };
-                    }
-                }
-                const voxelId = this.genVoxelId();
-                const salt = voxelId + '_' + Date.now();
-                const passwordHash = await this.hashPassword(pw, salt);
-                const account = {
-                    voxelId,
-                    name: n,
-                    email: em || '',
-                    passwordHash,
-                    salt,
-                    picture: null,
-                    googleId: null,
-                    lastNameChange: 0,
-                    friends: [],
-                    created: Date.now(),
-                    provider: 'local'
-                };
-                reg[voxelId] = account;
-                this._saveRegistry(reg);
-                this.user = { ...account };
-                delete this.user.passwordHash;
-                delete this.user.salt;
-                // keep hash only in registry; session user without secrets
-                this.user._auth = true;
-                this.save();
-                return { ok: true, user: this.user };
-            },
-            /** Login: email or name + password */
-            async login(loginId, password) {
-                const id = String(loginId || '').trim();
-                const pw = String(password || '');
-                if (!id) return { ok: false, error: 'Enter email or player name' };
-                if (!pw) return { ok: false, error: 'Enter password' };
-                const reg = this._loadRegistry();
-                let found = null;
-                const idLower = id.toLowerCase();
-                for (const vid of Object.keys(reg)) {
-                    const a = reg[vid];
-                    if ((a.email && a.email === idLower) || (a.name && a.name.toLowerCase() === idLower) || a.voxelId === id.toUpperCase()) {
-                        found = a;
-                        break;
-                    }
-                }
-                if (!found) return { ok: false, error: 'Account not found' };
-                if (!found.passwordHash || !found.salt) {
-                    return { ok: false, error: 'This account has no password — register again' };
-                }
-                const hash = await this.hashPassword(pw, found.salt);
-                if (hash !== found.passwordHash) return { ok: false, error: 'Wrong password' };
-                this.user = { ...found };
-                delete this.user.passwordHash;
-                delete this.user.salt;
-                this.user._auth = true;
-                this.save();
-                return { ok: true, user: this.user };
-            },
-            /** @deprecated use register/login */
-            signInLocal(name, email, password) {
-                // sync wrapper not available — callers should use register
-                return this.register(name, password || '1234', email);
-            },
-
-            signInGoogleProfile(profile) {
-                // profile: { sub, name, email, picture }
-                const reg = this._loadRegistry();
-                let foundId = null;
-                for (const vid of Object.keys(reg)) {
-                    if (reg[vid].googleId === profile.sub) { foundId = vid; break; }
-                }
-                if (foundId) {
-                    const acc = reg[foundId];
-                    if (profile.picture) acc.picture = profile.picture;
-                    if (profile.email) acc.email = profile.email;
-                    reg[foundId] = acc;
-                    this._saveRegistry(reg);
-                    this.user = { ...acc };
-                    delete this.user.passwordHash;
-                    delete this.user.salt;
-                    this.save();
-                    return this.user;
-                }
-                const voxelId = this.genVoxelId();
-                const account = {
-                    voxelId,
-                    name: (profile.name || 'Player').trim().slice(0, 16),
-                    email: (profile.email || '').toLowerCase(),
-                    picture: profile.picture || null,
-                    googleId: profile.sub || null,
-                    lastNameChange: 0,
-                    friends: [],
-                    created: Date.now(),
-                    provider: 'google'
-                };
-                reg[voxelId] = account;
-                this._saveRegistry(reg);
-                this.user = { ...account };
-                this.save();
-                return this.user;
-            },
-            signOut() {
-                this.user = null;
-                this.save();
-            },
-            deleteAccount(password) {
-                if (!this.user) return { ok: false, error: 'Not signed in' };
-                const vid = this.user.voxelId;
-                const reg = this._loadRegistry();
-                const acc = reg[vid];
-                // Google accounts or confirm without password if no hash in session path
-                if (acc && acc.passwordHash && password != null) {
-                    // verified async preferred — sync delete if password matches via stored check done by caller
-                }
-                if (acc) {
-                    delete reg[vid];
-                    this._saveRegistry(reg);
-                }
-                this.user = null;
-                this.save();
-                try { localStorage.removeItem('voxel_account'); } catch (e) {}
-                return { ok: true };
-            },
-            async deleteAccountWithPassword(password) {
-                if (!this.user) return { ok: false, error: 'Not signed in' };
-                const vid = this.user.voxelId;
-                const reg = this._loadRegistry();
-                const acc = reg[vid];
-                if (acc && acc.passwordHash) {
-                    const hash = await this.hashPassword(password, acc.salt);
-                    if (hash !== acc.passwordHash) return { ok: false, error: 'Wrong password' };
-                }
-                if (acc) {
-                    delete reg[vid];
-                    this._saveRegistry(reg);
-                }
-                this.user = null;
-                try { localStorage.removeItem('voxel_account'); } catch (e) {}
-                this.save();
-                return { ok: true };
-            },
-            canChangeName() {
-                if (!this.user) return false;
-                if (!this.user.lastNameChange) return true;
-                return (Date.now() - this.user.lastNameChange) >= this.NAME_COOLDOWN_MS;
-            },
-            nameChangeWaitDays() {
-                if (!this.user || !this.user.lastNameChange) return 0;
-                const left = this.NAME_COOLDOWN_MS - (Date.now() - this.user.lastNameChange);
-                return left <= 0 ? 0 : Math.ceil(left / (24 * 60 * 60 * 1000));
-            },
-            setName(newName) {
-                if (!this.user) return { ok: false, error: 'Not signed in' };
-                if (!this.user.email || !String(this.user.email).trim()) {
-                    return { ok: false, error: 'Add an email to your account before changing name' };
-                }
-                if (!this.canChangeName()) {
-                    return { ok: false, error: 'Name change available in ' + this.nameChangeWaitDays() + ' day(s)' };
-                }
-                const n = String(newName || '').trim().slice(0, 16);
-                if (n.length < 2) return { ok: false, error: 'Name must be 2–16 characters' };
-                if (!/^[a-zA-Z0-9_ \-]+$/.test(n)) return { ok: false, error: 'Invalid characters in name' };
-                // keep registry in sync
-                const reg = this._loadRegistry();
-                if (reg[this.user.voxelId]) {
-                    reg[this.user.voxelId].name = n;
-                    reg[this.user.voxelId].lastNameChange = Date.now();
-                    this._saveRegistry(reg);
-                }
-                this.user.name = n;
-                this.user.lastNameChange = Date.now();
-                this.save();
-                return { ok: true };
-            },
-            setEmail(email) {
-                if (!this.user) return { ok: false, error: 'Not signed in' };
-                const em = String(email || '').trim().toLowerCase().slice(0, 80);
-                if (!em || !em.includes('@') || em.length < 5) {
-                    return { ok: false, error: 'Enter a valid email' };
-                }
-                const reg = this._loadRegistry();
-                for (const vid of Object.keys(reg)) {
-                    if (vid !== this.user.voxelId && reg[vid].email === em) {
-                        return { ok: false, error: 'Email already used by another account' };
-                    }
-                }
-                if (reg[this.user.voxelId]) {
-                    reg[this.user.voxelId].email = em;
-                    this._saveRegistry(reg);
-                }
-                this.user.email = em;
-                this.save();
-                return { ok: true };
-            },
-            setPicture(dataUrl) {
-                if (!this.user) return false;
-                this.user.picture = dataUrl;
-                this.save();
-                return true;
-            },
-            addFriend(voxelIdOrName) {
-                if (!this.user) return { ok: false, error: 'Sign in first' };
-                const key = String(voxelIdOrName || '').trim();
-                if (!key) return { ok: false, error: 'Enter Voxel ID or name' };
-                if (!this.user.friends) this.user.friends = [];
-                if (this.user.friends.some(f => f.id === key || f.name === key)) {
-                    return { ok: false, error: 'Already in friends list' };
-                }
-                if (key === this.user.voxelId || key === this.user.name) {
-                    return { ok: false, error: 'Cannot add yourself' };
-                }
-                this.user.friends.push({ id: key, name: key, added: Date.now() });
-                this.save();
-                return { ok: true };
-            },
-            removeFriend(key) {
-                if (!this.user || !this.user.friends) return;
-                this.user.friends = this.user.friends.filter(f => f.id !== key && f.name !== key);
-                this.save();
-            },
-            // Merge game progress snapshot into account
-            saveGameData(snapshot) {
-                if (!this.user) return;
-                this.user.gameData = snapshot || {};
-                this.user.gameDataSavedAt = Date.now();
-                this.save();
-            },
-            getGameData() {
-                return (this.user && this.user.gameData) || null;
-            },
-            getGoogleClientId() {
-                try { return localStorage.getItem(this.GOOGLE_CLIENT_ID_KEY) || ''; } catch (e) { return ''; }
-            },
-            setGoogleClientId(id) {
-                try { localStorage.setItem(this.GOOGLE_CLIENT_ID_KEY, String(id || '').trim()); } catch (e) {}
-            },
-            _syncUI() {
-                try {
-                    const btn = document.getElementById('btn-account-main');
-                    const chip = document.getElementById('account-chip');
-                    if (this.isLoggedIn()) {
-                        if (btn) btn.textContent = 'Profile';
-                        if (chip) {
-                            chip.style.display = 'flex';
-                            const img = document.getElementById('account-chip-img');
-                            const nm = document.getElementById('account-chip-name');
-                            if (img) {
-                                if (this.user.picture) { img.src = this.user.picture; img.style.display = 'block'; }
-                                else img.style.display = 'none';
-                            }
-                            if (nm) nm.textContent = this.user.name + ' · ' + this.user.voxelId;
-                        }
-                        // Prefill join/create name fields
-                        const jn = document.getElementById('join-name-input');
-                        const wn = document.getElementById('world-name');
-                        if (jn) { jn.value = this.user.name; jn.readOnly = true; }
-                        // host name if exists
-                        const hn = document.getElementById('host-name');
-                        if (hn) { hn.value = this.user.name; hn.readOnly = true; }
-                    } else {
-                        if (btn) btn.textContent = 'Sign In';
-                        if (chip) chip.style.display = 'none';
-                        const jn = document.getElementById('join-name-input');
-                        if (jn) jn.readOnly = false;
-                        const hn = document.getElementById('host-name');
-                        if (hn) hn.readOnly = false;
-                    }
-                } catch (e) {}
-            }
+            user: null,
+            load() { this.user = null; return null; },
+            save() {},
+            isLoggedIn() { return false; },
+            getName() { return 'Player'; },
+            getVoxelId() { return null; },
+            register() { return { ok: false, error: 'Accounts removed' }; },
+            login() { return { ok: false, error: 'Accounts removed' }; },
+            logout() { this.user = null; },
+            signOut() { this.user = null; },
+            deleteAccount() { return { ok: false, error: 'Accounts removed' }; },
+            setEmail() { return { ok: false, error: 'Accounts removed' }; },
+            rename() { return { ok: false, error: 'Accounts removed' }; },
+            addFriend() { return { ok: false, error: 'Accounts removed' }; },
+            removeFriend() {},
+            listFriends() { return []; },
+            updateUI() {},
+            initGoogle() {},
+            handleGoogleCredential() {},
+            mergeProgress() {},
+            getDisplayName() { return 'Player'; }
         };
+
         VoxelAccount.load();
 
 const BLOCK_DROP_COLORS = {
@@ -12763,9 +12735,13 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                         }
                         if(e.code === 'ShiftLeft' || e.code === 'ShiftRight') this.player.isSprinting = true;
                         if(e.code === 'ControlLeft' || e.code === 'ControlRight') this.player.isCrouching = true;
-                        if(e.key >= '1' && e.key <= '9') {
-                            this.player.hotbarSelect = parseInt(e.key)-1;
-                            this.updateHUD();
+                        // Hotbar slots: number row only (Digit1-9). Never WASD / letters.
+                        if (e.code && e.code.startsWith('Digit')) {
+                            const n = parseInt(e.code.slice(5), 10);
+                            if (n >= 1 && n <= 9) {
+                                this.player.hotbarSelect = n - 1;
+                                this.updateHUD();
+                            }
                         }
                         if(e.code === 'F3') { 
                             e.preventDefault(); 
@@ -13156,190 +13132,8 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                         this.openSettings();
                     } catch (e) { console.warn('options', e); }
                 });
-                // Voxel Account UI
-                const openAccountPanel = () => {
-                    VoxelAccount.load();
-                    const scr = document.getElementById('account-screen');
-                    if (scr) scr.style.display = 'block';
-                    const so = document.getElementById('account-signed-out');
-                    const si = document.getElementById('account-signed-in');
-                    if (VoxelAccount.isLoggedIn()) {
-                        if (so) so.style.display = 'none';
-                        if (si) si.style.display = 'block';
-                        const u = VoxelAccount.user;
-                        const img = document.getElementById('acc-profile-img');
-                        if (img && u.picture) { img.src = u.picture; }
-                        const pn = document.getElementById('acc-profile-name');
-                        if (pn) pn.textContent = u.name;
-                        const pid = document.getElementById('acc-profile-id');
-                        if (pid) pid.textContent = 'Voxel ID: ' + u.voxelId;
-                        const pe = document.getElementById('acc-profile-email');
-                        if (pe) pe.textContent = u.email || (u.provider === 'google' ? 'Google' : 'Local');
-                        const emIn = document.getElementById('acc-set-email');
-                        if (emIn) emIn.value = u.email || '';
-                        const est = document.getElementById('acc-email-status');
-                        if (est) est.textContent = u.email ? ('Email on file: ' + u.email) : 'No email — add one to unlock name change';
-                        const st = document.getElementById('acc-name-status');
-                        if (st) {
-                            if (!u.email) st.textContent = 'Add an email first to change name';
-                            else if (VoxelAccount.canChangeName()) st.textContent = 'You can change your name now';
-                            else st.textContent = 'Next name change in ' + VoxelAccount.nameChangeWaitDays() + ' day(s)';
-                        }
-                        const fl = document.getElementById('acc-friends-list');
-                        if (fl) {
-                            fl.innerHTML = (u.friends && u.friends.length) ? u.friends.map(f => '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #444;"><span>' + (f.name||f.id) + '</span><button type="button" data-rm="' + f.id + '" style="background:#633;color:#fff;border:0;padding:2px 8px;cursor:pointer;">✕</button></div>').join('') : '<div style="color:#888">No friends yet</div>';
-                            fl.querySelectorAll('[data-rm]').forEach(btn => { btn.onclick = () => { VoxelAccount.removeFriend(btn.getAttribute('data-rm')); openAccountPanel(); }; });
-                        }
-                    } else {
-                        if (so) so.style.display = 'block';
-                        if (si) si.style.display = 'none';
-                        const gid = document.getElementById('acc-google-client-id');
-                        if (gid) gid.value = VoxelAccount.getGoogleClientId();
-                        try { renderGoogleBtn(); } catch (e) {}
-                    }
-                    VoxelAccount._syncUI();
-                };
-                const renderGoogleBtn = () => {
-                    const wrap = document.getElementById('google-btn-wrap');
-                    if (!wrap) return;
-                    wrap.innerHTML = '';
-                    const clientId = VoxelAccount.getGoogleClientId();
-                    if (!clientId || typeof google === 'undefined' || !google.accounts) {
-                        wrap.innerHTML = '<div style="color:#888;font-size:11px;">Optional: set Google Client ID below</div>';
-                        return;
-                    }
-                    try {
-                        google.accounts.id.initialize({
-                            client_id: clientId,
-                            callback: (resp) => {
-                                try {
-                                    const payload = JSON.parse(atob(resp.credential.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
-                                    VoxelAccount.signInGoogleProfile({ sub: payload.sub, name: payload.name, email: payload.email, picture: payload.picture });
-                                    this.notify('Signed in as ' + VoxelAccount.user.name);
-                                    openAccountPanel();
-                                } catch (err) { this.notify('Google sign-in failed'); console.warn(err); }
-                            }
-                        });
-                        google.accounts.id.renderButton(wrap, { theme: 'outline', size: 'large', text: 'signin_with' });
-                    } catch (err) { wrap.innerHTML = '<div style="color:#f88;font-size:11px;">Google button error</div>'; }
-                };
-                document.getElementById('btn-account-main')?.addEventListener('click', () => {
-                    const main = document.getElementById('menu-main');
-                    if (main) main.style.display = 'none';
-                    openAccountPanel();
-                });
-                document.getElementById('btn-acc-close')?.addEventListener('click', () => {
-                    const scr = document.getElementById('account-screen');
-                    if (scr) scr.style.display = 'none';
-                    const main = document.getElementById('menu-main');
-                    if (main) main.style.display = 'flex';
-                    VoxelAccount._syncUI();
-                });
-                document.getElementById('btn-acc-register')?.addEventListener('click', async () => {
-                    const st = document.getElementById('acc-reg-status');
-                    if (st) st.textContent = 'Creating…';
-                    const r = await VoxelAccount.register(
-                        document.getElementById('acc-reg-name')?.value,
-                        document.getElementById('acc-reg-password')?.value,
-                        document.getElementById('acc-reg-email')?.value
-                    );
-                    if (st) st.textContent = r.ok ? 'Account created!' : r.error;
-                    if (r.ok) {
-                        this.notify('Signed up: ' + VoxelAccount.user.name + ' (' + VoxelAccount.user.voxelId + ')');
-                        openAccountPanel();
-                    }
-                });
-                document.getElementById('btn-acc-login')?.addEventListener('click', async () => {
-                    const st = document.getElementById('acc-login-status');
-                    if (st) st.textContent = 'Checking…';
-                    const r = await VoxelAccount.login(
-                        document.getElementById('acc-login-id')?.value,
-                        document.getElementById('acc-login-password')?.value
-                    );
-                    if (st) st.textContent = r.ok ? 'Welcome back!' : r.error;
-                    if (r.ok) {
-                        this.notify('Logged in: ' + VoxelAccount.user.name);
-                        openAccountPanel();
-                    }
-                });
-                document.getElementById('btn-acc-delete')?.addEventListener('click', async () => {
-                    if (!confirm('Delete your Voxel account permanently on this device?')) return;
-                    const st = document.getElementById('acc-delete-status');
-                    const r = await VoxelAccount.deleteAccountWithPassword(document.getElementById('acc-delete-password')?.value);
-                    if (st) st.textContent = r.ok ? 'Account deleted' : r.error;
-                    if (r.ok) {
-                        this.notify('Account deleted');
-                        openAccountPanel();
-                    }
-                });
-                document.getElementById('btn-acc-save-gid')?.addEventListener('click', () => {
-                    VoxelAccount.setGoogleClientId(document.getElementById('acc-google-client-id')?.value || '');
-                    this.notify('Google Client ID saved');
-                    renderGoogleBtn();
-                });
-                document.getElementById('btn-acc-set-email')?.addEventListener('click', () => {
-                    const r = VoxelAccount.setEmail(document.getElementById('acc-set-email')?.value);
-                    const st = document.getElementById('acc-email-status');
-                    if (st) st.textContent = r.ok ? 'Email saved — you can change name now' : r.error;
-                    if (r.ok) { this.notify('Email saved'); openAccountPanel(); }
-                });
-                document.getElementById('btn-acc-rename')?.addEventListener('click', () => {
-                    const r = VoxelAccount.setName(document.getElementById('acc-new-name')?.value);
-                    const st = document.getElementById('acc-name-status');
-                    if (st) st.textContent = r.ok ? 'Name updated!' : r.error;
-                    if (r.ok) { this.notify('Name: ' + VoxelAccount.user.name); openAccountPanel(); }
-                });
-                document.getElementById('acc-pic-upload')?.addEventListener('change', (ev) => {
-                    const file = ev.target.files && ev.target.files[0];
-                    if (!file) return;
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const im = new Image();
-                        im.onload = () => {
-                            const c = document.createElement('canvas');
-                            c.width = 128; c.height = 128;
-                            c.getContext('2d').drawImage(im, 0, 0, 128, 128);
-                            VoxelAccount.setPicture(c.toDataURL('image/png'));
-                            this.notify('Profile image updated');
-                            openAccountPanel();
-                        };
-                        im.src = reader.result;
-                    };
-                    reader.readAsDataURL(file);
-                });
-                document.getElementById('btn-acc-add-friend')?.addEventListener('click', () => {
-                    const r = VoxelAccount.addFriend(document.getElementById('acc-friend-input')?.value);
-                    this.notify(r.ok ? 'Friend added' : r.error);
-                    if (r.ok) openAccountPanel();
-                });
-                document.getElementById('btn-acc-signout')?.addEventListener('click', () => {
-                    VoxelAccount.signOut();
-                    this.notify('Signed out');
-                    openAccountPanel();
-                });
-                try { VoxelAccount._syncUI(); } catch (e) {}
+                // Accounts removed — no Voxel Account UI
 
-                // Player Skin panel (main menu)
-                const openSkinPanel = () => {
-                    const scr = document.getElementById('skin-screen');
-                    if (scr) scr.style.display = 'block';
-                    const main = document.getElementById('menu-main');
-                    if (main) main.style.display = 'none';
-                    try {
-                        const sp = document.getElementById('skin-panel-preset');
-                        if (sp) sp.value = PlayerSkin.preset || 'steve';
-                        const sc = document.getElementById('skin-panel-cloth');
-                        if (sc) sc.value = PlayerSkin.cloth || 'blue';
-                        const st = document.getElementById('skin-panel-status');
-                        if (st) st.textContent = 'Mode: ' + (PlayerSkin.mode || 'preset');
-                    } catch (e) {}
-                    try {
-                        document.querySelectorAll('#skin-screen button, #skin-screen select').forEach(b => {
-                            if (!b.hasAttribute('tabindex')) b.setAttribute('tabindex', '0');
-                        });
-                        document.querySelector('#skin-screen select, #skin-screen button')?.focus();
-                    } catch (e) {}
-                };
                 document.getElementById('btn-skin-main')?.addEventListener('click', () => openSkinPanel());
                 document.getElementById('btn-skin-panel-close')?.addEventListener('click', () => {
                     const scr = document.getElementById('skin-screen');
@@ -15301,6 +15095,23 @@ Save as PNG and upload in-game.`;
                 set('set-render-dist', s.renderDist);
                 set('set-fov', s.fov);
                 set('set-rtx', !!s.rtx, true);
+                try {
+                    const th = document.getElementById('set-ui-theme');
+                    if (th) {
+                        th.value = s.uiTheme || localStorage.getItem('voxel_ui_theme') || 'classic';
+                        applyUITheme(th.value);
+                    }
+                } catch (e) {}
+                try {
+                    const th = document.getElementById('set-ui-theme');
+                    if (th && !th._themeBound) {
+                        th._themeBound = true;
+                        th.addEventListener('change', () => {
+                            applyUITheme(th.value);
+                            if (this.settings) this.settings.uiTheme = th.value;
+                        });
+                    }
+                } catch (e) {}
                 set('set-shaders', s.shaders !== false, true);
                 set('set-water-waves', s.waterWaves !== false, true);
                 set('set-smooth-light', s.smoothLight !== false, true);
@@ -15355,6 +15166,13 @@ Save as PNG and upload in-game.`;
                 this.settings.renderDist = Math.max(3, Math.min(16, num('set-render-dist', 6) | 0));
                 this.settings.fov = num('set-fov', 75) | 0;
                 this.settings.rtx = chk('set-rtx', false);
+                try {
+                    const th = document.getElementById('set-ui-theme');
+                    if (th) {
+                        this.settings.uiTheme = th.value;
+                        applyUITheme(th.value);
+                    }
+                } catch (e) {}
                 this.settings.shaders = chk('set-shaders', true);
                 this.settings.waterWaves = chk('set-water-waves', true);
                 this.settings.smoothLight = chk('set-smooth-light', true);
@@ -18832,6 +18650,25 @@ GPU: ${this.rendererBackend || '—'}  Mem: ${performance.memory ? (performance.
                 this._gamepad.prevButtons = bt.map(b => !!(b && (b.pressed || b.value > 0.5)));
             }
         }
+
+        
+        (function rotateSplash() {
+            const lines = [
+                'Now with UI Themes!', 'Ray-traced lighting!', 'First-Person Hands!',
+                'Multiplayer ready!', 'Mods welcome!', 'Also try creative mode!',
+                'Press F3 for debug!', 'Sleep in a bed!', 'Trade with villagers!',
+                'Explore the Nether!', 'As seen in your browser!', '100% voxel!',
+                'WASD to move!', 'Scroll to change hotbar!', 'E for inventory!'
+            ];
+            const el = document.getElementById('mc-splash');
+            if (!el) return;
+            let i = Math.floor(Math.random() * lines.length);
+            el.textContent = lines[i];
+            setInterval(() => {
+                i = (i + 1) % lines.length;
+                el.textContent = lines[i];
+            }, 8000);
+        })();
 
         window.onload = async () => {
             if (window.__VOXEL_LUMIA_BLOCKED__) {
