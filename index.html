@@ -99,8 +99,21 @@
             border-color: var(--theme-input-border) !important;
             color: #fff !important;
         }
+        /* Keep main-menu transparent so spinning world canvas shows through */
         body.theme-applied #main-menu {
-            background: var(--theme-menu-bg) !important;
+            background: transparent !important;
+        }
+        body.theme-applied:not(.in-game) #menu-world-bg {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 0 !important;
+            pointer-events: none !important;
+        }
+        body.theme-applied:not(.in-game) #menu-world-bg canvas {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
         }
         body.theme-applied #boot-loading {
             background: var(--theme-bg) !important;
@@ -1249,7 +1262,14 @@
             position: fixed; inset: 0; z-index: 0;
             pointer-events: none;
             background: #87CEEB;
-            display: block;
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+        body.in-game #menu-world-bg {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
         }
         #menu-world-bg canvas {
             width: 100% !important; height: 100% !important;
@@ -1470,7 +1490,7 @@
                 </select>
             </div>
             <div class="mc-footer">
-                <span class="mc-ver">Voxel Survival 1.16</span>
+                <span class="mc-ver">Voxel Survival 1.17</span>
                 <span class="mc-copy"></span>
             </div>
         </div>
@@ -1562,7 +1582,7 @@
             <div class="menu-title">VOXEL MODS</div>
             <div class="menu-subtitle" style="max-width:520px;text-align:left;font-size:12px;line-height:1.45;color:#bbb;">
                 <b>.vxm</b> = ZIP pack: <code>mod.json</code> + optional <code>mod.js</code>, textures (.png/.jpg/.webp/.gif/.svg/.bmp), sounds (.wav/.mp3/.ogg). Include an <code>icon.png</code> (or logo/pack, any supported format) at the pack root to show a real logo instead of a letter.<br>
-                Also accepts plain <code>.json</code> (legacy). <b>v6 shapes:</b> <code>sphere</code>, <code>cylinder</code>, <code>cross</code>, <code>path</code> in block defs. Drop files or multi-select.
+                Also accepts plain <code>.json</code> (legacy). <b>VXM v11:</b> shapes <code>sphere</code>/<code>cylinder</code>/<code>cross</code>/<code>path</code>, Make API fill/sphere/teleport/commands/events, worldgen ores, UI, sounds. Drop .vxm ZIP or multi-select.
             </div>
             <div id="mod-dropzone" style="width:100%;max-width:480px;border:2px dashed #5a7a9a;border-radius:10px;padding:18px;margin:10px 0;text-align:center;color:#9ab;background:rgba(30,50,70,0.4);cursor:pointer;">
                 Drop .vxm ZIP / .json here<br><span style="font-size:11px;opacity:0.8;">or click to browse (multi-select)</span>
@@ -8550,7 +8570,7 @@ const BLOCK_DROP_COLORS = {
         // Spec: a .vxm file is JSON (optionally wrapped). See loadExampleVxm().
         // ========== Voxel Mod System (.vxm JSON v2) ==========
         const ModAPI = {
-            formatVersion: 10, // v10: Uint16 chunks, IndexedDB mods, namespaced ids + world remap, worldgen ores
+            formatVersion: 11, // v11: expanded Make API (fill/sphere/teleport/commands/events), UI themes, RTX
             nextBlockId: 220,
             nextItemId: 500,
             nextMobKey: 0,
@@ -9067,8 +9087,8 @@ const BLOCK_DROP_COLORS = {
                 if (!mod || typeof mod !== 'object') errs.push('Root must be a JSON object');
                 if (mod && mod.voxelMod === false) errs.push('voxelMod cannot be false');
                 if (mod && !mod.name && !mod.id) errs.push('Missing name or id');
-                if (mod && mod.formatVersion != null && mod.formatVersion > 10)
-                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 10)');
+                if (mod && mod.formatVersion != null && mod.formatVersion > 11)
+                    errs.push('Unsupported formatVersion ' + mod.formatVersion + ' (max 11)');
                 if (mod && mod.blocks && !Array.isArray(mod.blocks)) errs.push('blocks must be an array');
                 if (mod && mod.items && !Array.isArray(mod.items)) errs.push('items must be an array');
                 if (mod && mod.mobs && !Array.isArray(mod.mobs)) errs.push('mobs must be an array');
@@ -9780,9 +9800,302 @@ const BLOCK_DROP_COLORS = {
                         try {
                             localStorage.setItem('vxm_' + (ctx.modId || 'mod') + '_' + key, JSON.stringify(val));
                         } catch (e) {}
+                    },
+                    remove(key) {
+                        try { localStorage.removeItem('vxm_' + (ctx.modId || 'mod') + '_' + key); } catch (e) {}
+                    },
+                    clear() {
+                        try {
+                            const prefix = 'vxm_' + (ctx.modId || 'mod') + '_';
+                            const keys = [];
+                            for (let i = 0; i < localStorage.length; i++) {
+                                const k = localStorage.key(i);
+                                if (k && k.startsWith(prefix)) keys.push(k);
+                            }
+                            keys.forEach(k => localStorage.removeItem(k));
+                        } catch (e) {}
                     }
                 },
-                log(...args) { console.log('[vxm:' + (ctx.modId || 'mod') + ']', ...args); }
+                log(...args) { console.log('[vxm:' + (ctx.modId || 'mod') + ']', ...args); },
+
+                // ===== VXM API v11 — expanded feature set =====
+                takeItem(itemId, count) {
+                    const p = this.player();
+                    if (!p || !p.inventory) return false;
+                    let need = count|0 || 1;
+                    for (let i = 0; i < 36 && need > 0; i++) {
+                        const it = p.inventory[i];
+                        if (it && it.id === (itemId|0)) {
+                            const take = Math.min(need, it.count);
+                            it.count -= take; need -= take;
+                            if (it.count <= 0) p.inventory[i] = null;
+                        }
+                    }
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.updateHUD) g.updateHUD();
+                    return need <= 0;
+                },
+                hasItem(itemId, count) {
+                    return this.countItem(itemId) >= (count|0 || 1);
+                },
+                clearInventory() {
+                    const p = this.player();
+                    if (!p || !p.inventory) return;
+                    for (let i = 0; i < 36; i++) p.inventory[i] = null;
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.updateHUD) g.updateHUD();
+                },
+                dropItem(itemId, count, x, y, z) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g || !g.spawnGroundItem) return;
+                    const p = this.pos();
+                    g.spawnGroundItem(itemId|0, count|0 || 1,
+                        x != null ? x : (p ? p.x : 0),
+                        y != null ? y : (p ? p.y + 1 : 0),
+                        z != null ? z : (p ? p.z : 0), true);
+                },
+                teleport(x, y, z) {
+                    const p = this.player();
+                    if (!p || !p.pos) return;
+                    p.pos.set(x, y, z);
+                    if (p.vel) p.vel.set(0, 0, 0);
+                },
+                setSpawn(x, y, z) {
+                    const p = this.player();
+                    if (!p) return;
+                    if (typeof THREE !== 'undefined') p.bedSpawn = new THREE.Vector3(x, y, z);
+                    else p.bedSpawn = { x, y, z };
+                },
+                getHealth() { const p = this.player(); return p ? p.health : 0; },
+                setHealth(n) {
+                    const p = this.player();
+                    if (p) p.health = Math.max(0, Math.min(10, n|0));
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.updateHUD) g.updateHUD();
+                },
+                getHunger() { const p = this.player(); return p ? p.hunger : 0; },
+                setHunger(n) {
+                    const p = this.player();
+                    if (p) p.hunger = Math.max(0, Math.min(10, n|0));
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.updateHUD) g.updateHUD();
+                },
+                addXP(amount) {
+                    const p = this.player();
+                    if (!p) return;
+                    p.xp = (p.xp || 0) + (amount|0 || 0);
+                    while (p.xpToNext && p.xp >= p.xpToNext()) {
+                        p.xp -= p.xpToNext();
+                        p.xpLevel = (p.xpLevel || 0) + 1;
+                    }
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.updateHUD) g.updateHUD();
+                },
+                getXP() {
+                    const p = this.player();
+                    return p ? { xp: p.xp || 0, level: p.xpLevel || 0 } : { xp: 0, level: 0 };
+                },
+                message(msg, color) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.showTitleText) g.showTitleText(String(msg), 3, color);
+                    else if (g && g.notify) g.notify(String(msg));
+                },
+                chat(msg) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.appendChat) g.appendChat(String(msg));
+                    else if (g && g.notify) g.notify(String(msg));
+                },
+                playSound(name, volume) {
+                    try {
+                        if (typeof audio !== 'undefined' && audio.playSound) audio.playSound(name, volume);
+                        else if (ModAPI.sounds && ModAPI.sounds[name]) {
+                            const a = new Audio(ModAPI.sounds[name]);
+                            if (volume != null) a.volume = Math.max(0, Math.min(1, volume));
+                            a.play().catch(() => {});
+                        }
+                    } catch (e) {}
+                },
+                explode(x, y, z, power) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g && g.explodeTNT) {
+                        // approximate with TNT explode at coords
+                        const r = Math.max(1, Math.min(8, power || 3));
+                        if (g.world) {
+                            for (let dx = -r; dx <= r; dx++)
+                                for (let dy = -r; dy <= r; dy++)
+                                    for (let dz = -r; dz <= r; dz++) {
+                                        if (dx*dx + dy*dy + dz*dz > r*r) continue;
+                                        const bx = Math.floor(x)+dx, by = Math.floor(y)+dy, bz = Math.floor(z)+dz;
+                                        const id = g.world.getBlock(bx, by, bz);
+                                        if (id && id !== BLOCKS.BEDROCK && id !== BLOCKS.AIR)
+                                            g.world.setBlock(bx, by, bz, BLOCKS.AIR);
+                                    }
+                        }
+                        if (g.particles) g.particles.spawn(x, y, z, 0xff6600, 24, 2.5, 0.7);
+                        this.playSound('explode');
+                    }
+                },
+                spawnMob(type, x, y, z) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g) return null;
+                    // Prefer existing spawn helpers
+                    if (g.spawnHostileAt && type) {
+                        try { return g.spawnHostileAt(type, x, y, z); } catch (e) {}
+                    }
+                    if (g.mobs && typeof Mob !== 'undefined') {
+                        try {
+                            const m = new Mob(g, type, x, y, z);
+                            g.mobs.push(m);
+                            return m;
+                        } catch (e) { console.warn('[vxm] spawnMob', e); }
+                    }
+                    return null;
+                },
+                killMobs(filter) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g || !g.mobs) return 0;
+                    let n = 0;
+                    for (let i = g.mobs.length - 1; i >= 0; i--) {
+                        const m = g.mobs[i];
+                        if (!m || m.dead) continue;
+                        if (typeof filter === 'function' && !filter(m)) continue;
+                        if (m.die) m.die();
+                        g.mobs.splice(i, 1);
+                        n++;
+                    }
+                    return n;
+                },
+                fill(x1, y1, z1, x2, y2, z2, blockId) {
+                    const w = this.world();
+                    if (!w) return 0;
+                    let n = 0;
+                    const xa = Math.min(x1, x2)|0, xb = Math.max(x1, x2)|0;
+                    const ya = Math.min(y1, y2)|0, yb = Math.max(y1, y2)|0;
+                    const za = Math.min(z1, z2)|0, zb = Math.max(z1, z2)|0;
+                    // safety limit
+                    if ((xb-xa+1)*(yb-ya+1)*(zb-za+1) > 20000) return 0;
+                    for (let x = xa; x <= xb; x++)
+                        for (let y = ya; y <= yb; y++)
+                            for (let z = za; z <= zb; z++) {
+                                w.setBlock(x, y, z, blockId|0);
+                                n++;
+                            }
+                    return n;
+                },
+                replace(x1, y1, z1, x2, y2, z2, fromId, toId) {
+                    const w = this.world();
+                    if (!w) return 0;
+                    let n = 0;
+                    const xa = Math.min(x1, x2)|0, xb = Math.max(x1, x2)|0;
+                    const ya = Math.min(y1, y2)|0, yb = Math.max(y1, y2)|0;
+                    const za = Math.min(z1, z2)|0, zb = Math.max(z1, z2)|0;
+                    if ((xb-xa+1)*(yb-ya+1)*(zb-za+1) > 20000) return 0;
+                    for (let x = xa; x <= xb; x++)
+                        for (let y = ya; y <= yb; y++)
+                            for (let z = za; z <= zb; z++) {
+                                if (w.getBlock(x, y, z) === (fromId|0)) {
+                                    w.setBlock(x, y, z, toId|0);
+                                    n++;
+                                }
+                            }
+                    return n;
+                },
+                sphere(cx, cy, cz, r, blockId, hollow) {
+                    const w = this.world();
+                    if (!w) return 0;
+                    let n = 0;
+                    const R = Math.min(16, Math.max(1, r|0));
+                    const R2 = R * R;
+                    const Rin2 = hollow ? (R - 1) * (R - 1) : -1;
+                    for (let x = -R; x <= R; x++)
+                        for (let y = -R; y <= R; y++)
+                            for (let z = -R; z <= R; z++) {
+                                const d = x*x + y*y + z*z;
+                                if (d > R2) continue;
+                                if (hollow && d < Rin2) continue;
+                                w.setBlock((cx|0)+x, (cy|0)+y, (cz|0)+z, blockId|0);
+                                n++;
+                            }
+                    return n;
+                },
+                lookDir() {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g || !g.camera) return { x: 0, y: 0, z: -1 };
+                    const e = new THREE.Vector3(0, 0, -1);
+                    e.applyQuaternion(g.camera.quaternion);
+                    return { x: e.x, y: e.y, z: e.z };
+                },
+                setLook(yaw, pitch) {
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (!g || !g.camera) return;
+                    g.camera.rotation.order = 'YXZ';
+                    if (yaw != null) g.camera.rotation.y = yaw;
+                    if (pitch != null) g.camera.rotation.x = Math.max(-1.5, Math.min(1.5, pitch));
+                },
+                isNight() {
+                    const g = ctx.game || ModAPI.gameRef;
+                    return !!(g && g.isNight);
+                },
+                isCreative() {
+                    const g = ctx.game || ModAPI.gameRef;
+                    return !!(g && g.gameMode === 'creative');
+                },
+                difficulty() {
+                    const g = ctx.game || ModAPI.gameRef;
+                    return (g && g.settings && g.settings.difficulty) || 'normal';
+                },
+                onAttack(fn) { return this.on('attack', fn); },
+                onPickup(fn) { return this.on('pickup', fn); },
+                onChat(fn) { return this.on('chat', fn); },
+                onUseItem(fn) { return this.on('use', fn); },
+                onRespawn(fn) { return this.on('respawn', fn); },
+                onEnterDimension(fn) { return this.on('dimension', fn); },
+                command(name, fn, opts) {
+                    try {
+                        ModAPI.registerCommand(String(name), fn, Object.assign({
+                            modId: ctx.modId || 'mod',
+                            help: (opts && opts.help) || '',
+                            allowClient: !!(opts && opts.allowClient)
+                        }, opts || {}));
+                    } catch (e) {
+                        console.warn('[vxm] command register', e);
+                    }
+                    // also mirror on game for legacy
+                    const g = ctx.game || ModAPI.gameRef;
+                    if (g) {
+                        if (!g._modCommands) g._modCommands = {};
+                        g._modCommands[String(name).toLowerCase()] = fn;
+                    }
+                },
+                registerOre(def) {
+                    if (!def) return;
+                    ModAPI.worldgen = ModAPI.worldgen || [];
+                    ModAPI.worldgen.push(def);
+                },
+                asset(path) {
+                    if (!path) return '';
+                    const s = String(path);
+                    if (ModAPI.assetCache[s]) return ModAPI.assetCache[s];
+                    if (ctx.packAssets && ctx.packAssets[s]) return ctx.packAssets[s];
+                    const base = s.split('/').pop();
+                    if (ModAPI.assetCache[base]) return ModAPI.assetCache[base];
+                    if (ctx.packAssets && ctx.packAssets[base]) return ctx.packAssets[base];
+                    return s;
+                },
+                random(min, max) {
+                    if (max == null) return Math.random() * (min || 1);
+                    return min + Math.random() * (max - min);
+                },
+                clamp(v, a, b) { return Math.max(a, Math.min(b, v)); },
+                dist(ax, ay, az, bx, by, bz) {
+                    const dx = ax-bx, dy = ay-by, dz = az-bz;
+                    return Math.sqrt(dx*dx + dy*dy + dz*dz);
+                },
+                THREE: (typeof THREE !== 'undefined') ? THREE : null,
+                BLOCKS: (typeof BLOCKS !== 'undefined') ? BLOCKS : {},
+                ITEMS: (typeof ITEMS !== 'undefined') ? ITEMS : {},
+                version() { return 11; },
+                modId() { return ctx.modId || 'mod'; }
             };
             return Make;
         }
@@ -10181,7 +10494,7 @@ const BLOCK_DROP_COLORS = {
         function loadExampleVxm() {
             return {
                 voxelMod: true,
-                formatVersion: 7,
+                formatVersion: 11,
                 name: 'Example Ruby Mod',
                 id: 'example_ruby',
                 version: '3.0.0',
@@ -10275,134 +10588,90 @@ WASD · Space · Shift · Ctrl · Arrows look · Alt mouse
 F5 camera · F3 debug · F4 gamemode · E inv · T chat
 `;
 
-const VXM_GUIDE = `HOW TO MAKE A .vxm MOD — ULTIMATE GUIDE (formatVersion 9)
+const VXM_GUIDE = `HOW TO MAKE A .vxm MOD — GUIDE (formatVersion 11)
 ================================================================
-.vxm = ZIP renamed to .vxm
+.vxm = ZIP file (rename .zip → .vxm). Also accepts plain mod.json.
 
 LAYOUT
 ------
-mymod.vxm
-|-- mod.json          REQUIRED
-|-- mod.js            RECOMMENDED (Make API)
-|-- textures/         png jpg webp gif
-|-- sounds/           ogg wav mp3
-+-- icon.png
+mymod.vxm /
+  mod.json          REQUIRED
+  mod.js            optional Make API script
+  textures/         png jpg webp gif svg
+  sounds/           ogg wav mp3
+  icon.png          pack logo
 
 mod.json
 --------
 {
   "voxelMod": true,
-  "formatVersion": 9,
-  "name": "Ultimate Demo",
-  "id": "ultimate_demo",
-  "version": "1.0.0",
-  "author": "You",
-  "description": "Shows Make API power",
+  "formatVersion": 11,
+  "name": "Demo Mod",
+  "id": "demo_mod",
+  "version": "1.0",
+  "author": "you",
+  "description": "Cool blocks",
+  "scope": "world",
   "blocks": [
-    { "key": "RUBY_BLOCK", "name": "Ruby Block", "tex": [64,64,64,64,64,64], "shape": "cube" }
+    { "key": "ruby_brick", "name": "Ruby Brick", "solid": true,
+      "tex": [58,58,58,58,58,58], "type": "stone" }
   ],
   "items": [
-    { "key": "RUBY", "name": "Ruby", "maxStack": 64 }
+    { "key": "ruby_shard", "name": "Ruby Shard", "maxStack": 64 }
   ],
   "recipes": [
-    { "shape": ["RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY","RUBY"], "out": "RUBY_BLOCK", "count": 1 }
-  ]
+    { "in": ["demo_mod:ruby_shard","demo_mod:ruby_shard","demo_mod:ruby_shard","demo_mod:ruby_shard"],
+      "out": "demo_mod:ruby_brick", "count": 1 }
+  ],
+  "ores": [
+    { "block": "demo_mod:ruby_brick", "size": 4, "count": 8, "yMin": 4, "yMax": 40, "chance": 0.003 }
+  ],
+  "ui": { "elements": [] }
 }
-Shapes: cube | path | slab | sphere | cylinder | cross
 
-================================================================
-mod.js — Make API (ULTIMATE)
-================================================================
+MAKE API (mod.js) — formatVersion 11
+------------------------------------
+Make.block({ key, name, solid, tex, type, light, shape })
+Make.item({ key, name, maxStack, type, toolType, damage, heal })
+Make.recipe({ in:[], out, count }) or { shape:[9], out, count }
+Make.mob({ key, name, hostile, health, ... })
+Make.sound(name, path)
+Make.notify(msg) / Make.message(msg, color) / Make.chat(msg)
+Make.showTitle(text, seconds, color)
+Make.player() / Make.world() / Make.pos()
+Make.getBlock(x,y,z) / Make.setBlock(x,y,z,id)
+Make.fill(x1,y1,z1,x2,y2,z2,id) / Make.replace(...) / Make.sphere(cx,cy,cz,r,id,hollow?)
+Make.give(id, count) / Make.takeItem(id, count) / Make.hasItem(id, count)
+Make.dropItem(id, count, x?, y?, z?)
+Make.clearInventory() / Make.inventory() / Make.hotbar() / Make.held()
+Make.teleport(x,y,z) / Make.setSpawn(x,y,z)
+Make.getHealth() / Make.setHealth(n) / Make.getHunger() / Make.setHunger(n)
+Make.addXP(n) / Make.getXP()
+Make.hurt(n, reason) / Make.heal(n)
+Make.setGamemode('survival'|'creative'|'spectator')
+Make.time('day'|'night'|number) / Make.isNight() / Make.isCreative()
+Make.raycast() / Make.lookDir() / Make.setLook(yaw, pitch)
+Make.particle(x,y,z,color,count) / Make.explode(x,y,z,power)
+Make.spawnMob(type,x,y,z) / Make.killMobs(filter?)
+Make.playSound(name, volume?)
+Make.on(event, fn) — break, place, join, death, attack, pickup, chat, use, respawn, dimension
+Make.onTick(fn) / Make.onBreak / Make.onPlace / Make.onDeath / Make.onJoin
+Make.every(seconds, fn) / Make.after(seconds, fn)
+Make.command(name, fn)  // /name from chat
+Make.registerOre({ block, size, count, yMin, yMax, chance })
+Make.storage.get/set/remove/clear(key)
+Make.addMenuButton(label, onClick)
+Make.injectCSS(css)
+Make.asset(path) / Make.seed() / Make.dimension()
+Make.BLOCKS / Make.ITEMS / Make.THREE / Make.version() // 11
 
-// CHAT
-Make.chat("Hello");
-Make.sendChat("Hi", "Bot");
-Make.getChat(30);
-Make.onChat(e => Make.log(e.name, e.msg));
+BLOCK SHAPES: cube (default), cross, sphere, cylinder, path
 
-// COMMANDS  /hello
-Make.command("hello", (args, ctx) => {
-  ctx.reply("Hello " + (args[0] || "friend"));
-}, { help: "Say hello", allowClient: true });
-
-// WORLD / PLAYER
-Make.pos();                          // {x,y,z}
-Make.getBlock(x,y,z);
-Make.setBlock(x,y,z, id);
-Make.give(103, 5);                   // apples
-Make.heal(2);
-Make.hurt(1, "cactus");
-Make.setGamemode("creative");
-Make.time("day");  Make.time("night");
-Make.held();                         // {id,count,slot} or null
-Make.inventory();                    // all 36 slots [{slot,id,count,name}|null]
-Make.hotbar();                       // first 9 slots
-Make.getItem(slot);                  // one slot
-Make.setHotbar(0..8);
-Make.countItem(itemId); Make.hasItem(itemId, n);
-Make.takeItem(itemId, n); Make.clearSlot(slot);
-
-// EVENTS
-Make.onBreak(({x,y,z,id}) => {});
-Make.onPlace(({x,y,z,id}) => {});
-Make.on('join', data => {});
-Make.onDeath(data => {});
-Make.onTick((dt, game) => {});
-Make.emit('custom', {});
-
-Make.seed(); Make.dimension();
-Make.notify('hi'); Make.title('Title', 2, '#ff0');
-Make.raycast();                      // look target
-
-Make.player();  Make.world();  Make.getGame();
-
-// TIMERS / TICK
-Make.after(2, () => Make.notify("2s later"));
-const stop = Make.every(5, () => Make.chat("tick"));
-Make.onTick((dt, game) => { /* every frame */ });
-
-// FX
-Make.particle(x, y, z, 0xff0000, 12);
-Make.sound("explode");
-Make.title("BOOM", 3, "#f55");
-Make.notify("Loaded");
-
-// STORAGE (per mod, localStorage)
-Make.storage.set("score", 10);
-Make.storage.get("score", 0);
-
-// AI  (keys: /aikey grok|gemini|openai|claude <key>)
-Make.ai.setKey("grok", "xai-...");
-const ans = await Make.ai.ask("What is stone?", "grok");
-Make.command("ask", async (args, ctx) => {
-  try {
-    ctx.reply(await Make.ai.ask(args.join(" "), "grok"));
-  } catch (e) { ctx.reply(e.message); }
-}, { help: "ask <q>", allowClient: true });
-
-// UI / CSS / MENU
-Make.injectCSS(".my { color: red; }");
-Make.setMenuTitle("My Server");
-Make.addMenuButton("Shop", () => Make.notify("Shop"));
-ModAPI.makeDisplay("textDisplay", { text: "Hi", color: "#fff" });
-ModAPI.makeDisplay("itemDisplay", { item: "DIAMOND", size: 32 });
-ModAPI.makeDisplay("webImgDisplay", { url: "https://..." });
-ModAPI.loadThirdParty("lib", "https://cdn.example.com/lib.js");
-
-// BLOCKS / ITEMS FROM JS
-Make.block({ key: "ORB", name: "Orb", shape: "sphere", tex: [47,47,47,47,47,47] });
-Make.item({ key: "GEM", name: "Gem", maxStack: 64 });
-
-// LOG
-Make.log("debug info");
-
-================================================================
-VANILLA CHAT COMMANDS
-================================================================
-/help /give /tp /gamemode /time /text /kill /clear
-/aikey <provider> <key> | /aisettings | /ai [provider] prompt
-
-Never put API keys inside the .vxm zip — use /aikey in-game.
+TIPS
+• IDs are namespaced: modId:key
+• Keep ore veins small; fill/sphere capped for safety
+• Main-menu mods: "scope": "main" or "both"
+• Drop .vxm on the Mods screen or multi-select files
 `;
 
 
@@ -12265,6 +12534,15 @@ Never put API keys inside the .vxm zip — use /aikey in-game.
                 hostEl.innerHTML = '';
                 hostEl.appendChild(this.renderer.domElement);
                 hostEl.style.display = 'block';
+                hostEl.style.visibility = 'visible';
+                hostEl.style.opacity = '1';
+                hostEl.style.zIndex = '0';
+                const canvas = this.renderer.domElement;
+                canvas.style.display = 'block';
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                canvas.style.position = 'absolute';
+                canvas.style.inset = '0';
 
                 const hw = (typeof isHalloweenEvent === 'function' && isHalloweenEvent());
                 this.scene.background = new THREE.Color(hw ? 0x1a1028 : 0x87CEEB);
@@ -15395,18 +15673,32 @@ Save as PNG and upload in-game.`;
             showMenuSpinWorld() {
                 try {
                     document.body.classList.remove('in-game');
-                    document.documentElement.classList.remove('in-game');
                     const mbg = document.getElementById('menu-world-bg');
                     if (mbg) {
                         mbg.style.display = 'block';
                         mbg.style.visibility = 'visible';
+                        mbg.style.opacity = '1';
+                        mbg.style.zIndex = '0';
+                        mbg.style.pointerEvents = 'none';
                     }
-                    if (this.renderer && this.renderer.domElement) {
-                        this.renderer.domElement.style.display = 'none';
+                    if (window.game && window.game.renderer && window.game.renderer.domElement) {
+                        window.game.renderer.domElement.style.display = 'none';
                     }
-                    if (!window._menuBgWorld || !window._menuBgWorld.running) {
+                    const needNew = !window._menuBgWorld || !window._menuBgWorld.running
+                        || !window._menuBgWorld.renderer || !window._menuBgWorld.renderer.domElement
+                        || !window._menuBgWorld.renderer.domElement.isConnected;
+                    if (needNew && mbg) {
                         try { if (window._menuBgWorld) window._menuBgWorld.dispose(); } catch (e) {}
-                        if (mbg) window._menuBgWorld = new MenuBackgroundWorld(mbg);
+                        window._menuBgWorld = new MenuBackgroundWorld(mbg);
+                    } else if (window._menuBgWorld) {
+                        window._menuBgWorld.running = true;
+                        try { window._menuBgWorld.onResize(); } catch (e) {}
+                        try {
+                            if (!window._menuBgWorld._rafKick) {
+                                window._menuBgWorld._rafKick = true;
+                                window._menuBgWorld.animate();
+                            }
+                        } catch (e) {}
                     }
                 } catch (e) { console.warn('showMenuSpinWorld', e); }
             }
@@ -15740,7 +16032,10 @@ Save as PNG and upload in-game.`;
             runCommand(raw) {
                 const parts0 = raw.slice(1).trim().split(/\s+/);
                 const c0 = (parts0[0] || '').toLowerCase();
-                const modCmd = (typeof ModAPI !== 'undefined' && ModAPI.commandHandlers) ? ModAPI.commandHandlers[c0] : null;
+                let modCmd = (typeof ModAPI !== 'undefined' && ModAPI.commandHandlers) ? ModAPI.commandHandlers[c0] : null;
+                if (!modCmd && this._modCommands && this._modCommands[c0]) {
+                    modCmd = { fn: this._modCommands[c0], modId: 'mod' };
+                }
                 if (this.mp && this.mp.enabled && !this.mp.isHost && this.mpRules && this.mpRules.hostCommandsOnly !== false) {
                     // clients can still use /help, /rules, /text, and mod commands marked allowClient
                     const clientOk = { help:1, rules:1, mprules:1, text:1, aisettings:1, aikey:1, ai:1 };
